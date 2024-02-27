@@ -1,0 +1,42 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Usuarios
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de gestión de usuarios.</h1>
+    <p><a href="{{ url_for('altaUsuario') }}"><button class="btn success">Nuevo usuario</button></a></p>
+    <table style="border: 1px solid black;">
+        <tr>
+            <th>Usuario</th>
+            <th>Contraseña</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+        </tr>
+        <form action="/usuarios/eliminarusuario" method="POST" name="formulario">
+        {% for i in tablas %}
+        <tr>
+                <td style="color: #008080;">{{ i[0] }}</td>
+                <td>{{ i[1] }}</td>
+                <td>{{ i[2] }}</td>
+                {% if i[3] == 'admin' %}
+                <td style="color: red; text-align: center;">Administrador</td>
+                {% else %}
+                <td style="color: blue; text-align: center;">Usuario</td>
+                {% endif %}
+                <td style="border: none;"><button type="button" onclick='document.formulario.action = "/usuarios/eliminarusuario"; document.getElementById("eliminar").value = "{{ i[0] }}"; borrarRegistro("¿Estás seguro que desea eliminar un cliente?", "Cliente eliminado con éxito!", "submit_altausuario");' class="btn danger" style="padding: 6px; font-size: 14px;">Eliminar</button></td>
+                <td><button type="submit" onmouseover='document.formulario.action = "/usuarios/gestionusuario"; document.getElementById("eliminar").value = "{{ i[0] }}";' class="btn primary" style="padding: 6px; font-size: 14px;">Modificar</button></td>
+        </tr>
+        {% endfor %}
+        <input type="hidden" name="eliminar" id="eliminar">
+        <button type="submit" id="submit_altausuario" hidden></button>
+        </form>
+    </table>
+</div>
+{% endblock %}

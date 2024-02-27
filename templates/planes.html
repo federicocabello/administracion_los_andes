@@ -1,0 +1,38 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Planes
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de gestión de planes.</h1>
+    <p><button type="button" onclick="nuevoPlan()" class="btn success">Nuevo plan</button></p>
+    <table style="border: 1px solid black; margin: 0 auto;">
+        <tr>
+            <th>Plan</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+        </tr>
+        {% for i in planes %}
+        <tr>
+                <td style="color: #008080;">{{ i[1] }}</td>
+                <td>{{ i[2] }}</td>
+                <td>${{ i[3] }}</td>
+                <textarea id="{{ i[0] }}" cols="30" rows="10" style="display: none">{{ i[2] }}</textarea>
+                <td style="border: none;"><button type="button" onclick='document.getElementById("eliminar").value = "{{ i[0] }}"; document.getElementById("desc_plan").value = "{{ i[1] }}";borrarRegistro("¿Estás seguro que desea eliminar un plan?", "Plan borrado con éxito!", "submit_bajaplan");' class="btn danger" style="padding: 6px; font-size: 14px;">Eliminar</button></td>
+                <td style="border: None;"><button type="button" onclick='modificarPlan("{{ i[0] }}", "{{ i[1]}}", document.getElementById("{{ i[0] }}").value, "{{ i[3] }}")' class="btn primary" style="padding: 6px; font-size: 14px;">Modificar</button></td>
+        </tr>
+        {% endfor %}
+        <form action="/planes/eliminarplan" method="POST" name="formulario">
+        <input type="hidden" name="eliminar" id="eliminar">
+        <input type="hidden" name="desc_plan" id="desc_plan">
+        <button type="submit" id="submit_bajaplan" hidden></button>
+        </form>
+    </table>
+</div>
+{% endblock %}

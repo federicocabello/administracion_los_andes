@@ -1,0 +1,103 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Nuevo cliente
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Registro de un nuevo cliente.</h1>
+    <main>
+        <form action="/clientes/nuevocliente" method="POST" name="ficha" enctype="multipart/form-data">
+        <div class="row">
+            <div class="column"> 
+                <p><h4 style="text-decoration: underline;">FICHA DEL CLIENTE</h4></p>
+                <p><fieldset style="width: 95%; text-align: center; display: flex; justify-content: left;">
+                    <legend style="text-align: left;">Plan</legend>
+                {% for p in planes %}
+                    <label for="{{ p[0] }}" style="margin-left: 15px; margin-right: 15px;"><input type="checkbox" name="check" onclick="onlyOne(this); document.getElementById('plan').value = document.getElementById('{{ p[0] }}').value;" value="{{ p[0] }}" style="vertical-align: middle; width: auto; margin: 0 auto;" id="{{ p[0] }}">{{ p[1] }}</label>
+                {% endfor %}
+                <textarea name="fichainterna" cols="30" rows="7" placeholder="Ficha interna..." style="text-transform: uppercase;"></textarea>
+                </fieldset></p>
+                <input type="hidden" id="plan" name="plan" value=0>
+                <p>Empresa: <input type="text" name="empresa" style="text-transform: uppercase;" onkeypress="foco('persona')" required autofocus>
+                <p>Imagen: <input type="file" name="logo[]"></p>
+                <p>Contrato: <input type="file" name="pdf"></p>
+                <p>Nombre y apellido: <input type="text" name="persona" id="persona" onkeypress="foco('direccion')" style="text-transform: uppercase;"></p>
+                <p>Dirección: <input type="text" name="direccion" id="direccion" onkeypress="foco('telefono')" style="text-transform: uppercase;"></p>
+                <p>Teléfono: <input type="number" name="telefono" id="telefono" onkeypress="foco('email')"></p>
+                <p>E-mail: <input type="email" name="email" style="text-transform: lowercase;" id="email" onkeypress="foco('vende')"></p>
+                <p>¿Que vende?<textarea name="vende" id="vende" cols="50" rows="6" style="text-transform: uppercase;"></textarea></p>
+                <p><button type="button" onclick="agregarArticulo()" class="btn success">Agregar artículo</button>
+                <button type="button" onclick="eliminarArticulo()" class="btn danger">Eliminar artículo</button></p>
+                <div id="column1">
+                    <p><input type="hidden" name="art1" id="art1" style="text-transform: uppercase;" required><input type="hidden" name="precio1" id="precio1" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion1" id="art_descripcion1" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes1[]" id="imagen1"></p>
+                    <p><input type="hidden" name="art2" id="art2" style="text-transform: uppercase;" required><input type="hidden" name="precio2" id="precio2" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion2" id="art_descripcion2" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes2[]" id="imagen2"></p>
+                    <p><input type="hidden" name="art3" id="art3" style="text-transform: uppercase;" required><input type="hidden" name="precio3" id="precio3" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion3" id="art_descripcion3" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes3[]" id="imagen3"></p>
+                    <p><input type="hidden" name="art4" id="art4" style="text-transform: uppercase;" required><input type="hidden" name="precio4" id="precio4" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion4" id="art_descripcion4" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes4[]" id="imagen4"></p>
+                    <p><input type="hidden" name="art5" id="art5" style="text-transform: uppercase;" required><input type="hidden" name="precio5" id="precio5" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion5" id="art_descripcion5" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes5[]" id="imagen5"></p>
+                    <p><input type="hidden" name="art6" id="art6" style="text-transform: uppercase;" required><input type="hidden" name="precio6" id="precio6" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion6" id="art_descripcion6" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes6[]" id="imagen6"></p>
+                    <p><input type="hidden" name="art7" id="art7" style="text-transform: uppercase;" required><input type="hidden" name="precio7" id="precio7" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion7" id="art_descripcion7" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes7[]" id="imagen7"></p>
+                    <p><input type="hidden" name="art8" id="art8" style="text-transform: uppercase;" required><input type="hidden" name="precio8" id="precio8" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion8" id="art_descripcion8" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes8[]" id="imagen8"></p>
+                    <p><input type="hidden" name="art9" id="art9" style="text-transform: uppercase;" required><input type="hidden" name="precio9" id="precio9" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion9" id="art_descripcion9" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes9[]" id="imagen9"></p>
+                    <p><input type="hidden" name="art10" id="art10" style="text-transform: uppercase;" required><input type="hidden" name="precio10" id="precio10" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion10" id="art_descripcion10" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes10[]" id="imagen10"></p>
+                    <p><input type="hidden" name="art11" id="art11" style="text-transform: uppercase;" required><input type="hidden" name="precio11" id="precio11" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion11" id="art_descripcion11" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes11[]" id="imagen11"></p>
+                    <p><input type="hidden" name="art12" id="art12" style="text-transform: uppercase;" required><input type="hidden" name="precio12" id="precio12" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion12" id="art_descripcion12" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes12[]" id="imagen12"></p>
+                    <p><input type="hidden" name="art13" id="art13" style="text-transform: uppercase;" required><input type="hidden" name="precio13" id="precio13" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion13" id="art_descripcion13" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes13[]" id="imagen13"></p>
+                    <p><input type="hidden" name="art14" id="art14" style="text-transform: uppercase;" required><input type="hidden" name="precio14" id="precio14" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion14" id="art_descripcion14" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes14[]" id="imagen14"></p>
+                    <p><input type="hidden" name="art15" id="art15" style="text-transform: uppercase;" required><input type="hidden" name="precio15" id="precio15" style="width: 20%;" placeholder="Precio" required><textarea style="display: none;" name="art_descripcion15" id="art_descripcion15" cols="30" rows="15" placeholder="Descripción"></textarea><input type="hidden" name="imagenes15[]" id="imagen15"></p>
+                </div>
+            </div>
+
+            <div class="column">
+                <p><h4 style="text-decoration: underline;">WORKSPACE</h4></p>
+                <p><button type="button" onclick="agregarEspacio()" class="btn success">Agregar sección</button>
+                <button type="button" onclick="eliminarEspacio()" class="btn danger">Eliminar sección</button></p>
+                <div id="column2">
+                    <p><input type="hidden" name="speech1" id="speech1" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc1" id="desc1" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech2" id="speech2" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc2" id="desc2" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech3" id="speech3" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc3" id="desc3" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech4" id="speech4" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc4" id="desc4" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech5" id="speech5" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc5" id="desc5" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech6" id="speech6" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc6" id="desc6" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech7" id="speech7" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc7" id="desc7" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                    <p><input type="hidden" name="speech8" id="speech8" placeholder="Speech" style="text-transform: uppercase;" required><textarea style="display: none;" name="desc8" id="desc8" cols="30" rows="20" placeholder="Descripción" required></textarea></p>
+                </div>
+                <p><h4 style="text-decoration: underline;">PREGUNTAS FRECUENTES</h4></p>
+                <p><button type="button" onclick="agregarPregunta()" class="btn success">Agregar pregunta</button>
+                <button type="button" onclick="eliminarPregunta()" class="btn danger">Eliminar pregunta</button></p>
+                <div id="column3">
+                    <p><input type="hidden" name="pregunta1" id="pregunta1" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta2" id="pregunta2" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta3" id="pregunta3" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta4" id="pregunta4" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta5" id="pregunta5" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta6" id="pregunta6" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta7" id="pregunta7" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta8" id="pregunta8" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta9" id="pregunta9" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta10" id="pregunta10" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta11" id="pregunta11" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta12" id="pregunta12" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta13" id="pregunta13" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta14" id="pregunta14" style="text-transform: uppercase;" required></p>
+                    <p><input type="hidden" name="pregunta15" id="pregunta15" style="text-transform: uppercase;" required></p>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="n_articulos" value="0" style="width: auto;">
+        <input type="hidden" name="n_espacios" value="0" style="width: auto;">
+        <input type="hidden" name="n_preguntas" value="0" style="width: auto;">
+        </form>
+        <p><button type="button" class="ov-btn-grow-ellipse" onclick="cargarContadores(); clienteAgregado();">Guardar</button></p>
+    </main>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/altacliente-scripts.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Movimientos
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de registros de todos los movimientos del sistema.</h1>
+    <table style="border: 1px solid black; margin: 0 auto;" id="tabla_movimientos">
+        <tr>
+            <td></td>
+            <td>
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',1,1)">
+            </td>
+            <td>
+                <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_movimientos',2,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="" style="color:gainsboro">Filtro por fecha...</option>
+                    <option value="-01-">Enero</option>
+                    <option value="-02-">Febrero</option>
+                    <option value="-03-">Marzo</option>
+                    <option value="-04-">Abril</option>
+                    <option value="-05-">Mayo</option>
+                    <option value="-06-">Junio</option>
+                    <option value="-07-">Julio</option>
+                    <option value="-08-">Agosto</option>
+                    <option value="-09-">Septiembre</option>
+                    <option value="-10-">Octubre</option>
+                    <option value="-11-">Noviembre</option>
+                    <option value="-12-">Diciembre</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th>N°</th>
+            <th>Movimiento</th>
+            <th>Fecha</th>
+        </tr>
+        {% for i in tablas %}
+        <tr>
+                <td style="text-align: center;">{{ i[0] }}</td>
+                <td style="color: #008080;">{{ i[1] }}</td>
+                <td>{{ i[2] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

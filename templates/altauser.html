@@ -1,0 +1,33 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Nuevo usuario
+{% endblock %}
+
+{% block body %}
+    <div id="main-content">
+        <h1>Registro de un nuevo usuario.</h1>
+        <main>
+            <form action="/usuarios/nuevousuario" method="POST">
+                <div class="row">
+                    <div class="column">
+                        <p><h4 style="text-decoration: underline;">FICHA DEL NUEVO USUARIO</h4></p>
+                        <p>Usuario (sin espacios): <input type="text" name="usuario" style="text-transform: lowercase;" onkeypress="foco('contrasena')" autofocus required></p>
+                        <p>Contraseña: <input type="password" name="contrasena" id="contrasena" onkeypress="foco('nombre')" required></p>
+                        <p>Nombre y apellido: <input type="text" name="nombre" id="nombre" style="text-transform: uppercase;"></p>
+                        <p>Rol: <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" name="rol">
+                            <option value="user">Usuario</option>
+                            <option value="admin">Administrador</option>
+                        </select></p>
+                        <p><button type="button" onclick="usuarioAgregado()" class="ov-btn-grow-ellipse">Guardar</button></p>
+                    </div>
+                </div>
+                <button type="submit" id="submit_altausuario" hidden></button>
+            </form>
+        </main>
+    </div>
+{% endblock %}

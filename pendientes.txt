@@ -1,0 +1,32 @@
+>longitud de campo de desscrpicion speech
+>confirmacion en boton de rechazado
+>salto de linea en descripcion de articulo
+>clientes que no tienen ningun articulo ni ningun speech
+>imagenes no procesadas en menu
+>registro no se guarda si el checkbox no se selecciona (verificar texts areas restantes)
+>!!INTENTAR AGREGAR UN CLIENTE
+>se insertan imagenes vacias en articlos-clientes
+>indice fuera de rango de la tupla al altacliente
+>.gitignore en github
+>limpiar ventana a la hora de registrar una llamada
+>poner if si tiene preguntas registradas
+>revisar TAREAS null, agregar TAREA = id == 0
+>en PLANES, el PLAN == 0
+>a la hora de editar cliente, traer plan 
+
+cambio base de datos:
+_campo rol a AUTH
+_revisar longitud de speech_descripcion %CLIENTE%
+_"vende" y "plan_fichainterna" pasar a TEXT en CLIENTES
+_"motivo" y "nota_rechazo" pasar a TEXT en REGISTROS
+
+//HOST
+app.run(debug=False, port=30358, host='admin.losandestx.com')
+
+//NUEVOS CAMBIOS:
+DB_agregar columna en REGISTROS --> pregunta; respuesta tipo TEXT
+DB_crear tabla FACTURAS
+<<<FILTROS en PREGUNTAS
+<<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
+<agregar a la tabla movimientos cuando un registro se pasa de agente
+<boton de editar speech

@@ -1,0 +1,55 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Clientes
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de gestión de clientes.</h1>
+    <p><a href="{{ url_for('altaCliente') }}"><button class="btn success">Nuevo cliente</button></a></p>
+    <table style="border: 1px solid black; margin: 0 auto;">
+        <tr>
+            <th colspan="2">Cliente</th>
+            <th>¿Que vende?</th>
+            <th>Plan</th>
+        </tr>
+        {% for i in tablas %}
+        <tr>
+            {% if i[1] != None %}
+            <td><img src="{{ url_for('mostrar_logo', cliente=i[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 30px; height: 30px; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px; vertical-align: middle;"></td>
+            {% else %}
+            <td></td>
+            {% endif %}   
+            <form action="/clientes/eliminarcliente" method="POST" name="formulario">
+            <td style="color: #008080;"><button style="padding: 6px; font-size: 14px; width: 100%;" type="button" class="btn secondary" onclick="alert('Nombre: {{ i[2] }}\nDirección: {{ i[3] }}\nTeléfono: {{ i[4] }}\nEmail: {{ i[5] }}\nRegistrado desde {{ i[9] }}')">{{ i[0] }}</button></td>
+                <td>{{ i[6] }}</td>
+                {% if i[7] != '' %}
+                <td><button style="width: 100%;" type="button" onclick="alert('Ficha interna:\n{{ i[8] }}')">{{ i[7] }}</button></td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                {% if i[10] != None %}
+                <td style="border: none;"><button type="button" onclick="document.getElementById('bajar_contrato').value = '{{ i[0] }}'; document.getElementById('btnContrato').click();" style="padding: 6px; font-size: 14px;" class="btn success"><i class="fa fa-download"></i> Contrato</button></td>
+                {% else %}
+                <td></td>
+                {% endif %}
+                <td style="border: none;"><button type="button" onclick='document.formulario.action = "/clientes/eliminarcliente"; document.getElementById("eliminar").value = "{{ i[0] }}"; borrarRegistro("¡Está eliminando un cliente del sistema!", "Cliente eliminado con éxito!", "btn_eliminarcliente"); ' class="btn danger" style="padding: 6px; font-size: 14px;">Eliminar</button></td>
+                <td><button type="submit" onmouseover='document.formulario.action = "/clientes/gestioncliente"; document.getElementById("eliminar").value = "{{ i[0] }}";' class="btn primary" style="padding: 6px; font-size: 14px;">Modificar</button></td>
+        </tr>
+        {% endfor %}
+        <input type="hidden" name="eliminar" id="eliminar">
+        <button type="submit" id="btn_eliminarcliente" style="display: None"></button>
+        </form>
+        <form action="/descargar/contrato" method="POST">
+            <input type="hidden" id="bajar_contrato" name="bajar_contrato">
+            <button type="submit" id="btnContrato" hidden></button>
+        </form>
+    </table>
+</div>
+{% endblock %}

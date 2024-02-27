@@ -1,0 +1,35 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Tareas
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de gestión de tareas.</h1>
+    <p><button type="button" onclick="nuevaTarea()" class="btn success">Nueva tarea</button></p>
+    <table style="border: 1px solid black;">
+        <tr>
+            <th>Tarea</th>
+        </tr>
+        {% for i in tareas %}
+        <tr>
+                <!-- <td style="color: #008080;">{{ i[0] }}</td> -->
+                <td>{{ i[1] }}</td>
+                <textarea id="{{ i[0] }}" cols="30" rows="10" style="display: none">{{ i[1] }}</textarea>
+                <td style="border: none;"><button type="button" onclick='document.getElementById("eliminar").value = "{{ i[0] }}"; document.getElementById("desc_tarea").value = document.getElementById("{{ i[0] }}").value; borrarRegistro("¿Estás seguro que desea eliminar una tarea?", "Tarea borrada con éxito!", "submit_bajatarea");' class="btn danger" style="padding: 6px; font-size: 14px;">Eliminar</button></td>
+                <td style="border: None;"><button type="button" onclick='modificarTarea("{{ i[0] }}", document.getElementById("{{ i[0] }}").value)' class="btn primary" style="padding: 6px; font-size: 14px;">Modificar</button></td>
+        </tr>
+        {% endfor %}
+        <form action="/tareas/eliminartarea" method="POST" name="formulario">
+        <input type="hidden" name="eliminar" id="eliminar">
+        <textarea name="desc_tarea" id="desc_tarea" cols="30" rows="10" style="display: None"></textarea>
+        <button type="submit" id="submit_bajatarea" hidden></button>
+        </form>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | {{ empresa }}
+{% endblock %}
+
+{% block body %}
+<div id="main-content" style="padding-top: 0; margin-top: 0;">
+    <div style="text-align: center; color: #008080;"><h1>{{ empresa }}</h1></div>
+    {% if pendientes != () %}
+    <p><nav style="text-align: center;"><button type="button" id="btn-pendientes" onclick="mostrarPendientes()" class="btn secondary" style="font-size: 14px;">Ver últimos pendientes »</button></nav></p>
+    <form method="POST" name="formulario_a_listo" action="/registros/editarregistro"><input type="hidden" name="eliminar" id="eliminar"><input type="hidden" name="accion" value="a_listo"><input type="hidden" name="redireccion" value="menu"><input type="hidden" name="nota" value=null><input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
+    <p>
+        <table id="pendiente" style="width: 60%; font-size: 14px; padding: 0; box-shadow: none; margin: 0px auto; border: none;" hidden>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <th style="padding-top: 3px; padding-bottom: 3px;">Tarea pendiente</th>
+                <td></td>
+            </tr>
+    {% for p in pendientes %}
+        <tr id="{{ p[5] }}">
+            <td>
+                <select id="{{p[5]}}agnt" onchange="cambiarAgente(document.getElementById('{{ p[5] }}agnt').value, '{{p[5]}}'); document.getElementById('{{p[5]}}').remove()" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    {% for a in agentes %}
+                    {% if p[6] == a[0] %}
+                    <option value="{{a[0]}}" selected>{{a[0]}}</option>
+                    {% else %}
+                    <option value="{{a[0]}}">{{a[0]}}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[0] }}</td>
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[1] }}</td>
+            {% if p[2] != '' %}
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[2] }}</td>
+            {% else %}
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">No tiene un motivo de llamada cargado</td>
+            {% endif %}
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{% if p[3] != '' %}{{ p[3] }} el día {{ p[4] }}{% else %}No tiene ninguna tarea asignada{% endif %}</td>
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">Llamada el {{ p[5] }}</td>
+            <td><button type="submit" onclick="document.getElementById('eliminar').value = '{{ p[5] }}'; registroListo('El registro fue guardado como Listo! con éxito.'); document.getElementById('{{ p[5] }}').style = 'display: None;'" style="float: left; font-size: 14px; padding: 3px; border: 1px solid;" class="btn success">Listo</button></td>
+        </tr>
+    {% endfor %}
+    {% endif %}
+        </table>
+    </p>
+    </form>
+    <main>
+        <div class="row">
+            <div class="column" style="width: 20%; float: left; background: none; box-shadow: none;">
+            {% if speech != () %}
+                {% for s in speech %}
+                <table style="width: 100%;">
+                    <tr>
+                        <th>{{ s[0] }}</th>
+                    </tr>
+                    <tr>
+                        <td><li>{{ s[1] | replace("\n", "<li>") | safe }}</li></td>
+                    </tr>
+                </table>
+                <hr>
+                {% endfor %}
+            {% else %}
+                <table>
+                    <tr>
+                    <th style="background-color: gray;">El cliente no tiene ningún speech cargado</th>
+                    </tr>
+                </table>
+            {% endif %}
+            </div>
+            <div class="column" style="width: 60%; background: none; box-shadow: none;">
+                {% if articulos != () %}
+                {% for a in articulos %}
+                <table style="width: 100%;">
+                    <tr>
+                        <th colspan="2">{{ a[0] }}<button type="button" onclick="agregarACotizacion('{{ a[0] }}',' {{a [1] }}');" class="btn warning" style="padding: 10px; font-size: 20px; float: right; font-family: 'Rubik', sans-serif;">${{ a[1] }}</button></th>
+                    </tr>
+                    <tr>
+                    {% if a[3] != None %}
+                    <td>
+                        <img src="{{ url_for('mostrar_imagen_art', articulo=a[0], empresa=empresa) }}" alt="El formato de imagen no pudo ser procesado" style="max-width: 500px; max-height: 500px; border-radius: 10px; background: None;">
+                    </td>
+                    {% endif %}
+                    <td style="text-align: left; vertical-align: top;"><li>{{ a[2] | replace("\n", "<li>") | safe }}</li></td>
+                    </tr>
+                </table>
+                <hr>
+                {% endfor %}
+                {% else %}
+                <table>
+                    <tr>
+                        <th style="background-color: gray;">El cliente no tiene artículos cargados</th>
+                    </tr>
+                </table>
+                {% endif %}
+            </div>
+            <div class="column" style="width: 20%; float: right; background: none; box-shadow: none;">
+                <form method="POST" name="formulario" action="/menu/registrarllamada">
+                <input type="hidden" value="{{ empresa }}" name="empresa">
+                <table style="width: 100%;">
+                    <tr>
+                        <th>Registro de llamada</th>
+                    </tr>
+                    <tr>
+                        <td>Nombre:<input type="text" style="width: 100%; text-transform: uppercase;" name="nombre" onkeypress="foco('telefono')" autofocus></td>
+                    </tr>
+                    <tr>
+                        <td>Telefono:<input type="number" style="width: 100%;" name="telefono" id="telefono" onkeypress="foco('email')"></td>
+                    </tr>
+                    <tr>
+                        <td>Email: <input type="email" style="width: 100%;" name="email" id="email" onkeypress="foco('motivo')"></td>
+                    </tr>
+                    <tr>
+                        <td>Motivo de la llamada:<textarea name="motivo" rows="5" style="width: 100%;" id="motivo" onkeypress="foco('motivo')"></textarea></td>
+                    </tr>
+                        {% for t in tareas%}
+                        <tr>
+                        <td><label for="{{ t[0] }}" style="display: inline-block; vertical-align: middle;"><input type="checkbox" name="check" onclick="onlyOne(this); seg('{{ t[0]}}')" id="{{ t[0] }}" style="vertical-align: middle; width: auto; position: relative; display: inline-block;">{{ t[1] }}</label></td>
+                        </tr> 
+                        {% endfor %}
+                    <tr>
+                        <td>
+                            <p><select name="select" id="select" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="document.getElementById('fecha_tarea').value = document.getElementById('select').value" disabled>
+                            {% for c in calendario %}
+                            <option value="{{ c[0] }}">{{ c[1] }}</option>
+                            {% endfor %}
+                            </select></p>
+                        </td>
+                        <input type="hidden" id="tarea" name="tarea" value=0>
+                        <input type="hidden" id="fecha_tarea" name="fecha_tarea" value=null>
+                    </tr>
+                    <tr>
+                        <th id="th_cot"></th>
+                        <table style="width: 100%;" id="tablacotizacion" name="tablacotizacion">
+                            <td><input type="hidden" value=0 id="cotizaciontotal" name="cotizaciontotal"></td>
+                            <td><textarea style="display: None" name="cotizacion" id="cotizacion" rows="10" style="text-transform: uppercase;"></textarea></td>
+                        </table>
+                    </tr>
+            
+                    </tr>
+                    <button type="submit" id="submit" style="display: none;"></button>
+                        <p><td><button id="botoncotizacion" type="button" onmouseover="copiarCotizacion()" onclick="registroListo('El registro fue guardado con éxito!'); document.getElementById('submit').click(); document.getElementById('cotizacion').value =''; document.getElementById('cotizaciontotal').value ='';" class="btn success" style="width: 100%; font-family: 'Rubik', sans-serif; padding: 10px; font-size: 16px;">Guardar registro</button></td></p>
+                    </tr>
+                </table>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+function agregarACotizacion(articulo,precio){
+    let n_row = document.getElementById('tablacotizacion').rows.length;
+    let fila = document.getElementById('tablacotizacion').insertRow(n_row);
+    fila.insertCell(0).innerHTML = articulo;
+    fila.insertCell(1).innerHTML = precio;
+    fila.id = articulo;
+    fila.style = "font-size: 16px;"
+    let boton = document.createElement("button");
+    boton.type = "button";
+    boton.classList = "btn danger";
+    boton.textContent = "-";
+    boton.style = "padding: 5px; font-size: 16px;";
+    boton.addEventListener('click', () => {document.getElementById(articulo).remove(); let valor = document.getElementById('cotizaciontotal').value = parseFloat(document.getElementById('cotizaciontotal').value)-parseFloat(precio); document.getElementById('th_cot').innerText = 'Cotización $'+valor;});
+    fila.appendChild(boton);
+    let valor = document.getElementById('cotizaciontotal').value = parseFloat(document.getElementById('cotizaciontotal').value)+parseFloat(precio);
+    //document.getElementById('botoncotizacion').textContent = 'Guardar registro ($ '+valor+')';
+    document.getElementById('th_cot').innerText = 'Cotización $'+valor;
+}
+
+function copiarCotizacion(){
+    let tabla = document.getElementById('tablacotizacion');
+    let filas = tabla.getElementsByTagName('tr');
+    let valores = '';
+
+    for (let i = 0; i <= filas.length; i++){
+        var celdas = filas[i].getElementsByTagName('td');
+
+        for (let j = 0; j < celdas.length; j++){
+            valores += celdas[j].innerText+' $';
+        }
+        valores += '\n';
+        document.getElementById('cotizacion').value = valores;
+    }
+}
+
+function mostrarPendientes(){
+    let pendiente = document.getElementById('pendiente');
+    if (pendiente.hidden == true){
+        pendiente.removeAttribute('hidden');
+        document.getElementById('btn-pendientes').textContent = 'Ver últimos pendientes «'
+    }else{
+        pendiente.setAttribute("hidden","hidden");
+        document.getElementById('btn-pendientes').textContent = 'Ver últimos pendientes »'
+    }
+}
+
+function seg(fecha){
+    seguimiento(fecha)
+}
+function seguimiento(fecha){
+    let checkbox = document.getElementById(fecha);
+      checkbox.addEventListener( "change", () => {
+         if ( checkbox.checked ) {
+            document.getElementById('tarea').value = fecha;
+            document.getElementById('fecha_tarea').value = document.getElementById('select').value;
+            document.getElementById('select').removeAttribute('disabled');
+         } else {
+            document.getElementById('tarea').value = 0;
+            document.getElementById('select').setAttribute("disabled","disabled");
+            document.getElementById('fecha_tarea').value = 'null';
+         }
+      });
+}
+
+function cambiarAgente(nuevo, fecha){
+        document.getElementById('agentenuevo').value = nuevo;
+        document.getElementById('eliminar').value = fecha;
+        document.formulario_a_listo.submit();
+}
+</script>
+{% endblock %}

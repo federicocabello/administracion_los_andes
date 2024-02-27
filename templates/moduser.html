@@ -1,0 +1,41 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Gestión de usuario
+{% endblock %}
+
+{% block body %}
+{% for i in tablas %}
+    <div id="main-content">
+        <h1>Gestión del usuario '{{ i[0] }}'</h1>
+        <main>
+            <form action="/usuarios/editarusuario" method="POST" name="form_mod_user">
+                <div class="row">
+                    <div class="column">
+                        <p><h4 style="text-decoration: underline;">FICHA DE '{{ i[2] }}'</h4></p>
+                        <p>Usuario: <input type="text" id="usuario" style="text-transform: lowercase;" value="{{ i[0] }}" disabled></p>
+                        <input type="hidden" name="usuario" value="{{ i[0] }}">
+                        <p>Contraseña: <input type="type" name="contrasena" style="color: orangered;" value="{{ i[1] }}" onkeypress="foco('nombre')" required autofocus></p>
+                        <p>Nombre y apellido: <input type="text" name="nombre" id="nombre" style="text-transform: uppercase;" value="{{ i[2] }}"></p>
+                        <p>Rol: <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" name="rol">
+                            {% if i[3] == 'admin' %}
+                            <option value="user">Usuario</option>
+                            <option value="admin" selected>Administrador</option>
+                            {% else %}
+                            <option value="user" selected>Usuario</option>
+                            <option value="admin">Administrador</option>
+                            {% endif %}
+                        </select></p>
+                        <p><button type="button" onclick="borrarRegistro('¿Está seguro que desea modificar este usuario?','Usuario actualizado con éxito!','submit_moduser')" class="ov-btn-grow-ellipse">Guardar</button></p>
+                    </div>
+                </div>
+            <button type="submit" id="submit_moduser" hidden></button>
+            </form>
+        </main>
+    </div>
+{% endfor %}
+{% endblock %}

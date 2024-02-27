@@ -1,0 +1,62 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Cotizaciones enviadas
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de cotizaciones enviadas.</h1>
+    <table style="border: 1px solid black; margin: 0 auto;" id="tabla_enviadas">
+        <tr>
+            <td><input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_empresa" onkeyup="filtro('filtro_empresa','tabla_enviadas',0,1)">
+            </td>
+            <td>
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_enviadas',1,1)">
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+                <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_enviadas',5,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="" style="color:gainsboro">Filtro por fecha...</option>
+                    <option value="-01-">Enero</option>
+                    <option value="-02-">Febrero</option>
+                    <option value="-03-">Marzo</option>
+                    <option value="-04-">Abril</option>
+                    <option value="-05-">Mayo</option>
+                    <option value="-06-">Junio</option>
+                    <option value="-07-">Julio</option>
+                    <option value="-08-">Agosto</option>
+                    <option value="-09-">Septiembre</option>
+                    <option value="-10-">Octubre</option>
+                    <option value="-11-">Noviembre</option>
+                    <option value="-12-">Diciembre</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <th>Empresa</th>
+            <th>Agente</th>
+            <th>Cliente</th>
+            <th>Cotización</th>
+            <th>Total</th>
+            <th>Fecha</th>
+        </tr>
+        {% for i in tablas %}
+        <tr>
+                <td style="text-align: center; color: #008080">{{ i[0] }}</td>
+                <td>{{ i[1] }}</td>
+                <td><button type="button" onclick="alert('Teléfono: {{ i[3] }}\nEmail: {{ i[4] }}\nMotivo de la llamada: {{i[5]}}')">{{ i[2] }}</button></td>
+                <td>{{ i[6] }}</td>
+                <td style="text-align: center;">${{ i[7] }}</td>
+                <td>Cotización enviada {{ i[8] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

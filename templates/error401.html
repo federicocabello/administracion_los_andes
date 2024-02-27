@@ -1,0 +1,29 @@
+{% extends 'error.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/error401-style.css')}}">
+{% endblock %}
+
+{% block titulo %}
+Error 401 | Acceso no autorizado
+{% endblock %}
+
+{% block body %}
+<body>
+<div id="clouds">
+  <div class="cloud x1"></div>
+  <div class="cloud x1_5"></div>
+  <div class="cloud x2"></div>
+  <div class="cloud x3"></div>
+  <div class="cloud x4"></div>
+  <div class="cloud x5"></div>
+</div>
+<div class='c'>
+  <div class='_404'>401</div>
+  <hr>
+  <div class='_1'>ERROR</div>
+  <div class='_2'>ACCESO NO AUTORIZADO</div>
+  <a class='btn' href="{{ url_for('logout') }}">REGRESAR AL INICIO</a>
+</div>
+</body>
+{% endblock %}
