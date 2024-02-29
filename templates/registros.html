@@ -41,12 +41,12 @@ Administración Los Andes | Registros
             <th colspan="2">Agente</th>
             <th>Cliente</th>
             <th>Motivo de llamada</th>
-            <th>Tarea</th>
+            <th colspan="4">Tarea</th>
         </tr>
         <form method="POST" name="formulario" action="/registros/editarregistro"><input type="hidden" name="redireccion">
         {% for i in tablas %}
         <tr style="color: white;">
-            {% if i[11] == "pendiente" %}
+            {% if i[12] == "pendiente" %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
                 <td style="border-radius: 5px; background-color: #ff9800;">{{ i[0] }}</td>
                 <td style="border-radius: 5px; background-color: #ff9800;">{{ i[1] }}</td>
@@ -64,19 +64,49 @@ Administración Los Andes | Registros
                 <td style="border-radius: 5px; background-color: #ff9800;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
                 <td style="border-radius: 5px; background-color: #ff9800;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
-                    <br>{{ i[5] }}
+                    <br>Nota: {{ i[5] }}
                     {% endif %}
                 </td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[9] }} el {{ i[10] }}</td>
+                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
                 {% else %}
                 <td style="border-radius: 5px; background-color: #ff9800;">No se le asignó ninguna tarea</td>
                 {% endif %}
+                <td>
+                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
+                        {% for t in tareas %}
+                        {% if i[9] == t[1] %}
+                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
+                        {% else %}
+                        <option value="{{t[0]}}">{{t[1]}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
+                    {% for c in calendario %}
+                    {% if i[10] == c[0] %}
+                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
+                    {% else %}
+                    <option value="{{ c[0] }}">{{c[1]}}</option>
+                    {% endif %}
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
+                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
+                        {% for hora in range(9,20) %}
+                        <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
-            {% elif i[11] == "listo" %}
+            {% elif i[12] == "listo" %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
                 <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[0] }}</td>
                 <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[1] }}</td>
@@ -94,19 +124,49 @@ Administración Los Andes | Registros
                 <td style="border-radius: 5px; background-color: #04AA6D;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
                 <td style="border-radius: 5px; background-color: #04AA6D;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
-                    <br>{{ i[5] }}
+                    <br>Nota: {{ i[5] }}
                     {% endif %}
                 </td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[9] }} el {{ i[10] }}</td>
+                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
                 {% else %}
                 <td style="border-radius: 5px; background-color: #04AA6D;">No se le asignó ninguna tarea</td>
                 {% endif %}
+                <td>
+                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
+                        {% for t in tareas %}
+                        {% if i[9] == t[1] %}
+                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
+                        {% else %}
+                        <option value="{{t[0]}}">{{t[1]}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
+                    {% for c in calendario %}
+                    {% if i[10] == c[0] %}
+                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
+                    {% else %}
+                    <option value="{{ c[0] }}">{{c[1]}}</option>
+                    {% endif %}
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
+                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
+                        {% for hora in range(9,20) %}
+                        <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
-            {% elif i[11] == "rechazado" %}
+            {% elif i[12] == "rechazado" %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
                 <td style="border-radius: 5px; color: #da190b;">{{ i[0] }}</td>
                 <td style="border-radius: 5px; color: #da190b;">{{ i[1] }}</td>
@@ -124,17 +184,49 @@ Administración Los Andes | Registros
                 <td style="border-radius: 5px; color: #da190b;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
                 <td style="border-radius: 5px; color: #da190b;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
-                    <br>{{ i[5] }}
+                    <br>Nota: {{ i[5] }}
                     {% endif %}
-                    {% if i[12] != '' %}
-                    <br><button style="width: 100%;" type="button" onclick="alert('{{ i[12] }}')">Razón del rechazo</button>
+                    {% if i[13] != '' %}
+                    <br>
+                    <!-- <button style="width: 100%;" type="button" onclick="alert('{{ i[13] }}')">Razón del rechazo</button> -->
+                    Razón del rechazo: {{i[13]}}
                     {% endif %}
                 </td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; color: #da190b;">{{ i[9] }} el {{ i[10] }}</td>
+                <td style="border-radius: 5px; color: #da190b;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
                 {% else %}
                 <td style="border-radius: 5px; color: #da190b;">No se le asignó ninguna tarea</td>
                 {% endif %}
+                <td>
+                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
+                        {% for t in tareas %}
+                        {% if i[9] == t[1] %}
+                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
+                        {% else %}
+                        <option value="{{t[0]}}">{{t[1]}}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
+                    {% for c in calendario %}
+                    {% if i[10] == c[0] %}
+                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
+                    {% else %}
+                    <option value="{{ c[0] }}">{{c[1]}}</option>
+                    {% endif %}
+                    {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
+                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
+                        {% for hora in range(9,20) %}
+                        <option value="{{hora}}:00 h" >{{ hora }}:00 h</option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
@@ -168,5 +260,13 @@ Administración Los Andes | Registros
         document.getElementById('eliminar').value = fecha;
         document.formulario.submit();
     }
+
+    function cambiarRegistro(columna, valornuevo, idfecha){
+    document.getElementById('accion').value = columna;
+    document.getElementById('agentenuevo').value = valornuevo;
+    document.getElementById('eliminar').value = idfecha;
+    document.formulario.action = '/registros/editarregistro/actualizar';
+    document.formulario.submit();
+}
 </script>
 {% endblock %}

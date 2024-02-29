@@ -34,8 +34,12 @@ Administración Los Andes | Inicio
         <td>{{ t[1] }}</td>
         <td>{{ t[2] }}</td>
         <td>{{ t[3] }}</td>
+        {% if t[4] != '' %}
         <td>{{ t[4] }}</td>
-        <td>{{ t[5] }}</td>
+        {% else %}
+        <td>No tiene ningún motivo cargado</td>
+        {% endif %}
+        <td>{{ t[5] }} a las {{ t[10 ]}}</td>
         <td><button type="button" onclick="cotizacionListo('{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn success">Listo</button></td>
         <td><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn primary">Enviar cotización</button></td>
         <td><textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea></td>
@@ -48,15 +52,17 @@ Administración Los Andes | Inicio
   </form>
   {% endif %}
   {% for i in tablas %} 
-  <div style="font-size: 26px; text-align: center; max-width: 200px;" class="btn_imagen">{{ i[0] }}
+  <button type="button" onclick="document.formulario.action='/menu'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="background: none; border: none; font-size: 26px; font-family: 'Rubik', sans-serif;;"><div style="font-size: 26px; text-align: center; max-width: 200px;" class="btn_imagen">{{ i[0] }}
     {% if i[1] != None %}
     <br>
     <img src="{{ url_for('mostrar_logo', cliente=i[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 50px; height: 50px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px;">
     {% endif %}
+    <!--
     <br>
     <button type="button" onclick="document.formulario.action='/menu/preguntasfrecuentes'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="font-size: 14px; background-color: #C39BD3; color: white; font-family: 'Rubik', sans-serif; border-radius: 5px;">Preguntas frecuentes</button>
     <button type="button" onclick="document.formulario.action='/menu'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="font-size: 14px; background-color: #85C1E9; color: white; font-family: 'Rubik', sans-serif; border-radius: 5px;">Registrar cotización</button>
-  </div>
+    -->
+  </div></button>
   {% endfor %}
   <a href="{{ url_for('altaCliente') }}"><div style="font-size: 26px;" class="button_slide_right slide_right">+ Nuevo</div></a>
   <form method="POST" name="formulario">

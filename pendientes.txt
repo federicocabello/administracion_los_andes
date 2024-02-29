@@ -13,6 +13,10 @@
 >revisar TAREAS null, agregar TAREA = id == 0
 >en PLANES, el PLAN == 0
 >a la hora de editar cliente, traer plan 
+>agregar a la tabla movimientos cuando un registro se pasa de agente
+>boton de editar speech
+>en MENU quitar barra azul inferior, cambiar en las tareas idtareas !=  0
+>ordenar tareas pendientes en dashboard por hora
 
 cambio base de datos:
 _campo rol a AUTH
@@ -28,5 +32,6 @@ DB_agregar columna en REGISTROS --> pregunta; respuesta tipo TEXT
 DB_crear tabla FACTURAS
 <<<FILTROS en PREGUNTAS
 <<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
-<agregar a la tabla movimientos cuando un registro se pasa de agente
-<boton de editar speech
+
+<actualizar calendario al entrar al dashboard y a registros
+<agregar campo direccion

@@ -48,15 +48,22 @@ function filtro(filtro, tabla, columna, cabeza) {
 }
 
 function foco2(id){
-  document.addEventListener("keypress", e => {
-    if(e.keyCode == 13) {
-      e.preventDefault();
-      document.getElementById(id).focus();
-    }})
+  if( event.keyCode == 13){
+    event.preventDefault();
+    document.getElementById(id).focus();
+  }
   }
 
 function foco(id){
   if( event.keyCode == 13){
     document.getElementById(id).focus();
+  }
+}
+
+function habilitarBoton(input, boton){
+  if (document.getElementById(input).value.length > 0 && document.getElementById(input).value != ' '){
+      document.getElementById(boton).removeAttribute('hidden')
+  }else{
+      document.getElementById(boton).setAttribute('hidden', 'hidden')
   }
 }
