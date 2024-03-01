@@ -8,7 +8,7 @@ Administración Los Andes | Inicio
 <div id="main-content">
   <h1>Bienvenido {{ current_user.fullname }} al sistema.</h1>
   <p><-- Recuerda nuestro dashboard para selecionar una opción en el menú lateral.</p>
-  {% if tareas == () %}
+  {% if pendiente == () %}
   <p> 
   <table style="text-align: center; margin: 0 auto;">
     <tr>
@@ -19,19 +19,31 @@ Administración Los Andes | Inicio
   {% else %}
   <p>
     <table style="box-shadow: none; background: none; margin: 0 auto;;">
-      <th style="background: grey; background: none; color: #008080; padding: 0;">Tareas pendientes para hoy {{ tareas[0][0] }}</th>
+      <th style="background: grey; background: none; color: #008080; padding: 0;">Tareas pendientes para hoy {{ pendiente[0][0] }}</th>
     </table>
     <table style="margin: 0 auto">
       <tr>
+        <td></td>
         <th>Empresa</th>
         <th>Nombre</th>
         <th>Teléfono</th>
-        <th>Motivo de la llamada</th>
-        <th>Tarea pendiente</th>
+        <th colspan="2">Notas de llamada</th>
+        <th colspan="4">Tarea pendiente</th>
       </tr>
-    {% for t in tareas %}
+    {% for t in pendiente %}
       <tr>
-        <td>{{ t[1] }}</td>
+        <td>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'agente',this.value)">
+            {% for agente in agentes %}
+            {% if agente [0] == current_user.fullname %}
+            <option value="{{ agente[0] }}" selected>{{ agente[0] }}</option>
+            {% else %}
+            <option value="{{ agente[0] }}">{{ agente[0] }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </td>
+        <td style="color: #008080; text-align: center;">{{ t[1] }}</td>
         <td>{{ t[2] }}</td>
         <td>{{ t[3] }}</td>
         {% if t[4] != '' %}
@@ -39,8 +51,40 @@ Administración Los Andes | Inicio
         {% else %}
         <td>No tiene ningún motivo cargado</td>
         {% endif %}
-        <td>{{ t[5] }} a las {{ t[10 ]}}</td>
+        <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="pedirDatos('{{t[9]}}', 'motivo', 'Nota nueva:')"></button></td>
+        <td>{{ t[5] }} 
+        {% if t[10] != '' %}
+         a las {{ t[10 ]}}
+        {% endif %}
+        </td>
+        <td>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'tarea',this.value)">
+            {% for tarea in tareas %}
+            {% if tarea[1] == t[5] %}
+            <option value="{{tarea[0]}}" selected>{{tarea[1]}}</option>
+            {% else %}
+            <option value="{{tarea[0]}}">{{tarea[1]}}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'fecha',this.value)">
+            {% for fecha in calendario %}
+            <option value="{{fecha[0] }}">{{ fecha[1]}}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'hora',this.value)">
+            <option value="" style="color: #008080;" selected>{{ t[10] }}</option>
+            {% for h in range (9,20) %}
+            <option value="{{h}}:00 h">{{h}}:00 h</option>
+            {% endfor %}
+          </select>
+        </td>
         <td><button type="button" onclick="cotizacionListo('{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn success">Listo</button></td>
+        <td><button type="button" style="margin: 0; padding: 5px; font-size: 16px;" class="btn danger" onclick="pedirDatos('{{ t[9] }}', 'rechazo', 'Razón del rechazo:')">No le interesó</button></td>
         <td><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn primary">Enviar cotización</button></td>
         <td><textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea></td>
       </tr>
@@ -68,5 +112,34 @@ Administración Los Andes | Inicio
   <form method="POST" name="formulario">
     <input type="hidden" name="menuempresa" id="menuempresa">
   </form>
+  <form method="POST" name="formulario_actualizacion">
+    <input type="hidden" id="accion" name="accion">
+    <input type="hidden" id="eliminar" name="eliminar">
+    <input type="hidden" id="agentenuevo" name="agentenuevo">
+    <input type="hidden" name="redireccion" value="dashboard">
+  </form>
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+function pedirDatos(id, accion, descripcion){
+    document.getElementById('accion').value = accion;
+    document.getElementById('eliminar').value = id;
+    let respuesta = prompt(descripcion);
+        if (respuesta != null){
+            document.getElementById('agentenuevo').value = respuesta;
+            document.formulario_actualizacion.action = '/registros/editarregistro/actualizar';
+            document.formulario_actualizacion.submit();
+        }
+}
+
+function actualizarRegistro(id, accion, nuevo){
+  document.getElementById('accion').value = accion;
+  document.getElementById('eliminar').value = id;
+  document.getElementById('agentenuevo').value = nuevo;
+  document.formulario_actualizacion.action = '/registros/editarregistro/actualizar';
+  document.formulario_actualizacion.submit();
+}
+</script>
 {% endblock %}

@@ -12,15 +12,15 @@ Administración Los Andes | {{ empresa }}
 <div id="main-content" style="padding-top: 0; margin-top: 0;">
     <div style="text-align: center; color: #008080;"><h1>{{ empresa }}</h1></div>
     {% if pendientes != () %}
-    <p><nav style="text-align: center;"><button type="button" id="btn-pendientes" onclick="mostrarPendientes()" class="btn secondary" style="font-size: 14px;">Ver últimos pendientes »</button></nav></p>
+    <p><nav style="text-align: center;"><button type="button" id="btn-pendientes" onclick="mostrarPendientes()" class="btn secondary" style="font-size: 14px;">Ver últimos 5 pendientes »</button></nav></p>
     <form method="POST" name="formulario_a_listo" action="/registros/editarregistro"><input type="hidden" name="eliminar" id="eliminar"><input type="hidden" name="accion" id="accion" value="a_listo"><input type="hidden" name="redireccion" value="menu"><input type="hidden" name="nota" value=null><input type="hidden" id="agentenuevo" name="agentenuevo" value="null"><input type="hidden" name="menu_empresa" value="{{empresa}}" style="text-transform: uppercase;">
     <p>
-        <table id="pendiente" style="width: 60%; font-size: 14px; padding: 0; box-shadow: none; margin: 0px auto; border: none;" hidden>
+        <table id="pendiente" style="width: 100%; font-size: 14px; padding: 0; box-shadow: none; margin: 0px auto; border: none;" hidden>
             <tr>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
+                <th colspan="2" style="padding-top: 3px; padding-bottom: 3px;">Notas de llamada</th>
                 <th colspan="4" style="padding-top: 3px; padding-bottom: 3px;">Tarea pendiente</th>
                 <td></td>
             </tr>
@@ -44,9 +44,13 @@ Administración Los Andes | {{ empresa }}
             {% else %}
             <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">No tiene un motivo de llamada cargado</td>
             {% endif %}
+            <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="editarMotivo('{{ p[5] }}', 'motivo', 'Nota nueva:')"></button></td>
             <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">
                 {% if p[3] != '' %}
-                {{ p[3] }} el día {{ p[4] }} a las {{ p[7]}}
+                {{ p[3] }} el día {{ p[4] }}
+                {% if p[7] != ''%}
+                a las {{ p[7]}}
+                {% endif %}
                 {% else %}
                 No tiene ninguna tarea asignada
                 {% endif %}</td>
@@ -81,7 +85,8 @@ Administración Los Andes | {{ empresa }}
                 </select>
             </td>
             <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">Llamada el {{ p[5] }}</td>
-            <td><button type="submit" onclick="document.getElementById('eliminar').value = '{{ p[5] }}'; registroListo('El registro fue guardado como Listo! con éxito.'); document.getElementById('{{ p[5] }}').style = 'display: None;'" style="float: left; font-size: 14px; padding: 3px; border: 1px solid;" class="btn success">Listo</button></td>
+            <td style="text-align: center; margin: 0;"><button type="submit" onclick="document.getElementById('eliminar').value = '{{ p[5] }}'; registroListo('El registro fue guardado como Listo! con éxito.'); document.getElementById('{{ p[5] }}').style = 'display: None;'" style="font-size: 14px; padding: 3px; border: 1px solid;" class="btn success">Listo</button></td>
+            <td style="text-align: center; margin: 0;"><button type="submit" style="font-size: 14px; padding: 3px; border: 1px solid; margin: 0;" class="btn danger" onclick="editarMotivo('{{ p[5 ]}}', 'rechazo', 'Razón del rechazo:')">Rechazado</button></td>
         </tr>
     {% endfor %}
     {% endif %}
@@ -151,10 +156,10 @@ Administración Los Andes | {{ empresa }}
                         <td>Telefono:<input type="text" style="width: 100%;" name="telefono" id="telefono" onkeypress="foco2('email')"></td>
                     </tr>
                     <tr>
-                        <td>Email: <input type="email" style="width: 100%;" name="email" id="email" onkeypress="foco2('motivo')"></td>
+                        <td>Email: <input type="email" style="width: 100%; text-transform: lowercase;" name="email" id="email" onkeypress="foco2('motivo')"></td>
                     </tr>
                     <tr>
-                        <td>Notas de la llamada:<textarea name="motivo" rows="7" style="width: 100%;" id="motivo"></textarea></td>
+                        <td>Notas de la llamada:<textarea name="motivo" rows="8" style="width: 100%; text-transform: uppercase;" id="motivo"></textarea></td>
                     </tr>
                     {% if preguntas != () %}
                     <tr>
@@ -272,10 +277,10 @@ function mostrarPendientes(){
     let pendiente = document.getElementById('pendiente');
     if (pendiente.hidden == true){
         pendiente.removeAttribute('hidden');
-        document.getElementById('btn-pendientes').textContent = 'Ver últimos pendientes «'
+        document.getElementById('btn-pendientes').textContent = 'Ver últimos 5 pendientes «'
     }else{
         pendiente.setAttribute("hidden","hidden");
-        document.getElementById('btn-pendientes').textContent = 'Ver últimos pendientes »'
+        document.getElementById('btn-pendientes').textContent = 'Ver últimos 5 pendientes »'
     }
 }
 
@@ -320,6 +325,17 @@ function cambiarRegistro(columna, valornuevo, idfecha){
     document.getElementById('eliminar').value = idfecha;
     document.formulario_a_listo.action = '/registros/editarregistro/actualizar';
     document.formulario_a_listo.submit();
+}
+
+function editarMotivo(idreg, accion, desc_prompt){
+    document.getElementById("eliminar").value = idreg;
+    document.getElementById("accion").value = accion;
+    let respuesta = prompt(desc_prompt);
+    if (respuesta != null){
+        document.getElementById('agentenuevo').value = respuesta;
+        document.formulario_a_listo.action = '/registros/editarregistro/actualizar';
+        document.formulario_a_listo.submit();
+    }
 }
 </script>
 {% endblock %}

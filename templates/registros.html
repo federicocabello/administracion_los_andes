@@ -11,7 +11,7 @@ Administración Los Andes | Registros
 
 {% block body %}
 <div id="main-content">
-    <h1>Panel de registros de cotizaciones.</h1>
+    <h1>Panel de registros.</h1>
     <table style="border: 1px solid black; margin:0 auto;" id="tabla_registros">
         <tr>
             <td><input style="font-size: 14px; background: none; width: 100%; border: none; margin: 0;" id="filtro_empresa" onkeyup="filtro('filtro_empresa','tabla_registros',0,1)" type="text" placeholder="Filtro de empresa..."></td>
@@ -40,7 +40,7 @@ Administración Los Andes | Registros
             <th>Empresa</th>
             <th colspan="2">Agente</th>
             <th>Cliente</th>
-            <th>Motivo de llamada</th>
+            <th colspan="2">Notas de llamada</th>
             <th colspan="4">Tarea</th>
         </tr>
         <form method="POST" name="formulario" action="/registros/editarregistro"><input type="hidden" name="redireccion">
@@ -67,8 +67,13 @@ Administración Los Andes | Registros
                     <br>Nota: {{ i[5] }}
                     {% endif %}
                 </td>
+                <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
+                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[9] }} el {{ i[10] }}
+                    {% if i[11] != '' %} 
+                    a las {{ i[11] }}
+                    {% endif %}
+                </td>
                 {% else %}
                 <td style="border-radius: 5px; background-color: #ff9800;">No se le asignó ninguna tarea</td>
                 {% endif %}
@@ -127,8 +132,13 @@ Administración Los Andes | Registros
                     <br>Nota: {{ i[5] }}
                     {% endif %}
                 </td>
+                <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
+                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[9] }} el {{ i[10] }}
+                    {% if i[11] != '' %} 
+                    a las {{ i[11] }}
+                    {% endif %}
+                </td>
                 {% else %}
                 <td style="border-radius: 5px; background-color: #04AA6D;">No se le asignó ninguna tarea</td>
                 {% endif %}
@@ -192,8 +202,13 @@ Administración Los Andes | Registros
                     Razón del rechazo: {{i[13]}}
                     {% endif %}
                 </td>
+                <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; color: #da190b;">{{ i[9] }} el {{ i[10] }} a las {{ i[11] }}</td>
+                <td style="border-radius: 5px; color: #da190b;">{{ i[9] }} el {{ i[10] }}
+                    {% if i[11] != '' %} 
+                    a las {{ i[11] }}
+                    {% endif %}
+                </td>
                 {% else %}
                 <td style="border-radius: 5px; color: #da190b;">No se le asignó ninguna tarea</td>
                 {% endif %}
@@ -267,6 +282,17 @@ Administración Los Andes | Registros
     document.getElementById('eliminar').value = idfecha;
     document.formulario.action = '/registros/editarregistro/actualizar';
     document.formulario.submit();
+}
+
+function motivo(id){
+    document.getElementById('accion').value = 'motivo';
+    document.getElementById('eliminar').value = id;
+    let respuesta = prompt("Nota nueva:");
+        if (respuesta != null){
+            document.getElementById('agentenuevo').value = respuesta;
+            document.formulario.action = '/registros/editarregistro/actualizar';
+            document.formulario.submit();
+        }
 }
 </script>
 {% endblock %}

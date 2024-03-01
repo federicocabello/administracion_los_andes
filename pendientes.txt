@@ -17,6 +17,7 @@
 >boton de editar speech
 >en MENU quitar barra azul inferior, cambiar en las tareas idtareas !=  0
 >ordenar tareas pendientes en dashboard por hora
+>actualizar calendario al entrar al dashboard y a registros
 
 cambio base de datos:
 _campo rol a AUTH
@@ -33,5 +34,7 @@ DB_crear tabla FACTURAS
 <<<FILTROS en PREGUNTAS
 <<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
 
-<actualizar calendario al entrar al dashboard y a registros
 <agregar campo direccion
+<filtro para "estados" en REGISTROS
+<filtro por "TAREA"
+<ver hace un CRM con numero de telefono como id; ver como python convertirá el numero en solonumeros

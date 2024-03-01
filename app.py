@@ -553,8 +553,14 @@ def dashboard():
     tablas =  cursor.fetchall()
     #tablas = [elemento[0].upper().replace('_',' ') for elemento in tablas]
     cursor.execute(f"SELECT current_date, empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha , hora_tarea, cast(hora_tarea as unsigned) as hora from registros join tareas on tareas.idtarea = registros.tarea WHERE agente = '{current_user.fullname}' and fecha_tarea = current_date() and estado='pendiente' and tareas.tarea != '' order by hora;")
+    pendiente = cursor.fetchall()
+    cursor.execute("SELECT fullname from auth order by fullname")
+    agentes = cursor.fetchall()
+    cursor.execute("SELECT * from tareas")
     tareas = cursor.fetchall()
-    return render_template('dashboard.html', tablas=tablas, tareas=tareas)
+    cursor.execute("select * from calendario")
+    calendario = cursor.fetchall()
+    return render_template('dashboard.html', tablas=tablas, tareas=tareas, agentes=agentes, pendiente=pendiente, calendario=calendario)
 
 @app.route('/usuarios')
 @login_required
@@ -720,19 +726,28 @@ def actualizarRegistro():
     if request.method == 'POST':
         cursor = db.connection.cursor()
         accion = request.form['accion']
-        reg_act = request.form['agentenuevo']
+        reg_act = request.form['agentenuevo'].strip().upper()
         idfecha = request.form['eliminar']
+        if accion == 'agente':
+            cursor.execute(f"UPDATE registros SET agente ='{reg_act}' where fecha = '{idfecha}'")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} envió el registro N° ´{idfecha}´ a {reg_act}', date_add(now(), interval -6 hour))")
         if accion == 'tarea':
             cursor.execute(f"UPDATE registros SET tarea = {reg_act} WHERE fecha = '{idfecha}';")
         if accion == 'fecha':
             cursor.execute(f"UPDATE registros SET fecha_tarea = '{reg_act}' WHERE fecha = '{idfecha}';")
         if accion == 'hora':
-            cursor.execute(f"UPDATE registros SET hora_tarea = '{reg_act}' WHERE fecha = '{idfecha}';")
+            cursor.execute(f"UPDATE registros SET hora_tarea = '{reg_act.lower()}' WHERE fecha = '{idfecha}';")
+        if accion == 'motivo':
+            cursor.execute(f"UPDATE registros SET motivo = '{reg_act}' where fecha = '{idfecha}';")
+        if accion == 'rechazo':
+            cursor.execute(f"UPDATE registros SET estado = 'rechazado', nota_rechazo = '{reg_act}' where fecha = '{idfecha}' and pregunta is null;")
         db.connection.commit()
         cursor.close()
         if request.form['redireccion'] == 'menu':
             menu_empresa = request.form['menu_empresa'].upper().replace(' ','_')
             return refrescarMenu(menu_empresa)
+        if request.form['redireccion'] == 'dashboard':
+            return redirect(url_for('dashboard'))
     return redirect(url_for('registros'))
 
 @app.route('/cotizacion', methods=['GET', 'POST'])
@@ -914,5 +929,5 @@ if __name__ == '__main__':
     app.config.from_object(config['development'])
     app.register_error_handler(401, pagina_no_autorizada)
     app.register_error_handler(404, pagina_no_encontrada)
-    app.run(debug=True, port=5001)
-    #app.run(debug=False, port=30358, host='admin.losandestx.com')
+    #app.run(debug=True, port=5001)
+    app.run(debug=False, port=30358, host='admin.losandestx.com')
