@@ -25,6 +25,10 @@ function btnCliente(telefono, email, cotizacion, total){
   alert("Teléfono: "+telefono+"\nEmail: "+email+"\nCotización: "+cotizacion+"\nCotización total: $"+total)
 }
 
+function btnCotizacion (cotizacion, total){
+  alert("Cotización: "+cotizacion+"\nCotización total: $"+total)
+}
+
 function filtro(filtro, tabla, columna, cabeza) {
   // Declare variables
   var input, filter, table, tr, td, i, txtValue;

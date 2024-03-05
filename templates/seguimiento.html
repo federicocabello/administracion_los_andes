@@ -1,0 +1,72 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Seguimiento {{registros[0][1]}}
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de seguimiento de {{registros[0][1]}}.</h1>
+    <h2>
+        {% if registros[0][11] == 'listo' %}
+        <div style="vertical-align: middle; color: #04AA6D"><img src="{{ url_for('static', filename='img/user-check-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Listo</div>
+        {% elif registros[0][11] == 'pendiente' %}
+        <div style="vertical-align: middle; color: #ff9800"><img src="{{ url_for('static', filename='img/user-clock-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Pendiente</div>
+        <h3>
+            <div style="vertical-align: middle; color: #ff9800">
+                {% if registros[0][8] != '' %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
+                {% else %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
+                {% endif %}
+                <br>
+                {% if registros[0][9] != '' %}
+                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
+                {% endif %}
+                {% if registros[0][10] != '' %}
+                <br>
+                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
+                {% endif %}
+            </div>
+        </h3>
+        {% elif registros[0][11] == 'rechazado' %}
+        <div style="vertical-align: middle; color: #da190b;"><img src="{{ url_for('static', filename='img/user-xmark-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> No está interesado</div>
+        {% if registros[0][12] != '' %}
+        <h3>Razón: {{registros[0][12]}}</h3>
+        {% endif %}
+        {% endif %}
+    </h2>
+    <h3>
+        {% if registros[0][4] != '' %}
+        <p><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][4]}}</p>
+        {% endif %}
+        <p><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][2]}}
+        {% if registros[0][3] != '' %}
+        <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][3]}}</p>
+        {% endif %}
+        {% if registros[0][6] != 0 %}
+        <p><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Tiene una cotiazación cargada: {{registros[0][5]}}
+        <br>Total: ${{registros[0][6]}}</p>
+        {% endif %}
+    </h3>
+    <table style="margin: 0 auto;">
+        <tr>
+            <th style="color: black; background-color: #85C1E9; vertical-align: middle; font-size: 24px;" colspan="2"><img src="{{ url_for('static', filename='img/route-solid.svg') }}" width="30" height="30" style="vertical-align: middle;"> Seguimiento</th>
+        </tr>
+        {% for i in movimientos %}
+        <tr>
+            <td style="vertical-align: middle;">
+                <img src="{{ url_for('static', filename='img/turn-up-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{i[0]}}
+            </td>
+            <td style="vertical-align: middle;">
+                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{i[1]}}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

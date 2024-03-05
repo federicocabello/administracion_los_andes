@@ -14,12 +14,32 @@ Administración Los Andes | Registros
     <h1>Panel de registros.</h1>
     <table style="border: 1px solid black; margin:0 auto;" id="tabla_registros">
         <tr>
-            <td><input style="font-size: 14px; background: none; width: 100%; border: none; margin: 0;" id="filtro_empresa" onkeyup="filtro('filtro_empresa','tabla_registros',0,1)" type="text" placeholder="Filtro de empresa..."></td>
-            <td><input style="font-size: 14px; background: none; width: 100%; border: none; margin: 0;" id="filtro_agente" onkeyup="filtro('filtro_agente','tabla_registros',1,1)" type="text" placeholder="Filtro de agente..."></td>
-            <td></td>
-            <td></td>
             <td>
-                <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_registros',3,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+            <select id="filtro_empresa" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_empresa', 'tabla_registros', 0, 1)">
+                <option value="" style="color:gainsboro">Filtro por empresa...</option>
+                {% for emp in empresas %}
+                <option value="{{emp[0]}}">{{emp[0]}}</option>
+                {% endfor %}
+            </select>
+            </td>
+            <td colspan="2">            
+            <select id="filtro_agentes" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_agentes', 'tabla_registros', 1, 1)">
+                <option value="" style="color:gainsboro">Filtro por agente...</option>
+                {% for agt in agentes %}
+                <option value="{{agt[0]}}">{{agt[0]}}</option>
+                {% endfor %}
+            </select>
+            </td>
+            <td colspan="3">
+                <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
+                    <option value="" style="color:gainsboro">Filtro por cliente...</option>
+                    {% for cli in clientes %}
+                    <option value="{{ cli[0] }}.">{{ cli[0] }}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_registros',6,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
                     <option value="" style="color:gainsboro">Filtro por fecha...</option>
                     <option value="-01-">Enero</option>
                     <option value="-02-">Febrero</option>
@@ -35,11 +55,35 @@ Administración Los Andes | Registros
                     <option value="-12-">Diciembre</option>
                 </select>
             </td>
+            <td></td>
+            <td>
+                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',8,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="" style="color: gainsboro;">Filtro por tarea...</option>
+                    {% for tar in tareas %}
+                    {% if tar[0] == 0 %}
+                    <option value="No se le asignó ninguna tarea">Sin tarea</option>
+                    {% else %}
+                    <option value="{{ tar[1] }}">{{ tar[1] }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td colspan="3">
+            <select id="filtro_estado" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_estado', 'tabla_registros', 15,1)">
+                <option value="" style="color: gainsboro">Filtrar por estado...</option>
+                <option value="listo" class="btn success">Listo</option>
+                <option value="pendiente" class="btn warning">Pendiente</option>
+                <option value="rechazado" class="btn danger">Rechazado</option>
+            </select>
+            </td>
         </tr>
         <tr>
             <th>Empresa</th>
             <th colspan="2">Agente</th>
-            <th>Cliente</th>
+            <th colspan="3">Cliente</th>
             <th colspan="2">Notas de llamada</th>
             <th colspan="4">Tarea</th>
         </tr>
@@ -61,7 +105,21 @@ Administración Los Andes | Registros
                         {% endfor %}
                     </select>
                 </td>
-                <td style="border-radius: 5px; background-color: #ff9800;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
+                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[2] }}.
+                {% if i[3] != '' %}
+                    <br>Teléfono: {{ i[3] }}.
+                {% endif %}
+                </td>
+                <td>
+                    {% if i[3] != '' %}
+                    <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if i[7] != 0 %}
+                    <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
+                    {% endif %}
+                </td>
                 <td style="border-radius: 5px; background-color: #ff9800;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
                     <br>Nota: {{ i[5] }}
@@ -111,6 +169,7 @@ Administración Los Andes | Registros
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
+                <td style="display: none;">{{i[12]}}</td>
             {% elif i[12] == "listo" %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
                 <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[0] }}</td>
@@ -126,7 +185,21 @@ Administración Los Andes | Registros
                         {% endfor %}
                     </select>
                 </td>
-                <td style="border-radius: 5px; background-color: #04AA6D;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
+                <td style="border-radius: 5px; background-color: #04aa6d;">{{ i[2] }}.
+                    {% if i[3] != '' %}
+                        <br>Teléfono: {{ i[3] }}.
+                    {% endif %}
+                    </td>
+                    <td>
+                        {% if i[3] != '' %}
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action = '/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if i[7] != 0 %}
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
+                        {% endif %}
+                    </td>
                 <td style="border-radius: 5px; background-color: #04AA6D;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
                     <br>Nota: {{ i[5] }}
@@ -176,6 +249,7 @@ Administración Los Andes | Registros
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
+                <td style="display: none;">{{ i[12] }}</td>
             {% elif i[12] == "rechazado" %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
                 <td style="border-radius: 5px; color: #da190b;">{{ i[0] }}</td>
@@ -191,7 +265,21 @@ Administración Los Andes | Registros
                         {% endfor %}
                     </select>
                 </td>
-                <td style="border-radius: 5px; color: #da190b;"><button type="button" onclick="btnCliente('{{ i[3] }}','{{ i[4] }}',document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')">{{ i[2] }}</button></td>
+                <td style="border-radius: 5px; color: #da190b;">{{ i[2] }}.
+                    {% if i[3] != '' %}
+                        <br>Teléfono: {{ i[3] }}.
+                    {% endif %}
+                    </td>
+                    <td>
+                        {% if i[3] != '' %}
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action = '/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if i[7] != 0 %}
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
+                        {% endif %}
+                    </td>
                 <td style="border-radius: 5px; color: #da190b;">Llamada el {{i[8]}}
                     {% if i[5] != '' %}
                     <br>Nota: {{ i[5] }}
@@ -246,6 +334,7 @@ Administración Los Andes | Registros
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
                 <button id="btn{{ i[8] }}" type="submit" hidden></button>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
+                <td style="display: none;">{{i[12]}}</td>
             {% endif %}
         </tr>
         {% endfor %}
@@ -253,6 +342,7 @@ Administración Los Andes | Registros
         <input type="hidden" id="accion" name="accion">
         <input type="hidden" id="nota" name="nota" value="null">
         <input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
+        <input type="hidden" id="telefono_seg" name="telefono_seg" value="">
         </form>
     </table>
 </div>

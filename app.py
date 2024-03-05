@@ -29,6 +29,25 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/seguimiento/<telefono>')
+@login_required
+def seguimiento(telefono):
+    telefono = telefono.replace('.','')
+    cursor = db.connection.cursor()
+    cursor.execute(f'select empresa, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo from registros join tareas on tareas.idtarea = registros.tarea where telefono = "{telefono}" and pregunta is null group by nombre order by fecha asc limit 1;')
+    registros = cursor.fetchall()
+    cursor.execute(f'select mov, date_mov from movimientos where mov like "%{registros[0][1]}%" order by date_mov desc;')
+    movimientos = cursor.fetchall()
+    return render_template('seguimiento.html', registros=registros, movimientos=movimientos)
+    return Response(status=204)
+
+@app.route('/seguimiento', methods=['GET', 'POST'])
+@login_required
+def pre_seguimiento():
+    if request.method == 'POST':
+        telefono = request.form['telefono_seg']
+        return seguimiento(telefono)
+
 @app.route('/menu/<empresa>', methods=['GET', 'POST'])
 @login_required
 def refrescarMenu(empresa):
@@ -318,7 +337,11 @@ def editarCliente():
         empresa = request.form['empresa'].upper().strip()
         nombre = request.form['persona'].upper()
         direccion = request.form['direccion'].upper()
-        telefono = request.form['telefono']
+        telefono_sn = request.form['telefono']
+        telefono = ''
+        for n in telefono_sn:
+            if n.isdigit():
+                telefono = telefono+n
         email = request.form['email'].lower()
         vende = request.form['vende'].upper()
         plan = request.form['plan']
@@ -413,7 +436,11 @@ def altaCliente():
         logos_data = [logo_file.read() if logo_file else None for logo_file in logos_file]
         persona = request.form['persona'].upper()
         direccion = request.form['direccion'].upper()
-        telefono = request.form['telefono']
+        telefono_sn = request.form['telefono']
+        telefono = ''
+        for n in telefono_sn:
+            if n.isdigit():
+                telefono = telefono+n
         email = request.form['email'].lower()
         vende = request.form['vende'].upper()
         plan = request.form['plan']
@@ -605,7 +632,11 @@ def registros():
     calendario = cursor.fetchall()
     cursor.execute("select * from tareas")
     tareas = cursor.fetchall()
-    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, calendario=calendario)
+    cursor.execute("select nombre, telefono from registros where telefono is not null group by telefono order by nombre asc")
+    clientes = cursor.fetchall()
+    cursor.execute("SELECT empresa from clientes order by empresa asc;")
+    empresas = cursor.fetchall()
+    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, calendario=calendario, clientes=clientes, empresas=empresas)
 
 @app.route('/preguntas')
 @login_required
@@ -631,12 +662,16 @@ def clientes():
 def registrarLlamada():
     if request.method == 'POST':
         empresa = request.form['empresa'].upper()
-        nombre = request.form['nombre'].upper()
-        telefono = request.form['telefono'].strip().replace('-','')
-        motivo = request.form['motivo']
+        nombre = request.form['nombre'].upper().strip()
+        telefono_sn = request.form['telefono']
+        telefono = ''
+        for n in telefono_sn:
+            if n.isdigit():
+                telefono = telefono+n
+        motivo = request.form['motivo'].upper().strip()
         email = request.form['email'].lower()
         cotizacion = request.form['cotizacion'].upper().replace(' | $','')
-        if cotizacion == ' $ $':
+        if cotizacion == ' $ $\n':
             cotizacion = ''
         cotizaciontotal = request.form['cotizaciontotal']
         estado = request.form['estado']
@@ -653,6 +688,7 @@ def registrarLlamada():
                     if respuesta != '':
                         pregunta = request.form[f'pregunta{i}.0']
                         cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, email, motivo, fecha, tarea, fecha_tarea, hora_tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, '{calendario}', '{hora}', 'cotizar', '{pregunta}', '{respuesta}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre}, quedó como {estado.upper()} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. Se le asignó una tarea para el día {calendario}', date_add(now(), interval -6 hour))")
         else:
             cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -6 hour), {tarea}, '{estado}');")
             num_preguntas = request.form['comprobarSiHayPreguntas']
@@ -662,7 +698,7 @@ def registrarLlamada():
                     if respuesta != '':
                         pregunta = request.form[f'pregunta{i}.0']
                         cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, email, motivo, fecha, tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, 'cotizar', '{pregunta}', '{respuesta}')")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre} por {motivo.upper()} del cliente {empresa.replace('_', ' ')}', date_add(now(), interval -6 hour))")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre}, quedó como {estado.upper()} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. No se le asignó fecha para realizar una tarea', date_add(now(), interval -6 hour))")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('dashboard'))
@@ -701,19 +737,23 @@ def editarRegistro():
         cursor = db.connection.cursor()
         agentenuevo = request.form['agentenuevo']
         registro = request.form['eliminar']
+        cursor.execute(f"SELECT nombre, estado from registros where fecha = '{registro}' and pregunta is null")
+        estadoanterior = cursor.fetchone()
         if agentenuevo == 'null':
             accion = request.form['accion']
             nota = request.form['nota'].upper().strip()
             if accion == "eliminar":
-                sql = f"UPDATE registros SET estado = 'rechazado', nota_rechazo = '{nota}' where fecha = '{registro}' and pregunta is null;"
+                cursor.execute(f"UPDATE registros SET estado = 'rechazado', nota_rechazo = '{nota}' where fecha = '{registro}' and pregunta is null;")
+                cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} cambió el registro N°´{registro}´ de {estadoanterior[0]}, se modificó de {estadoanterior[1].upper()} a RECHAZADO: {nota}', date_add(now(), interval -6 hour))")
             if accion == "a_listo":
-                sql = f"UPDATE registros SET estado='listo' where fecha = '{registro}' and pregunta is null;"
+                cursor.execute(f"UPDATE registros SET estado='listo' where fecha = '{registro}' and pregunta is null;")
+                cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} cambió el registro N°´{registro}´ de {estadoanterior[0]}, se modificó de {estadoanterior[1].upper()} a LISTO', date_add(now(), interval -6 hour))")
             if accion == "a_pendiente":
-                sql = f"UPDATE registros SET estado='pendiente' WHERE fecha = '{registro}' and pregunta is null;"
-            cursor.execute(sql)
+                cursor.execute(f"UPDATE registros SET estado='pendiente' WHERE fecha = '{registro}' and pregunta is null;")
+                cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} cambió el registro N°´{registro}´ de {estadoanterior[0]}, se modificó de {estadoanterior[1].upper()} a PENDIENTE', date_add(now(), interval -6 hour))")
         else:
             cursor.execute(f"UPDATE registros SET agente = '{agentenuevo}' where fecha = '{registro}'")
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} envió el registro N° ´{registro}´ a {agentenuevo}', date_add(now(), interval -6 hour))")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} envió el registro N° ´{registro}´ de {estadoanterior[0]} a {agentenuevo}', date_add(now(), interval -6 hour))")
         db.connection.commit()
         cursor.close()
         if request.form['redireccion'] == 'menu':
@@ -728,19 +768,37 @@ def actualizarRegistro():
         accion = request.form['accion']
         reg_act = request.form['agentenuevo'].strip().upper()
         idfecha = request.form['eliminar']
+        cursor.execute(f"SELECT nombre, estado, tareas.tarea, fecha_tarea, hora_tarea, motivo, nota_rechazo from registros join tareas on registros.tarea = tareas.idtarea where fecha = '{idfecha}' and pregunta is null")
+        estadoanterior = cursor.fetchone()
         if accion == 'agente':
             cursor.execute(f"UPDATE registros SET agente ='{reg_act}' where fecha = '{idfecha}'")
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} envió el registro N° ´{idfecha}´ a {reg_act}', date_add(now(), interval -6 hour))")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} envió el registro N° ´{idfecha}´ de {estadoanterior[0]} a {reg_act}', date_add(now(), interval -6 hour))")
         if accion == 'tarea':
             cursor.execute(f"UPDATE registros SET tarea = {reg_act} WHERE fecha = '{idfecha}';")
+            cursor.execute(f"select tarea from tareas where idtarea = {reg_act}")
+            tareavieja = cursor.fetchone()
+            no = 'NO SE LE ASIGNÓ NINGUNA TAREA'
+            if tareavieja[0] == '':
+                tareaold = no
+            else:
+                tareaold = tareavieja[0]
+            if estadoanterior[2] == '':
+                estadoold = no
+            else:
+                estadoold = estadoanterior[2]
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} cambió la tarea del registro N° ´{idfecha}´ de {estadoanterior[0]}, pasó de {estadoold.upper()} a {tareaold.upper()}', date_add(now(), interval -6 hour))")
         if accion == 'fecha':
             cursor.execute(f"UPDATE registros SET fecha_tarea = '{reg_act}' WHERE fecha = '{idfecha}';")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} actualizó la fecha de la tarea del registro N° ´{idfecha}´ de {estadoanterior[0]}, pasó del {estadoanterior[3]} para el {reg_act}', date_add(now(), interval -6 hour))")
         if accion == 'hora':
             cursor.execute(f"UPDATE registros SET hora_tarea = '{reg_act.lower()}' WHERE fecha = '{idfecha}';")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} actualizó la hora de la tarea del registro N° ´{idfecha}´ de {estadoanterior[0]}, pasó de las {estadoanterior[4]} para las {reg_act}', date_add(now(), interval -6 hour))")
         if accion == 'motivo':
             cursor.execute(f"UPDATE registros SET motivo = '{reg_act}' where fecha = '{idfecha}';")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} cambió la nota del registro N° ´{idfecha}´ de {estadoanterior[0]}, pasó de {estadoanterior[5]} a {reg_act}', date_add(now(), interval -6 hour))")
         if accion == 'rechazo':
             cursor.execute(f"UPDATE registros SET estado = 'rechazado', nota_rechazo = '{reg_act}' where fecha = '{idfecha}' and pregunta is null;")
+            cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} cambió el registro N°´{idfecha}´ de {estadoanterior[0]}, se modificó de {estadoanterior[1].upper()} a RECHAZADO: {reg_act}', date_add(now(), interval -6 hour))")
         db.connection.commit()
         cursor.close()
         if request.form['redireccion'] == 'menu':
@@ -929,5 +987,5 @@ if __name__ == '__main__':
     app.config.from_object(config['development'])
     app.register_error_handler(401, pagina_no_autorizada)
     app.register_error_handler(404, pagina_no_encontrada)
-    #app.run(debug=True, port=5001)
-    app.run(debug=False, port=30358, host='admin.losandestx.com')
+    app.run(debug=True, port=5001)
+    #app.run(debug=False, port=30358, host='admin.losandestx.com')

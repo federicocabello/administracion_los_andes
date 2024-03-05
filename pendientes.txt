@@ -35,6 +35,3 @@ DB_crear tabla FACTURAS
 <<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
 
 <agregar campo direccion
-<filtro para "estados" en REGISTROS
-<filtro por "TAREA"
-<ver hace un CRM con numero de telefono como id; ver como python convertirá el numero en solonumeros
