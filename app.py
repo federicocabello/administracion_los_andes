@@ -401,7 +401,7 @@ def editarCliente():
                 cursor.execute(sql)
                 
         if num_preg != 0:
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_preg} preguntas al cliente {empresa}', date_add(now(), interval -6 hour))")
+            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_preg} preguntas a {empresa}', date_add(now(), interval -6 hour))")
             for i in range(1, num_preg+1):
                 pregunta = request.form[f"pregunta{i}"].upper().strip().replace('?', '').replace('¿','')
                 cursor.execute(f"INSERT INTO {empresa.replace(' ','_')} VALUES (null, null, null, null, null, null, '¿{pregunta}?')")
@@ -986,5 +986,5 @@ if __name__ == '__main__':
     app.config.from_object(config['development'])
     app.register_error_handler(401, pagina_no_autorizada)
     app.register_error_handler(404, pagina_no_encontrada)
-    app.run(debug=True, port=5001)
-    #app.run(debug=False, port=30358, host='admin.losandestx.com')
+    #app.run(debug=True, port=5001)
+    app.run(debug=False, port=30358, host='admin.losandestx.com')

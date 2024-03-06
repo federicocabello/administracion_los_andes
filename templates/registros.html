@@ -31,12 +31,15 @@ Administración Los Andes | Registros
             </select>
             </td>
             <td colspan="3">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="filtro('filtro_cliente','tabla_registros',3,1)">
+            <!--
                 <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
                     <option value="" style="color:gainsboro">Filtro por cliente...</option>
                     {% for cli in clientes %}
                     <option value="{{ cli[0] }}.">{{ cli[0] }}</option>
                     {% endfor %}
                 </select>
+            -->
             </td>
             <td>
                 <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_registros',6,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">

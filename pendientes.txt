@@ -35,6 +35,5 @@ DB_crear tabla FACTURAS
 <<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
 
 <seccion de imagenes en altacliente
-<agregar campo direccion
-<en tabla MOVIMIENTOS cambiar a TEXT
-<en base de datos, actualizar creacion de tablas REGISTROS y MOVIMIENTOS
+
+<apartado de REPORTES donde tenga campos FECHA, PAGO, EMPRESA, y X DIAS
