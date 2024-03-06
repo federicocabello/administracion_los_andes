@@ -18,8 +18,7 @@ Administración Los Andes | {{ empresa }}
         <table id="pendiente" style="width: 100%; font-size: 14px; padding: 0; box-shadow: none; margin: 0px auto; border: none;" hidden>
             <tr>
                 <td></td>
-                <td></td>
-                <td></td>
+                <th style="padding-top: 3px; padding-bottom: 3px;">Cliente</th>
                 <th colspan="2" style="padding-top: 3px; padding-bottom: 3px;">Notas de llamada</th>
                 <th colspan="4" style="padding-top: 3px; padding-bottom: 3px;">Tarea pendiente</th>
                 <td></td>
@@ -37,8 +36,17 @@ Administración Los Andes | {{ empresa }}
                     {% endfor %}
                 </select>
             </td>
-            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[0] }}</td>
-            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[1] }}</td>
+            <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[0] }}
+            {% if p[1] != '' %}
+            <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{p[1]}}
+            {% endif %}
+            {% if p[8] != '' %}
+            <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{p[8]}}
+            {% endif %}
+            {% if p[9] != '' %}
+            <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{p[9]}}
+            {% endif %}
+            </td>
             {% if p[2] != '' %}
             <td style="border-radius: 5px; background-color: #ff9800; color: white; margin: 0;">{{ p[2] }}</td>
             {% else %}
@@ -153,7 +161,10 @@ Administración Los Andes | {{ empresa }}
                         <td>Nombre:<input type="text" style="width: 100%; text-transform: uppercase;" name="nombre" id="nombre" oninput="habilitarBoton('nombre', 'botoncotizacion')" onkeypress="foco2('telefono');" autofocus required></td>
                     </tr>
                     <tr>
-                        <td>Telefono:<input type="text" style="width: 100%;" name="telefono" id="telefono" onkeypress="foco2('email')"></td>
+                        <td>Telefono:<input type="text" style="width: 100%; text-transform: uppercase;" name="telefono" id="telefono" onkeypress="foco2('direccion')"></td>
+                    </tr>
+                    <tr>
+                        <td>Dirección: <input type="text" style="width: 100%; text-transform: uppercase;" name="direccion" id="direccion" onkeypress="foco2('email')"></td>
                     </tr>
                     <tr>
                         <td>Email: <input type="email" style="width: 100%; text-transform: lowercase;" name="email" id="email" onkeypress="foco2('motivo')"></td>

@@ -11,11 +11,35 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
 {% block body %}
 <div id="main-content">
     <h1>Panel de seguimiento de {{registros[0][1]}}.</h1>
+<table style="background: none; box-shadow: none; margin: 0 auto;">
+    <tr style="text-align: center;">
+        <td colspan="4">
     <h2>
         {% if registros[0][11] == 'listo' %}
         <div style="vertical-align: middle; color: #04AA6D"><img src="{{ url_for('static', filename='img/user-check-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Listo</div>
+    </td></tr>
+    <tr><td>
+        <h3>
+            <div style="vertical-align: middle; color: #04AA6D">
+                {% if registros[0][8] != '' %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
+                {% else %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
+                {% endif %}
+                <br>
+                {% if registros[0][9] != '' %}
+                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
+                {% endif %}
+                {% if registros[0][10] != '' %}
+                <br>
+                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
+                {% endif %}
+            </div>
+        </h3>
         {% elif registros[0][11] == 'pendiente' %}
         <div style="vertical-align: middle; color: #ff9800"><img src="{{ url_for('static', filename='img/user-clock-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Pendiente</div>
+    </td></tr>
+    <tr><td>
         <h3>
             <div style="vertical-align: middle; color: #ff9800">
                 {% if registros[0][8] != '' %}
@@ -35,27 +59,63 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
         </h3>
         {% elif registros[0][11] == 'rechazado' %}
         <div style="vertical-align: middle; color: #da190b;"><img src="{{ url_for('static', filename='img/user-xmark-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> No está interesado</div>
-        {% if registros[0][12] != '' %}
-        <h3>Razón: {{registros[0][12]}}</h3>
-        {% endif %}
+    </td></tr>
+    <tr><td>
+        <h3>
+            {% if registros[0][12] != '' %}
+            <p style="vertical-align: middle; color: #da190b;"><img src="{{ url_for('static', filename='img/ban-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> Razón: {{registros[0][12]}}</p>
+            {% endif %}
+            <div style="vertical-align: middle; color: #da190b">
+                {% if registros[0][8] != '' %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
+                {% else %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
+                {% endif %}
+                <br>
+                {% if registros[0][9] != '' %}
+                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
+                {% endif %}
+                {% if registros[0][10] != '' %}
+                <br>
+                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
+                {% endif %}
+            </div>
+        </h3>
         {% endif %}
     </h2>
+        </td>
+        <td></td>
+        <td></td>
+        <td>
     <h3>
+        <p>
+        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][0]}}
+        <br><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][13]}}
+        </p>
         {% if registros[0][4] != '' %}
-        <p><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][4]}}</p>
+        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][4]}}
         {% endif %}
-        <p><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][2]}}
+        </p>
+        <p>
+        <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][2]}}
+        {% if registros[0][14] != '' %}
+        <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][14]}}
+        {% endif %}
         {% if registros[0][3] != '' %}
-        <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{registros[0][3]}}</p>
+        <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][3]}}
         {% endif %}
+        </p>
         {% if registros[0][6] != 0 %}
-        <p><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Tiene una cotiazación cargada: {{registros[0][5]}}
+        <p><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> Tiene una cotiazación cargada: {{registros[0][5]}}
         <br>Total: ${{registros[0][6]}}</p>
         {% endif %}
     </h3>
+        </td>
+    </tr>
+</table>
     <table style="margin: 0 auto;">
         <tr>
-            <th style="color: black; background-color: #85C1E9; vertical-align: middle; font-size: 24px;" colspan="2"><img src="{{ url_for('static', filename='img/route-solid.svg') }}" width="30" height="30" style="vertical-align: middle;"> Seguimiento</th>
+            <th style="color: black; background-color: #85C1E9; vertical-align: middle; font-size: 24px;" colspan="2"><img src="{{ url_for('static', filename='img/eye-regular.svg') }}" width="30" height="30" style="vertical-align: middle;"> Seguimiento</th>
         </tr>
         {% for i in movimientos %}
         <tr>

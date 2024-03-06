@@ -34,7 +34,7 @@ def logout():
 def seguimiento(telefono):
     telefono = telefono.replace('.','')
     cursor = db.connection.cursor()
-    cursor.execute(f'select empresa, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo from registros join tareas on tareas.idtarea = registros.tarea where telefono = "{telefono}" and pregunta is null group by nombre order by fecha asc limit 1;')
+    cursor.execute(f'select empresa, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, agente, direccion from registros join tareas on tareas.idtarea = registros.tarea where telefono = "{telefono}" and pregunta is null group by nombre order by fecha asc limit 1;')
     registros = cursor.fetchall()
     cursor.execute(f'select mov, date_mov from movimientos where mov like "%{registros[0][1]}%" order by date_mov desc;')
     movimientos = cursor.fetchall()
@@ -70,7 +70,7 @@ def refrescarMenu(empresa):
         sql = f"SELECT speech,descripcion FROM {empresa} WHERE speech is not null"
         cursor.execute(sql)
         speech = cursor.fetchall()
-        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE estado = 'pendiente' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' order by fecha asc limit 5;"
+        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea, direccion, email from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE estado = 'pendiente' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' order by fecha asc limit 5;"
         cursor.execute(sql)
         pendientes = cursor.fetchall()
         cursor.execute("select * from tareas")
@@ -119,7 +119,7 @@ def abrirMenu():
         sql = f"SELECT speech,descripcion FROM {empresa} WHERE speech is not null"
         cursor.execute(sql)
         speech = cursor.fetchall()
-        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE estado = 'pendiente' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' order by fecha asc limit 5;"
+        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea, direccion, email from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE estado = 'pendiente' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' order by fecha asc limit 5;"
         cursor.execute(sql)
         pendientes = cursor.fetchall()
         cursor.execute("select * from tareas")
@@ -579,7 +579,7 @@ def dashboard():
     cursor.execute(sql)
     tablas =  cursor.fetchall()
     #tablas = [elemento[0].upper().replace('_',' ') for elemento in tablas]
-    cursor.execute(f"SELECT current_date, empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha , hora_tarea, cast(hora_tarea as unsigned) as hora from registros join tareas on tareas.idtarea = registros.tarea WHERE agente = '{current_user.fullname}' and fecha_tarea = current_date() and estado='pendiente' and tareas.tarea != '' order by hora;")
+    cursor.execute(f"SELECT current_date, empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion from registros join tareas on tareas.idtarea = registros.tarea WHERE agente = '{current_user.fullname}' and fecha_tarea = current_date() and estado='pendiente' and tareas.tarea != '' order by hora;")
     pendiente = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname")
     agentes = cursor.fetchall()
@@ -611,7 +611,7 @@ def movimientos():
 @login_required
 def registros():
     cursor = db.connection.cursor()
-    sql = "SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo from registros join tareas on tareas.idtarea = registros.tarea order by registros.fecha desc;"
+    sql = "SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion from registros join tareas on tareas.idtarea = registros.tarea order by registros.fecha desc;"
     cursor.execute(sql)
     tablas = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname asc")
@@ -670,34 +670,33 @@ def registrarLlamada():
                 telefono = telefono+n
         motivo = request.form['motivo'].upper().strip()
         email = request.form['email'].lower()
-        cotizacion = request.form['cotizacion'].upper().replace(' | $','')
-        if cotizacion == ' $ $\n':
-            cotizacion = ''
+        cotizacion = request.form['cotizacion'].upper()#.replace(' | $','')
         cotizaciontotal = request.form['cotizaciontotal']
         estado = request.form['estado']
         tarea = request.form['tarea']
         calendario = request.form['calendario']
         hora = request.form['hora']
+        direccion = request.form['direccion'].upper()
         cursor = db.connection.cursor()
         if calendario != '':
-            cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, fecha_tarea, hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -6 hour), {tarea}, '{calendario}', '{hora}', '{estado}');")
+            cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, fecha_tarea, hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -6 hour), {tarea}, '{calendario}', '{hora}', '{estado}');")
             num_preguntas = request.form['comprobarSiHayPreguntas']
             if num_preguntas != 0:
                 for i in range(1, int(num_preguntas)+1):
                     respuesta = request.form[f'respuesta{i}.0'].strip().upper()
                     if respuesta != '':
                         pregunta = request.form[f'pregunta{i}.0']
-                        cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, email, motivo, fecha, tarea, fecha_tarea, hora_tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, '{calendario}', '{hora}', 'cotizar', '{pregunta}', '{respuesta}')")
+                        cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, direccion, email, motivo, fecha, tarea, fecha_tarea, hora_tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, '{calendario}', '{hora}', 'cotizar', '{pregunta}', '{respuesta}')")
             cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre}, quedó como {estado.upper()} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. Se le asignó una tarea para el día {calendario}', date_add(now(), interval -6 hour))")
         else:
-            cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -6 hour), {tarea}, '{estado}');")
+            cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{direccion}','{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -6 hour), {tarea}, '{estado}');")
             num_preguntas = request.form['comprobarSiHayPreguntas']
             if num_preguntas != 0:
                 for i in range(1, int(num_preguntas)+1):
                     respuesta = request.form[f'respuesta{i}.0'].strip().upper()
                     if respuesta != '':
                         pregunta = request.form[f'pregunta{i}.0']
-                        cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, email, motivo, fecha, tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, 'cotizar', '{pregunta}', '{respuesta}')")
+                        cursor.execute(f"insert into registros (empresa, agente, nombre, telefono, direccion, email, motivo, fecha, tarea, estado, pregunta, respuesta) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', date_add(now(), interval -6 hour), {tarea}, 'cotizar', '{pregunta}', '{respuesta}')")
             cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre}, quedó como {estado.upper()} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. No se le asignó fecha para realizar una tarea', date_add(now(), interval -6 hour))")
         db.connection.commit()
         cursor.close()

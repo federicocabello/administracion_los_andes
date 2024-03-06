@@ -19,14 +19,13 @@ Administración Los Andes | Inicio
   {% else %}
   <p>
     <table style="box-shadow: none; background: none; margin: 0 auto;;">
-      <th style="background: grey; background: none; color: #008080; padding: 0;">Tareas pendientes para hoy {{ pendiente[0][0] }}</th>
+      <th style="background: grey; background: none; color: #008080; padding: 0; font-size: 20px;">Tareas pendientes para hoy {{ pendiente[0][0] }}</th>
     </table>
     <table style="margin: 0 auto">
       <tr>
         <td></td>
         <th>Empresa</th>
-        <th>Nombre</th>
-        <th>Teléfono</th>
+        <th>Cliente</th>
         <th colspan="2">Notas de llamada</th>
         <th colspan="4">Tarea pendiente</th>
       </tr>
@@ -44,8 +43,17 @@ Administración Los Andes | Inicio
           </select>
         </td>
         <td style="color: #008080; text-align: center;">{{ t[1] }}</td>
-        <td>{{ t[2] }}</td>
-        <td>{{ t[3] }}</td>
+        <td>{{ t[2] }}
+          {% if t[3] != '' %}
+          <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[3]}}
+          {% endif %}
+          {% if t[12] != '' %}
+          <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[12]}}
+          {% endif %}
+          {% if t[6] != '' %}
+          <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[6]}}
+          {% endif %}
+        </td>
         {% if t[4] != '' %}
         <td>{{ t[4] }}</td>
         {% else %}
@@ -87,6 +95,9 @@ Administración Los Andes | Inicio
         <td><button type="button" style="margin: 0; padding: 5px; font-size: 16px;" class="btn danger" onclick="pedirDatos('{{ t[9] }}', 'rechazo', 'Razón del rechazo:')">No le interesó</button></td>
         <td><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn primary">Enviar cotización</button></td>
         <td><textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea></td>
+      </tr>
+      <tr>
+      <td colspan="12" style="border-top: 1px solid #BDBDBD;"></td>
       </tr>
     {% endfor %}
     </table>

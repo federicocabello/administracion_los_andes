@@ -107,7 +107,13 @@ Administración Los Andes | Registros
                 </td>
                 <td style="border-radius: 5px; background-color: #ff9800;">{{ i[2] }}.
                 {% if i[3] != '' %}
-                    <br>Teléfono: {{ i[3] }}.
+                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
+                {% endif %}
+                {% if i[14] != '' %}
+                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
+                {% endif %}
+                {% if i[4] != '' %}
+                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
                 {% endif %}
                 </td>
                 <td>
@@ -187,8 +193,14 @@ Administración Los Andes | Registros
                 </td>
                 <td style="border-radius: 5px; background-color: #04aa6d;">{{ i[2] }}.
                     {% if i[3] != '' %}
-                        <br>Teléfono: {{ i[3] }}.
-                    {% endif %}
+                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
+                {% endif %}
+                {% if i[14] != '' %}
+                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
+                {% endif %}
+                {% if i[4] != '' %}
+                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
+                {% endif %}
                     </td>
                     <td>
                         {% if i[3] != '' %}
@@ -267,8 +279,14 @@ Administración Los Andes | Registros
                 </td>
                 <td style="border-radius: 5px; color: #da190b;">{{ i[2] }}.
                     {% if i[3] != '' %}
-                        <br>Teléfono: {{ i[3] }}.
-                    {% endif %}
+                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
+                {% endif %}
+                {% if i[14] != '' %}
+                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
+                {% endif %}
+                {% if i[4] != '' %}
+                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
+                {% endif %}
                     </td>
                     <td>
                         {% if i[3] != '' %}
