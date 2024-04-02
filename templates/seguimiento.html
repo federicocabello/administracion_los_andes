@@ -10,108 +10,158 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
 
 {% block body %}
 <div id="main-content">
-    <h1>Panel de seguimiento de {{registros[0][1]}}.</h1>
+    <h1>Panel de seguimiento de <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="30" height="30"> {{registros[0][1]}}.</h1>
 <table style="background: none; box-shadow: none; margin: 0 auto;">
-    <tr style="text-align: center;">
-        <td colspan="4">
-    <h2>
-        {% if registros[0][11] == 'listo' %}
-        <div style="vertical-align: middle; color: #04AA6D"><img src="{{ url_for('static', filename='img/user-check-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Listo</div>
-    </td></tr>
-    <tr><td>
-        <h3>
-            <div style="vertical-align: middle; color: #04AA6D">
-                {% if registros[0][8] != '' %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
-                {% else %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
-                {% endif %}
-                <br>
-                {% if registros[0][9] != '' %}
-                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
-                {% endif %}
-                {% if registros[0][10] != '' %}
-                <br>
-                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
-                {% endif %}
+<tr style="text-align: center;">
+    <td colspan="10">
+        <h2>
+            <div style="vertical-align: middle;">
+                <img src="{{ url_for('static', filename='img/chalkboard-user-solid.svg') }}" width="35" height="35" style="vertical-align: middle;">{% if registros[0][8] != '' %} {{registros[0][8]}}{% else %} NO TIENE ASIGNADO NINGUNA TAREA{% endif %}
             </div>
-        </h3>
-        {% elif registros[0][11] == 'pendiente' %}
-        <div style="vertical-align: middle; color: #ff9800"><img src="{{ url_for('static', filename='img/user-clock-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> Pendiente</div>
-    </td></tr>
-    <tr><td>
-        <h3>
-            <div style="vertical-align: middle; color: #ff9800">
-                {% if registros[0][8] != '' %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
-                {% else %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
-                {% endif %}
-                <br>
-                {% if registros[0][9] != '' %}
-                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
-                {% endif %}
-                {% if registros[0][10] != '' %}
-                <br>
-                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
-                {% endif %}
-            </div>
-        </h3>
-        {% elif registros[0][11] == 'rechazado' %}
-        <div style="vertical-align: middle; color: #da190b;"><img src="{{ url_for('static', filename='img/user-xmark-solid.svg') }}" width="35" height="35" style="vertical-align: middle;"> No está interesado</div>
-    </td></tr>
-    <tr><td>
-        <h3>
-            {% if registros[0][12] != '' %}
-            <p style="vertical-align: middle; color: #da190b;"><img src="{{ url_for('static', filename='img/ban-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> Razón: {{registros[0][12]}}</p>
+        </h2>
+    </td>
+</tr>
+<tr>
+    <td colspan="10" style="background-color: #{{registros[0][15]}};"></td>
+</tr>
+<h3>
+<tr>
+    <td>
+        {% if registros[0][8] == 'NO LE INTERESA' %}
+            {% if registros[0][12] != None %}
+                    {% if registros[0][12] != '' %}
+                    <p style="vertical-align: middle; color: #da190b;">
+                        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" onclick="editarCliente('razon', '{{registros[0][7]}}', '{{registros[0][12]}}', 'formulario', '{{registros[0][1]}}')"><img src="{{ url_for('static', filename='img/ban-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Razón: {{registros[0][12]}}
+                    </p>
+                    {% else %}
+                    <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="editarCliente('razon', '{{registros[0][7]}}', '{{registros[0][12]}}', 'formulario', '{{registros[0][1]}}')">+<img src="{{ url_for('static', filename='img/ban-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar razón</button></p>
+                    {% endif %}
+            {% else %}
+            <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="editarCliente('razon', '{{registros[0][7]}}', '{{registros[0][12]}}', 'formulario', '{{registros[0][1]}}')">+<img src="{{ url_for('static', filename='img/ban-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar razón</button></p>
             {% endif %}
-            <div style="vertical-align: middle; color: #da190b">
-                {% if registros[0][8] != '' %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][8]}}
+        {% endif %}
+            <div style="vertical-align: middle;">
+                <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="editarSelect('tarea_seg','{{registros[0][7]}}', this.value, '{{registros[0][8]}}', '{{registros[0][1]}}', 'formulario')">
+                {% for tarea in tareas %}
+                       {% if tarea[1] == registros[0][8] %}
+                       <option value="{{tarea[0]}}" selected>{{ tarea[1] }}</option>
+                       {% else %}
+                       <option value="{{tarea[0]}}">{{tarea[1]}}</option>
+                       {% endif %}
+                {% endfor %}
+                </select>
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="20" height="20" style="vertical-align: middle;">
+            {% if registros[0][8] != '' %}
+                {{registros[0][8]}}
+                <br>
+                <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="editarSelect('fecha_seg','{{registros[0][7]}}', this.value, '{{registros[0][9]}}', '{{registros[0][1]}}', 'formulario')">
+                    {% for fecha in calendario %}
+                           {% if fecha[0] == registros[0][9] %}
+                           <option value="{{fecha[0]}}" selected>{{ fecha[1] }}</option>
+                           {% else %}
+                           <option value="{{fecha[0]}}">{{fecha[1]}}</option>
+                           {% endif %}
+                    {% endfor %}
+                </select>
+                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: middle;">
+                {% if registros[0][9] != None %}
+                    {{registros[0][9]}}
+                        <br>
+                        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="editarSelect('hora_seg','{{registros[0][7]}}', this.value, '{{registros[0][10]}}', '{{registros[0][1]}}', 'formulario')">
+                            <option value="{{registros[0][10]}}">{{registros[0][10]}}</option>
+                            <option value="">SIN HORA</option>
+                            {% for hs in range(9,20) %}
+                            <option value="{{hs}}:00 h">{{hs}}:00 h</option>
+                            {% endfor %}
+                        </select>
+                        <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="20" height="20" style="vertical-align: middle;">
+                        {% if registros[0][10] != '' %}
+                            {{registros[0][10]}}
+                        {% else %}
+                            No tiene ninguna hora asignada
+                        {% endif %}
                 {% else %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> No tiene asignado ninguna tarea
+                No tiene asignada ninguna fecha de tarea
                 {% endif %}
-                <br>
-                {% if registros[0][9] != '' %}
-                <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][9]}}
-                {% endif %}
-                {% if registros[0][10] != '' %}
-                <br>
-                <img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][10]}}
-                {% endif %}
+            {% else %}
+                No tiene asignado ninguna tarea
+            {% endif %}
             </div>
-        </h3>
-        {% endif %}
-    </h2>
-        </td>
-        <td></td>
-        <td></td>
-        <td>
-    <h3>
+    </td>
+    <td></td>
+    <td></td>
+    <td>
         <p>
-        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][0]}}
-        <br><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][13]}}
+            <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][0]}}
+            <br>
+            <img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][13]}}
         </p>
+        <p>
         {% if registros[0][4] != '' %}
-        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][4]}}
+        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" onclick="editarCliente('notas', '{{registros[0][7]}}', '{{registros[0][4]}}', 'formulario', '{{registros[0][1]}}');"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][4]}}
+        {% else %}
+        <button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="editarCliente('notas', '{{registros[0][7]}}', '{{registros[0][4]}}', 'formulario', '{{registros[0][1]}}');">+<img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar una nota</button>
         {% endif %}
         </p>
         <p>
-        <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][2]}}
+        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" onclick="editarCliente('numero', '{{registros[0][2]}}', '{{registros[0][2]}}', 'formulario', '{{registros[0][1]}}')"> <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][2]}}
+        <br>
         {% if registros[0][14] != '' %}
-        <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][14]}}
+        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" onclick="editarCliente('direccion', '{{registros[0][7]}}', '{{registros[0][14]}}', 'formulario', '{{registros[0][1]}}')"><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][14]}}
+        <br>
+        {% else %}
+        <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="editarCliente('direccion', '{{registros[0][7]}}', '{{registros[0][14]}}', 'formulario', '{{registros[0][1]}}')">+<img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar dirección</button></p>
         {% endif %}
         {% if registros[0][3] != '' %}
-        <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> {{registros[0][3]}}
+        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" onclick="editarCliente('correo electronico', '{{registros[0][7]}}', '{{registros[0][3]}}', 'formulario', '{{registros[0][1]}}')"><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{registros[0][3]}}
+        {% else %}
+        <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="editarCliente('correo electronico', '{{registros[0][7]}}', '{{registros[0][3]}}', 'formulario', '{{registros[0][1]}}')">+<img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar e-mail</button></p>
         {% endif %}
         </p>
+    </td>
+    <td></td>
+    <td></td>
+    <td>
+        <div id="cotizacion_real">
         {% if registros[0][6] != 0 %}
-        <p><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="25" height="25" style="vertical-align: middle;"> Tiene una cotiazación cargada: {{registros[0][5]}}
-        <br>Total: ${{registros[0][6]}}</p>
+        <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" type="button" onclick="document.getElementById('pre_cotizacion').value = '{{registros[0][5]}}'; document.getElementById('cotizaciontotal').value = '{{registros[0][6]}}'; document.getElementById('menu_cotizacion').removeAttribute('hidden'); document.getElementById('cotizacion_real').setAttribute('hidden', 'hidden'); document.getElementById('pre_cotizacion').focus();"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Tiene una cotización cargada:
+        <br><div style="color: #008080">{{registros[0][5]}}</div>
+        <br><img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20"> Total: <div style="color: #008080">${{registros[0][6]}}</div>
+        {% else %}
+        <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px;" onclick="document.getElementById('menu_cotizacion').removeAttribute('hidden'); document.getElementById('pre_cotizacion').focus(); document.getElementById('cotizacion_real').setAttribute('hidden', 'hidden');">+<img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar cotización</button></p>
         {% endif %}
-    </h3>
-        </td>
-    </tr>
+        </div>
+        <div id="menu_cotizacion" hidden>
+        <br>
+        <button type="button" style="border-radius: 50%; float: right; text-align: center;background-color: #da190b; vertical-align: middle; color: white" onclick="document.getElementById('menu_cotizacion').setAttribute('hidden', 'hidden'); document.getElementById('cotizacion_real').removeAttribute('hidden');">x</button>
+        <br>
+        <img src="{{ url_for('static', filename='img/hand-holding-solid.svg') }}" width="20" height="20"> Cotización:
+        <textarea id="pre_cotizacion" cols="30" rows="10" style="width: 100%; text-transform: uppercase;"></textarea>
+        <br>
+        <img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20"> Precio:
+        <input type="number" style="width: 100%;" id="cotizaciontotal">
+        <br>
+        <div style="text-align: center;">
+        <button class="btn success" style="padding: 8px; justify-content: center; margin-bottom: 10px;" onclick="document.getElementById('cotizacion').value = document.getElementById('pre_cotizacion').value; editarSelect('cotizacion', '{{registros[0][7]}}', document.getElementById('cotizaciontotal').value, '{{registros[0][6]}}', '{{registros[0][1]}}', 'formulario')">Guardar cotización</button>
+        </div>
+        </div>
+    </td>
+    <td></td>
+    <td></td>
+    <td>
+        {% if preguntas != () %}
+        <img src="{{ url_for('static', filename='img/clipboard-question-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Tiene preguntas cargadas:
+        {% for q in preguntas %}
+        <p>
+            <div style="margin: 0; padding: 0; color:#008080"><img src="{{ url_for('static', filename='img/circle-question-regular.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{q[0]}}
+            </div>
+            <img src="{{ url_for('static', filename='img/comment-dots-regular.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{q[1]}}
+        </p>
+        {% endfor %}
+        {% endif %}
+    </td>
+</tr>
+</h3>
 </table>
     <table style="margin: 0 auto;">
         <tr>
@@ -129,4 +179,14 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
         {% endfor %}
     </table>
 </div>
+<form action="/registros/editarregistro/actualizar" id="formulario" method="POST">
+    <input type="hidden" name="eliminar" id="eliminar">
+    <input type="hidden" id="accion" name="accion">
+    <input type="hidden" id="nota" name="nota" value="null">
+    <input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
+    <input type="hidden" id="cliente" name="cliente">
+    <input type="hidden" name="redireccion" value="seguimiento">
+    <input type="hidden" name="tel_seg" id="tel_seg" value="{{registros[0][2]}}">
+    <textarea name="cotizacion" id="cotizacion" style="display: none;"></textarea>
+</form>
 {% endblock %}

@@ -1,0 +1,244 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Hoja de inspección de {{hoja[1]}}
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Hoja de inspección N° {{ n_hoja[0] }}</h1><input type="hidden" id="idhoja" value="{{n_hoja[0]}}"><input type="hidden" id="idfecha" value="{{hoja[9]}}"><input type="hidden" id="accion" value="{% if condicional != 0 %}actualizar{% else %}crear{% endif %}">
+    <h3>
+    <div style="display: flex; width: 100%; justify-content: space-around;">
+    <span style="width: 40%;">
+    <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Fecha de emisión<input type="date" style="width: 90%; margin-top: 5%;" value="{{hoja[0]}}" id="fecha_emision">
+    </span>
+    <span style="width: 100%;">
+    <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Nombre<input type="text" style="width: 95%; margin-top: 2%; text-transform: uppercase;;" value="{{hoja[1]}}" onkeypress="foco2('telefono');" id="nombre" autofocus>
+    </span>
+    <span style="width: 50%;">
+    <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Teléfono<input type="text" style="width: 90%; margin-top: 4%; text-transform: uppercase;" value="{{hoja[3]}}" id="telefono" onkeypress="foco2('direccion');">
+    </span>
+    <span style="width: 100%;">
+        <img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Dirección<input type="text" style="width: 95%; margin-top: 2%; text-transform: uppercase;" value="{{hoja[2]}}" id="direccion" onkeypress="foco2('notastecnicas');">
+    </span>
+    </div>
+    </h3>
+    <main>
+            <fieldset style="display: flex; justify-content: space-around; width: 97%;">
+                <legend style="text-align: center;"><h3><img src="{{ url_for('static', filename='img/toolbox-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> SERVICIO</h3></legend>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'MANTENIMIENTO PREVENTIVO';" {% if hoja[4] == "MANTENIMIENTO PREVENTIVO" %}checked{% endif %}>MANTENIMIENTO PREVENTIVO</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INSTALACIÓN';" {% if hoja[4] == "INSTALACIÓN" %}checked{% endif %}>INSTALACIÓN</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'MANTENIMIENTO CORRECTIVO';" {% if hoja[4] == "MANTENIMIENTO CORRECTIVO" %}checked{% endif %}>MANTENIMIENTO CORRECTIVO</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INSPECCIÓN';" {% if hoja[4] == "INSPECCIÓN" %}checked{% endif %}>INSPECCIÓN</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'CCTV';" {% if hoja[4] == "CCTV" %}checked{% endif %}>CCTV</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INTERNET';" {% if hoja[4] == "INTERNET" %}checked{% endif %}>INTERNET</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('servicio').value = '{{hoja[4]}}'; document.getElementById('p_servicio').removeAttribute('hidden'); document.getElementById('servicio').focus();" {% if hoja[4] != 'MANTENIMIENTO PREVENTIVO' and hoja[4] != 'INSTALACIÓN' and hoja[4] != 'MANTENIMIENTO CORRECTIVO' and hoja[4] != 'INSPECCIÓN' and hoja[4] != 'CCTV' and hoja[4] != 'INTERNET' and hoja[4] != '' %}checked{% endif %}>Otro</span>
+            </fieldset>
+            <p id="p_servicio" {% if hoja[4] == 'MANTENIMIENTO PREVENTIVO' or hoja[4] == 'INSTALACIÓN' or hoja[4] == 'MANTENIMIENTO CORRECTIVO' or hoja[4] == 'INSPECCIÓN' or hoja[4] == 'CCTV' or hoja[4] == 'INTERNET' %}hidden{% endif %}>Otro:<input type="text" style="width: 99%; text-transform: uppercase;" id="servicio" value="{{hoja[4]}}"></p>
+            <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/ethernet-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> MATERIALES</h3>
+            <table style="margin: 0 auto; width: 80%;" id="tabla_materiales">
+                <tr>
+                    <th style="width: 4%;">Cantidad</th>
+                    <th>Descripción</th>
+                </tr>
+                {% if n_materiales != 0 %}
+                {% for m in materiales %}
+                <tr>
+                    <td style="display: flex; justify-content: center;">
+                        <input type="number" value="{{m[0]}}" style="color: #008080; text-align: center; background: none; border: none; width: 100%;">
+                    </td>
+                    <td>
+                        <input type="text" value="{{m[1]}}" style="width: 100%; background: none; border: none; color: black; text-transform: uppercase;">
+                    </td>
+                    <td style="width: 1%; text-align: center;">
+                        <img src="{{ url_for('static', filename='img/borrar-icono.png') }}" width="30" height="30" onclick="deleteRow(this)" style="vertical-align: middle;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border-top: 1px solid black;" colspan="2"></td>
+                </tr>
+                {% endfor%}
+                {% endif %}
+                <tr>
+                    <td style="display: flex; justify-content: center; margin-top: 5px; margin-bottom: 5px;">
+                        <input type="number" style="text-align: center; color: #008080; width: 100%;">
+                    </td>
+                    <td>
+                        <input type="text" style="width: 100%; color: black; text-transform: uppercase;">
+                    </td>
+                    <td style="width: 1%; text-align: center;">
+                        <img src="{{ url_for('static', filename='img/borrar-icono.png') }}" width="30" height="30" onclick="deleteRow(this)" style="vertical-align: middle;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="border-top: 1px solid black;" colspan="2"></td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <button style="margin-top: 5px;" class="btn success" type="button" onclick="addRow(); deleteRow(this)">Agregar material</button>
+                    </td>
+                </tr>
+            </table>
+            <br>
+            <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/clipboard-list-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> NOTAS TÉCNICAS</h3>
+            <input type="text" style="width: 80%; margin: 0 auto; text-transform: uppercase;" value="{{hoja[5]}}" id="notastecnicas" onkeypress="foco2('nota_pago');">
+            <br>
+            <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/file-invoice-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> ACUERDO DE PAGO</h3>
+            <div style="display: flex; justify-content: center;">
+                <span>Precio total<input type="number" style="text-align: center;" value="{{hoja[6]}}" id="precio_total" onchange="saldoRestante()" onkeydown="saldoRestante()" onkeyup="saldoRestante()"></span>
+                <span>Enganche<input type="number" style="text-align: center; color: green;" value="{{hoja[7]}}" id="enganche" onchange="saldoRestante()" onkeydown="saldoRestante()" onkeyup="saldoRestante()"></span>
+                <span style="width: 10%;">Saldo restante<div style="display: flex; margin-top: 5px;"><input type="text" value="$" style="padding: 0; background: none; color: red; border: none; margin: 0; width: 15px;" disabled><input type="number" style="padding: 0; background: none; color: red; border: none; width: 100%; font-size: 22px;" value="{{hoja[8]}}" id="saldo_restante" disabled></div></span>
+                <span>
+                    <table style="background: none; box-shadow: none; border: none; margin: 0 30px 0 0; padding: 0;" id="tabla_acuerdos">
+                        <tr>
+                            <th style="background: none; margin: 0; padding: 0; text-align: center;">
+                                <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" id="acuerdo_cantidad" onchange="acuerdosPago()">
+                                    <option value="0" style="color: gainsboro;">Acuerdos de pago...</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </th>
+                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_interes" hidden>
+                                Porcentaje de interés
+                            </td>
+                        </tr>
+                        <tr id="acuerdo_1" hidden>
+                            <td style="margin: 0; padding: 0;">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #1" id="acuerdo_campo1">
+                            </td>
+                            <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje1">
+                            </td>
+                        </tr>
+                        <tr id="acuerdo_2" hidden>
+                            <td style="margin: 0; padding: 0;">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #2" id="acuerdo_campo2">
+                            </td>
+                            <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje2">
+                            </td>
+                        </tr>
+                        <tr id="acuerdo_3" hidden>
+                            <td style="margin: 0; padding: 0;">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #3" id="acuerdo_campo3">
+                            </td>
+                            <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje3">
+                            </td>
+                        </tr>
+                        <tr id="acuerdo_4" hidden>
+                            <td style="margin: 0; padding: 0;">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #4" id="acuerdo_campo4">
+                            </td>
+                            <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje4">
+                            </td>
+                        </tr>
+                    </table>
+                </span>
+                <span>Notas de pago<textarea name="" id="nota_pago" cols="30" rows="8" style="width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase;"></textarea></span>
+            </div>
+            <p style="text-align: center;">
+                <button class="btn primary" style="margin: 0 auto;" id="btn-guardar">{% if condicional != 0 %}Actualizar{% else %}Crear nueva{% endif %} hoja de inspección</button>
+            </p>
+    </main>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+function acuerdosPago(){
+    cantidad_acuerdos = parseInt(document.getElementById('acuerdo_cantidad').value);
+    document.getElementById('acuerdo_interes').setAttribute('hidden', 'hidden');
+    for (let oculto = 1; oculto<=4; oculto++){
+        document.getElementById('acuerdo_'+oculto).setAttribute('hidden', 'hidden');
+    }
+    for (let vacio = cantidad_acuerdos; vacio<=4; vacio++){
+        document.getElementById('acuerdo_campo'+vacio).value='';
+        document.getElementById('acuerdo_porcentaje'+vacio).value='';
+    }
+    if (cantidad_acuerdos>0){
+        document.getElementById('acuerdo_interes').removeAttribute('hidden');
+        for (let i = 1; i<=cantidad_acuerdos; i++){
+            document.getElementById('acuerdo_'+i).removeAttribute('hidden');
+        }
+    }
+    var hiddenInputs = document.querySelectorAll('input[type="hidden"]')
+    hiddenInputs.forEach(function(input){input.value='';});
+}
+    function deleteRow(btn) {
+  var row = btn.parentNode.parentNode;
+  var nextRow = row.nextElementSibling;
+
+  if (nextRow){
+    row.parentNode.removeChild(nextRow)
+  }
+  row.parentNode.removeChild(row)
+}
+
+function addRow() {
+
+let tableID="tabla_materiales";
+let table = document.getElementById(tableID);
+
+let boton = table.rows[table.rows.length - 1];
+let ultimoHr = table.rows[table.rows.length - 2];
+let ultimaFila = table.rows[table.rows.length - 3];
+
+let nuevaFila1 = ultimaFila.cloneNode(true);
+let nuevaFila2 = ultimoHr.cloneNode(true);
+let nuevaFila3 = boton.cloneNode(true);
+
+//table.appendChild(nuevaFila1);
+//table.appendChild(nuevaFila2);
+//table.appendChild(nuevaFila3);
+
+//table.insertBefore(nuevaFila1, ultimoHr);
+//table.insertBefore(nuevaFila2, ultimoHr);
+
+table.insertAdjacentHTML('beforeend', nuevaFila1.outerHTML);
+table.insertAdjacentHTML('beforeend', nuevaFila2.outerHTML);
+table.insertAdjacentHTML('beforeend', nuevaFila3.outerHTML);
+}
+
+function removeRow(){
+var tableID="tabla_materiales";
+var table = document.getElementById(tableID);
+var rowCount = table.rows.length;
+
+if(rowCount>1){   
+    //you had type in deletRow. Also, you can pass in -1 to remove the last row    
+    table.deleteRow(rowCount-2); 
+    table.deleteRow(rowCount-3); 
+}
+}
+
+
+//document.getElementById('btn-guardar').addEventListener('click', function() {var table = document.getElementById('tabla_materiales'); var data = []; var rows = table.getElementsByTagName('tr'); for (var i = 0; i< table.rows.length; i++){var row = rows[i]; var rowData = []; var inputs = row.getElementsByTagName('input'); for (var j= 0; j < inputs.length; j++) {rowData.push(inputs[j].value);} data.push(rowData);} var xhr = new XMLHttpRequest(); xhr.open('POST', '/guardar_en_mysql', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify(data));});
+
+document.getElementById('btn-guardar').addEventListener('click', function() {var table = document.getElementById('tabla_materiales'); var tableData = []; var rows = table.getElementsByTagName('tr'); for (var i = 0; i<rows.length; i++){var row = rows[i]; var rowData = []; var inputs = row.getElementsByTagName('input'); for (var j= 0; j < inputs.length; j++) {rowData.push(inputs[j].value);} tableData.push(rowData);}
+var idhoja = document.getElementById('idhoja').value;
+var idfecha = document.getElementById('idfecha').value;
+var fecha_emision = document.getElementById('fecha_emision').value;
+var nombre = document.getElementById('nombre').value;
+var direccion = document.getElementById('direccion').value;
+var telefono = document.getElementById('telefono').value;
+var servicio = document.getElementById('servicio').value;
+var notas = document.getElementById('notastecnicas').value;
+var precio_total = document.getElementById('precio_total').value;
+var enganche = document.getElementById('enganche').value;
+var accion = document.getElementById('accion').value;
+var xhr = new XMLHttpRequest(); xhr.open('POST', '/hoja_de_inspeccion/guardar', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({materiales: tableData, accion: accion, datos: [idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, notas, precio_total, enganche]}));});
+
+function saldoRestante(){
+    let saldorestante = parseFloat(document.getElementById('precio_total').value)-parseFloat(document.getElementById('enganche').value)
+    document.getElementById('saldo_restante').value = saldorestante;
+}
+</script>
+{% endblock %}

@@ -203,3 +203,32 @@ td{
 .warning:hover {background: #e68a00;}
 .danger {background-color: #f44336;} 
 .danger:hover {background: #da190b;}
+
+.tooltip {
+  visibility: hidden;
+  background-color: #008080;
+  color: white;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-family: 'Rubik', sans-serif;
+  font-size: 12px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.icon-container {
+  position: relative;
+}
+
+.icon-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}

@@ -30,10 +30,18 @@ app.run(debug=False, port=30358, host='admin.losandestx.com')
 
 //NUEVOS CAMBIOS:
 DB_agregar columna en REGISTROS --> pregunta; respuesta tipo TEXT
-DB_crear tabla FACTURAS
-<<<FILTROS en PREGUNTAS
+DB_crear tabla facturas
 <<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
 
 <seccion de imagenes en altacliente
 
 <apartado de REPORTES donde tenga campos FECHA, PAGO, EMPRESA, y X DIAS
+
+<roles para vistas
+
+<modulo de actividades fuera de los registros
+
+<en modulo de cuenta, agregar seccion de cuentas por cobrar
+<agregar imprimir pdf al modulo
+
+<en la adevertencia de registro duplicado, mostrar a nombre de quien está (el ultimo registro)

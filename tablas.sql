@@ -57,7 +57,7 @@ CREATE TABLE `planes` (
 ) /*!50100 TABLESPACE `rehder_administracion_los_andes` */ ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE `registros` (
- `empresa` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+ `empresa` tinytext COLLATE utf8_unicode_ci,
  `agente` tinytext COLLATE utf8_unicode_ci,
  `nombre` tinytext COLLATE utf8_unicode_ci,
  `telefono` tinytext COLLATE utf8_unicode_ci,
@@ -70,15 +70,10 @@ CREATE TABLE `registros` (
  `tarea` tinyint(4) DEFAULT NULL,
  `fecha_tarea` date DEFAULT NULL,
  `hora_tarea` varchar(7) COLLATE utf8_unicode_ci DEFAULT NULL,
- `estado` varchar(9) COLLATE utf8_unicode_ci NOT NULL,
+ `estado` tinytext COLLATE utf8_unicode_ci,
  `nota_rechazo` text COLLATE utf8_unicode_ci,
  `pregunta` text COLLATE utf8_unicode_ci,
  `respuesta` text COLLATE utf8_unicode_ci,
  KEY `fk_tarea` (`tarea`),
  CONSTRAINT `fk_tarea` FOREIGN KEY (`tarea`) REFERENCES `tareas` (`idtarea`) ON DELETE CASCADE ON UPDATE CASCADE
-) /*!50100 TABLESPACE `rehder_administracion_los_andes` */ ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-CREATE TABLE `tareas` (
- `idtarea` tinyint(4) NOT NULL AUTO_INCREMENT,
- `tarea` tinytext COLLATE utf8_unicode_ci NOT NULL,
- PRIMARY KEY (`idtarea`)
 ) /*!50100 TABLESPACE `rehder_administracion_los_andes` */ ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;

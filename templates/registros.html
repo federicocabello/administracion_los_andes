@@ -11,7 +11,21 @@ Administración Los Andes | Registros
 
 {% block body %}
 <div id="main-content">
-    <h1>Panel de registros.</h1>
+    <h1>Panel de registros. <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="document.getElementById('filtro').value = 'limite'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click();">
+        {% if mostrados != 25 and mostrados != 50 and mostrados != 75 and mostrados != 100 and mostrados != n_registros[0] %}<option selected>Mostrar {{mostrados}}</option>{% endif %}
+        <option value="25" {% if mostrados == '25' %}selected{% endif %}>Mostrar 25</option>
+        <option value="50" {% if mostrados == '50' %}selected{% endif %}>Mostrar 50</option>
+        <option value="75" {% if mostrados == '75' %}selected{% endif %}>Mostrar 75</option>
+        <option value="100" {% if mostrados == '100' %}selected{% endif %}>Mostrar 100</option>
+        <option value="all" {% if mostrados == n_registros[0] %}selected{% endif %}>Mostrar todos ({{n_registros[0]}})</option>
+    </select><button type="button" style="margin-left: 10px;"><a href="{{ url_for('registros') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20"></a></button>
+    {% if repetidos[0] != 0 %}
+    <button style="float: right;" class="btn warning" onclick="document.getElementById('filtro').value = 'duplicados'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/warning_icon.svg.png') }}" height="25" style="vertical-align: middle;"> Hay registros duplicados</button>
+    {% endif %}
+    {% if faltantes[0] != 0 %}
+    <button style="float: right; margin-right: 8px;" class="btn secondary" onclick="document.getElementById('filtro').value = 'faltantes'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/person-circle-exclamation-solid.svg') }}" height="25" style="vertical-align: middle;"> Hay datos faltantes</button>
+    {% endif %}
+    </h1>
     <table style="border: 1px solid black; margin:0 auto;" id="tabla_registros">
         <tr>
             <td>
@@ -30,7 +44,7 @@ Administración Los Andes | Registros
                 {% endfor %}
             </select>
             </td>
-            <td colspan="3">
+            <td colspan="2">
                 <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="filtro('filtro_cliente','tabla_registros',3,1)">
             <!--
                 <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
@@ -41,7 +55,9 @@ Administración Los Andes | Registros
                 </select>
             -->
             </td>
-            <td>
+            <form action="/registros" method="POST">
+            <td style="display: flex; vertical-align: baseline; margin: 0; padding: 0;">
+            <!--
                 <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_registros',6,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
                     <option value="" style="color:gainsboro">Filtro por fecha...</option>
                     <option value="-01-">Enero</option>
@@ -57,48 +73,55 @@ Administración Los Andes | Registros
                     <option value="-11-">Noviembre</option>
                     <option value="-12-">Diciembre</option>
                 </select>
+            -->
+            Desde<input onmouseenter="this.type='date'; this.removeAttribute('disabled')" onmouseleave="this.type='text'; this.setAttribute('disabled', 'disabled');" name="fecha_inicial" id="fecha_inicial" type="text" {% if fecha_inicial != '' %}placeholder="{{fecha_inicial}}"{% else %}placeholder="mm/dd/yyyy"{% endif %} style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%; margin: 0 10px 0 10px;" disabled>hasta
+            <input name="fecha_final" id="fecha_final" type="text" onmouseenter="this.type='date'; this.removeAttribute('disabled')" onmouseleave="this.type='text'; this.setAttribute('disabled', 'disabled');" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%; margin: 0 10px 0 10px;" {% if fecha_final != '' %}placeholder="{{fecha_final}}"{% else %}placeholder="mm/dd/yyyy"{% endif %} disabled>
+            <span class="icon-container">
+            <button type="button" onclick="document.getElementById('fecha_inicial').removeAttribute('disabled'); document.getElementById('fecha_final').removeAttribute('disabled');; document.getElementById('filtro').value = 'fechas'; document.getElementById('btn-enviar').click()"><img src="{{ url_for('static', filename='img/magnifying-glass-chart-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></button>
+            <span class="tooltip" id="tooltip-editar">Filtrar entre fechas</span></span>
+            <button type="submit" id="btn-enviar" hidden></button>
+            <input type="hidden" id="filtro" name="filtro">
+            <input type="hidden" id="limite" name="limite">
+            <span class="icon-container">
+            <button type="button" style="margin-left: 10px;"><a href="{{ url_for('registros') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></a></button>
+            <span class="tooltip" id="tooltip-editar">Regresar a Registros</span></span>
             </td>
-            <td></td>
+            </form>
             <td>
-                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',8,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
-                    <option value="" style="color: gainsboro;">Filtro por tarea...</option>
+                <span style="display: flex;">
+                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',8,1)" style="margin-right: 5px; width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="" style="color: gainsboro;">Tarea...</option>
                     {% for tar in tareas %}
                     {% if tar[0] == 0 %}
-                    <option value="No se le asignó ninguna tarea">Sin tarea</option>
+                    <option value="No se le asignó ninguna tarea">SIN TAREA</option>
                     {% else %}
                     <option value="{{ tar[1] }}">{{ tar[1] }}</option>
                     {% endif %}
                     {% endfor %}
                 </select>
-            </td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td colspan="3">
-            <select id="filtro_estado" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_estado', 'tabla_registros', 15,1)">
-                <option value="" style="color: gainsboro">Filtrar por estado...</option>
-                <option value="listo" class="btn success">Listo</option>
-                <option value="pendiente" class="btn warning">Pendiente</option>
-                <option value="rechazado" class="btn danger">Rechazado</option>
-            </select>
+                <input onmouseenter="this.type='date'; this.removeAttribute('disabled')" onmouseleave="this.type='text'; this.setAttribute('disabled', 'disabled');" onchange="document.getElementById('fecha_inicial').removeAttribute('disabled'); document.getElementById('fecha_inicial').value = this.value; document.getElementById('filtro').value = 'fecha_unica'; document.getElementById('btn-enviar').click();" type="text" {% if fechaunica == '' %}placeholder="Filtro por fecha de tarea..."{% else %}placeholder="{{fechaunica}}"{% endif %} style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%;" disabled>
+            </span>
             </td>
         </tr>
         <tr>
             <th>Empresa</th>
             <th colspan="2">Agente</th>
-            <th colspan="3">Cliente</th>
-            <th colspan="2">Notas de llamada</th>
+            <th colspan="2">Cliente</th>
+            <th>Notas de llamada</th>
             <th colspan="4">Tarea</th>
         </tr>
-        <form method="POST" name="formulario" action="/registros/editarregistro"><input type="hidden" name="redireccion">
+        <form method="POST" name="formulario" action="/registros/editarregistro" id="formulario"><input type="hidden" name="redireccion">
         {% for i in tablas %}
+        {% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}
         <tr style="color: white;">
-            {% if i[12] == "pendiente" %}
+        {% else %}
+        <tr>
+        {% endif %}
             <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[0] }}</td>
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[1] }}</td>
-                <td style="border-radius: 5px; background-color: #ff9800;">
-                    <select id="{{i[8]}}agnt" onchange="cambiarAgente(document.getElementById('{{ i[8] }}agnt').value, '{{i[8]}}')" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[0] }}</td>
+                <td style="border-radius: 5px; background-color: #{{i[15]}}"><span class="icon-container"><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="15" height="15" style="vertical-align: middle;" onclick="document.getElementById('{{i[8]}}agnt').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span> {{i[1]}}</td>
+                <td style="background: none; padding-left: 0; padding-right: 0;" id="td_agente">
+                    <select id="{{i[8]}}agnt" onchange="cambiarAgente(document.getElementById('{{ i[8] }}agnt').value, '{{i[8]}}')" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" hidden>
                         {% for a in agentes %}
                         {% if i[1] == a[0] %}
                         <option value="{{a[0]}}" selected>{{a[0]}}</option>
@@ -108,55 +131,77 @@ Administración Los Andes | Registros
                         {% endfor %}
                     </select>
                 </td>
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[2] }}.
+                <td style="border-radius: 5px; background-color: #{{i[15]}};">{% if i[3] != '' %}<a type="button" onclick="editarCliente('nombre', '{{i[3]}}', '{{i[2]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}{% if i[3] != '' %}</a>{% endif %}
                 {% if i[3] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
+                    <br><a type="button" {% if editar_telefono == 'SI' %}onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"{% endif %}>{% if editar_telefono == 'SI' %}<span class="icon-container">{% endif %}<img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if editar_telefono == 'SI' %}<span class="tooltip" id="tooltip-editar">Editar teléfono</span></span>{% endif %} {{ i[3] }}</a>
                 {% endif %}
-                {% if i[14] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
+                {% if i[0] == 'TS NETWORK CAMARAS DE SEGURIDAD' or i[0] == 'TS NETWORK INTERNET' %}
+                    <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{i[8]}}', '{{i[14]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[14]}}{% if i[3] != '' %}</a>{% endif %}
+                {% else %}
+                    {% if i[14] != '' %}
+                    <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{i[8]}}', '{{i[14]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[14]}}{% if i[3] != '' %}</a>{% endif %}
+                    {% endif %}
                 {% endif %}
                 {% if i[4] != '' %}
-                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
+                <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('email', '{{i[3]}}', '{{i[4]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar email</span></span> {{i[4]}}{% if i[3] != '' %}</a>{% endif %}
                 {% endif %}
                 </td>
-                <td>
+                <td style="border-radius: 5px; background: none; padding-left: 0; padding-right: 0; margin: 0;">
                     {% if i[3] != '' %}
-                    <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
+                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
+                    {% else %}
+                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"><img src="{{ url_for('static', filename='img/phone-volume-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
+                    {% endif %}
+                    {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
+                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
                     {% endif %}
                 </td>
-                <td>
-                    {% if i[7] != 0 %}
-                    <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
+                <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Llamada el {{i[8]}}
+                <br><a type="button" onclick="motivo('{{i[8]}}')"><span class="icon-container"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Editar nota</span></span> {% if i[5] != '' %}{{ i[5] }}{% else %}No tiene notas de llamada cargadas.{% endif %}</a>
+                    {% if i[9] == 'NO LE INTERESA' %}
+                    {% if i[13] != None %}
+                        {% if i[13] != '' %}
+                            <br><img src="{{ url_for('static', filename='img/xmark-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Razón: {{i[13]}}
+                        {% endif %}
+                    {% endif %}
                     {% endif %}
                 </td>
-                <td style="border-radius: 5px; background-color: #ff9800;">Llamada el {{i[8]}}
-                    {% if i[5] != '' %}
-                    <br>Nota: {{ i[5] }}
-                    {% endif %}
-                </td>
+            <!--
                 <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
+            -->
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #ff9800;">{{ i[9] }} el {{ i[10] }}
-                    {% if i[11] != '' %} 
-                    a las {{ i[11] }}
+                <td style="border-radius: 5px; background-color: #{{i[15]}};">
+                {% if i[9] != 'NO LE INTERESA' %}
+                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">
+                {% endif %}
+                    {{ i[9] }}
+                    {% if i[9] != 'NO LE INTERESA' %}
+                        {% if i[10] != None %}
+                            el {{ i[10] }}
+                                {% if i[11] != '' %} 
+                                    a las {{ i[11] }}
+                                {% endif %}
+                        {% endif %}
                     {% endif %}
                 </td>
                 {% else %}
-                <td style="border-radius: 5px; background-color: #ff9800;">No se le asignó ninguna tarea</td>
+                <td style="border-radius: 5px; background-color: #{{i[15]}};">No se le asignó ninguna tarea</td>
                 {% endif %}
-                <td>
-                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
+                <td style="border-radius: 5px; background: none;">
+                    <span class="icon-container" id="flotante_tarea_{{i[8]}}"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_tarea_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_tarea{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>
+                    <select name="tarea" id="select_tarea{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')" hidden>
                         {% for t in tareas %}
+                        {% if t[1] != 'NO LE INTERESA' %}
                         {% if i[9] == t[1] %}
                         <option value="{{t[0]}}" selected>{{t[1]}}</option>
                         {% else %}
                         <option value="{{t[0]}}">{{t[1]}}</option>
                         {% endif %}
+                        {% endif %}
                         {% endfor %}
                     </select>
-                </td>
-                <td>
-                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
+                    <span class="icon-container" id="flotante_calendar_{{i[8]}}"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_calendar_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_calendar{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
+                    <select name="calendario" id="select_calendar{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')" hidden>
                     {% for c in calendario %}
                     {% if i[10] == c[0] %}
                     <option value="{{ c[0] }}" selected>{{c[1]}}</option>
@@ -165,198 +210,23 @@ Administración Los Andes | Registros
                     {% endif %}
                     {% endfor %}
                     </select>
-                </td>
-                <td>
-                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
+                    <span class="icon-container" id="flotante_hora_{{i[8]}}"><img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_hora_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_hora{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar hora de tarea</span></span>
+                    <select name="hora" id="select_hora{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')" hidden>
                         <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
                         {% for hora in range(9,20) %}
                         <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
                         {% endfor %}
                     </select>
+                    <span class="icon-container"><img src="{{ url_for('static', filename='img/youtube-dislike.png') }}" width="18" height="18" class="icon" id="editar-icono" type="button" onclick="rechazar('{{ i[8] }}');"><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+                    <span class="icon-container"><img src="{{ url_for('static', filename='img/send-blue.png') }}" width="15" height="15" class="icon" id="editar-icono" type="button"><span class="tooltip" id="tooltip-editar" style="background-color: blue;">Enviar cotización</span></span>
                 </td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
-                <button id="btn{{ i[8] }}" type="submit" hidden></button>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
-                <td style="display: none;">{{i[12]}}</td>
-            {% elif i[12] == "listo" %}
-            <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
-                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[0] }}</td>
-                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[1] }}</td>
-                <td style="border-radius: 5px; background-color: #04AA6D;">
-                    <select id="{{i[8]}}agnt" onchange="cambiarAgente(document.getElementById('{{ i[8] }}agnt').value, '{{i[8]}}')" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;">
-                        {% for a in agentes %}
-                        {% if i[1] == a[0] %}
-                        <option value="{{a[0]}}" selected>{{a[0]}}</option>
-                        {% else %}
-                        <option value="{{a[0]}}">{{a[0]}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
+                <td hidden>
+                    {{i[9]}}
                 </td>
-                <td style="border-radius: 5px; background-color: #04aa6d;">{{ i[2] }}.
-                    {% if i[3] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
-                {% endif %}
-                {% if i[14] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
-                {% endif %}
-                {% if i[4] != '' %}
-                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
-                {% endif %}
-                    </td>
-                    <td>
-                        {% if i[3] != '' %}
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action = '/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if i[7] != 0 %}
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
-                        {% endif %}
-                    </td>
-                <td style="border-radius: 5px; background-color: #04AA6D;">Llamada el {{i[8]}}
-                    {% if i[5] != '' %}
-                    <br>Nota: {{ i[5] }}
-                    {% endif %}
-                </td>
-                <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
-                {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #04AA6D;">{{ i[9] }} el {{ i[10] }}
-                    {% if i[11] != '' %} 
-                    a las {{ i[11] }}
-                    {% endif %}
-                </td>
-                {% else %}
-                <td style="border-radius: 5px; background-color: #04AA6D;">No se le asignó ninguna tarea</td>
-                {% endif %}
-                <td>
-                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
-                        {% for t in tareas %}
-                        {% if i[9] == t[1] %}
-                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
-                        {% else %}
-                        <option value="{{t[0]}}">{{t[1]}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
-                    {% for c in calendario %}
-                    {% if i[10] == c[0] %}
-                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
-                    {% else %}
-                    <option value="{{ c[0] }}">{{c[1]}}</option>
-                    {% endif %}
-                    {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
-                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
-                        {% for hora in range(9,20) %}
-                        <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
-                <button id="btn{{ i[8] }}" type="submit" hidden></button>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
-                <td style="display: none;">{{ i[12] }}</td>
-            {% elif i[12] == "rechazado" %}
-            <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
-                <td style="border-radius: 5px; color: #da190b;">{{ i[0] }}</td>
-                <td style="border-radius: 5px; color: #da190b;">{{ i[1] }}</td>
-                <td>
-                    <select id="{{i[8]}}agnt" onchange="cambiarAgente(document.getElementById('{{ i[8] }}agnt').value, '{{i[8]}}')" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;">
-                        {% for a in agentes %}
-                        {% if i[1] == a[0] %}
-                        <option value="{{a[0]}}" selected>{{a[0]}}</option>
-                        {% else %}
-                        <option value="{{a[0]}}">{{a[0]}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </td>
-                <td style="border-radius: 5px; color: #da190b;">{{ i[2] }}.
-                    {% if i[3] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[3] }}.
-                {% endif %}
-                {% if i[14] != '' %}
-                    <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[14]}}
-                {% endif %}
-                {% if i[4] != '' %}
-                <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{i[4]}}
-                {% endif %}
-                    </td>
-                    <td>
-                        {% if i[3] != '' %}
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action = '/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if i[7] != 0 %}
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="btnCotizacion(document.getElementById('{{ i[8] }}').value, '{{ i[7] }}')"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20"></button>
-                        {% endif %}
-                    </td>
-                <td style="border-radius: 5px; color: #da190b;">Llamada el {{i[8]}}
-                    {% if i[5] != '' %}
-                    <br>Nota: {{ i[5] }}
-                    {% endif %}
-                    {% if i[13] != '' %}
-                    <br>
-                    <!-- <button style="width: 100%;" type="button" onclick="alert('{{ i[13] }}')">Razón del rechazo</button> -->
-                    Razón del rechazo: {{i[13]}}
-                    {% endif %}
-                </td>
-                <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
-                {% if i[9] != '' %}
-                <td style="border-radius: 5px; color: #da190b;">{{ i[9] }} el {{ i[10] }}
-                    {% if i[11] != '' %} 
-                    a las {{ i[11] }}
-                    {% endif %}
-                </td>
-                {% else %}
-                <td style="border-radius: 5px; color: #da190b;">No se le asignó ninguna tarea</td>
-                {% endif %}
-                <td>
-                    <select name="tarea" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')">
-                        {% for t in tareas %}
-                        {% if i[9] == t[1] %}
-                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
-                        {% else %}
-                        <option value="{{t[0]}}">{{t[1]}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <select name="calendario" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')">
-                    {% for c in calendario %}
-                    {% if i[10] == c[0] %}
-                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
-                    {% else %}
-                    <option value="{{ c[0] }}">{{c[1]}}</option>
-                    {% endif %}
-                    {% endfor %}
-                    </select>
-                </td>
-                <td>
-                    <select name="hora" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')">
-                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
-                        {% for hora in range(9,20) %}
-                        <option value="{{hora}}:00 h" >{{ hora }}:00 h</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value ='a_listo'" class="btn success" style="padding: 6px; font-size: 14px;">Listo</button></td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="submit" onmouseover="document.getElementById('eliminar').value = '{{ i[8] }}'; document.getElementById('accion').value = 'a_pendiente'" class="btn warning" style="padding: 6px; font-size: 14px;">Pendiente</button></td>
-                <button id="btn{{ i[8] }}" type="submit" hidden></button>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">Rechazado</button></td>
-                <td style="display: none;">{{i[12]}}</td>
-            {% endif %}
+                <!--
+                <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">No le interesó</button></td>
+                <td style="border: none; text-align: center; border-radius: 5px;"><button style="padding: 6px; font-size: 14px;" class="btn primary">Enviar cotización</button></td>
+                -->
         </tr>
         {% endfor %}
         <input type="hidden" name="eliminar" id="eliminar">
@@ -364,6 +234,7 @@ Administración Los Andes | Registros
         <input type="hidden" id="nota" name="nota" value="null">
         <input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
         <input type="hidden" id="telefono_seg" name="telefono_seg" value="">
+        <input type="hidden" id="cliente" name="cliente">
         </form>
     </table>
 </div>
@@ -377,7 +248,8 @@ Administración Los Andes | Registros
         let respuesta = prompt("Razón del rechazo:");
         if (respuesta != null){
             document.getElementById('nota').value = respuesta;
-            document.getElementById("btn"+id).click();
+            //document.getElementById("btn"+id).click();
+            document.formulario.submit();
         }
     }
 

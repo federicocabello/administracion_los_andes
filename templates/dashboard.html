@@ -43,35 +43,37 @@ Administración Los Andes | Inicio
           </select>
         </td>
         <td style="color: #008080; text-align: center;">{{ t[1] }}</td>
-        <td>{{ t[2] }}
+        <td>{% if t[3] != '' %}<a type="button" onclick="editarCliente('nombre','{{t[3]}}', '{{t[2]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[2] }}{% if t[3] != '' %}</a>{% endif %}
           {% if t[3] != '' %}
-          <br><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[3]}}
+          <br><a type="button" onclick="editarCliente('telefono', '{{t[3]}}', '{{t[3]}}', 'formulario_actualizacion', '{{t[2]}}')"><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[3]}}
           {% endif %}
           {% if t[12] != '' %}
-          <br><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[12]}}
+          <br>{% if t[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{t[3]}}', '{{t[12]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[12]}}{% if t[3] != '' %}</a>{% endif %}
           {% endif %}
           {% if t[6] != '' %}
-          <br><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[6]}}
+          <br>{% if t[3] != '' %}<a type="button" onclick="editarCliente('email', '{{t[3]}}', '{{t[6]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[6]}}{% if t[3] != '' %}</a>{% endif %}
           {% endif %}
         </td>
         {% if t[4] != '' %}
-        <td>{{ t[4] }}</td>
+        <td><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[4] }}</td>
         {% else %}
         <td>No tiene ningún motivo cargado</td>
         {% endif %}
-        <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="pedirDatos('{{t[9]}}', 'motivo', 'Nota nueva:')"></button></td>
-        <td>{{ t[5] }} 
+        <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" onclick="pedirDatos('{{t[9]}}', 'motivo', 'Nota nueva:')" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20"></button></td>
+        <td><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[5] }} 
         {% if t[10] != '' %}
-         a las {{ t[10 ]}}
+         a las {{ t[10]}}
         {% endif %}
         </td>
         <td>
           <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'tarea',this.value)">
             {% for tarea in tareas %}
+            {% if tarea[1] != 'NO LE INTERESA' %}
             {% if tarea[1] == t[5] %}
             <option value="{{tarea[0]}}" selected>{{tarea[1]}}</option>
             {% else %}
             <option value="{{tarea[0]}}">{{tarea[1]}}</option>
+            {% endif %}
             {% endif %}
             {% endfor %}
           </select>
@@ -91,7 +93,6 @@ Administración Los Andes | Inicio
             {% endfor %}
           </select>
         </td>
-        <td><button type="button" onclick="cotizacionListo('{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn success">Listo</button></td>
         <td><button type="button" style="margin: 0; padding: 5px; font-size: 16px;" class="btn danger" onclick="pedirDatos('{{ t[9] }}', 'rechazo', 'Razón del rechazo:')">No le interesó</button></td>
         <td><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn primary">Enviar cotización</button></td>
         <td><textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea></td>
@@ -123,11 +124,13 @@ Administración Los Andes | Inicio
   <form method="POST" name="formulario">
     <input type="hidden" name="menuempresa" id="menuempresa">
   </form>
-  <form method="POST" name="formulario_actualizacion">
+  <form method="POST" name="formulario_actualizacion" id="formulario_actualizacion">
     <input type="hidden" id="accion" name="accion">
     <input type="hidden" id="eliminar" name="eliminar">
     <input type="hidden" id="agentenuevo" name="agentenuevo">
     <input type="hidden" name="redireccion" value="dashboard">
+    <input type="hidden" name="nota" id="nota">
+    <input type="hidden" name="cliente" id="cliente">
   </form>
 </div>
 {% endblock %}

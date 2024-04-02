@@ -10,7 +10,17 @@ Administración Los Andes | Movimientos
 
 {% block body %}
 <div id="main-content">
-    <h1>Panel de registros de todos los movimientos del sistema.</h1>
+    <form action="/movimientos" name="formulario" method="POST">
+    <h1>Panel de registros de todos los movimientos del sistema. <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" name="cantidad_mov" onchange="document.getElementById('accion').value = 'cantidad'; document.formulario.submit()">
+        {% if mostrados != '25' and mostrados != '50' and mostrados != '75' and mostrados != '100' and mostrados != '150' and mostrados != '200' and mostrados != n_mov[0] %}<option selected>Mostrar {{mostrados}}</option>{% endif %}
+        <option value="25" {% if mostrados == '25' %}selected{% endif %}>Mostrar 25</option>
+        <option value="50" {% if mostrados == '50' %}selected{% endif %}>Mostrar 50</option>
+        <option value="75" {% if mostrados == '75' %}selected{% endif %}>Mostrar 75</option>
+        <option value="100" {% if mostrados == '100' %}selected{% endif %}>Mostrar 100</option>
+        <option value="150" {% if mostrados == '150' %}selected{% endif %}>Mostrar 150</option>
+        <option value="200" {% if mostrados == '200' %}selected{% endif %}>Mostrar 200</option>
+        <option value="{{n_mov[0]}}" {% if mostrados == n_mov[0] %}selected{% endif %}>Mostrar todos ({{n_mov[0]}})</option>
+    </select><button type="button" style="margin-left: 10px;"><a href="{{ url_for('movimientos') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20"></a></button></h1>
     <table style="border: 1px solid black; margin: 0 auto;" id="tabla_movimientos">
         <tr>
             <td></td>
@@ -18,6 +28,7 @@ Administración Los Andes | Movimientos
                 <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',1,1)">
             </td>
             <td>
+            <!--
                 <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_movimientos',2,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
                     <option value="" style="color:gainsboro">Filtro por fecha...</option>
                     <option value="-01-">Enero</option>
@@ -33,6 +44,8 @@ Administración Los Andes | Movimientos
                     <option value="-11-">Noviembre</option>
                     <option value="-12-">Diciembre</option>
                 </select>
+            -->
+            <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" onmouseenter="this.type='date'; this.removeAttribute('disabled')" onmouseleave="this.type='text'; this.setAttribute('disabled', 'disabled');" type="text" {% if fecha == '' %}placeholder="Filtrar por fecha..."{% else %}placeholder="{{fecha}}"{% endif %} disabled>
             </td>
         </tr>
         <tr>
@@ -48,5 +61,7 @@ Administración Los Andes | Movimientos
         </tr>
         {% endfor %}
     </table>
+    <input type="hidden" name="accion" id="accion">
+    </form>
 </div>
 {% endblock %}

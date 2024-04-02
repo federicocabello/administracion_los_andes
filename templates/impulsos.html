@@ -1,0 +1,63 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Impulsos
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de impulsos.</h1>
+    <form action="">
+    <table style="margin: 0 auto;">
+        <tr>
+            <th colspan="6">Nuevo impulso</th>
+        </tr>
+        <tr>
+            <td>
+                <select name="empresa" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    {% for empresa in empresas %}
+                    <option value="{{empresa[0]}}">{{empresa[0]}}</option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td>
+                Descripción:
+                <input type="text" autofocus>
+            </td>
+            <td>
+                Monto total:
+                <input type="number" placeholder="$...">
+            </td>
+            <td>
+                Fecha de inicio:
+                <input type="date">
+            </td>
+            <td>
+                Dias:
+                <input type="number">
+            </td>
+            <td>
+                <button class="btn success">Guardar</button>
+            </td>
+        </tr>
+    </table>
+    <br>
+    <br>
+    <table style="margin: 0 auto;">
+        <tr>
+            <th>Empresa</th>
+            <th>Descripción</th>
+            <th>Monto</th>
+            <th>Fechas</th>
+        </tr>
+        <tr>
+
+        </tr>
+    </table>
+    </form>
+</div>
+{% endblock %}

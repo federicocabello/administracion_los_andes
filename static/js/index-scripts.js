@@ -71,3 +71,48 @@ function habilitarBoton(input, boton){
       document.getElementById(boton).setAttribute('hidden', 'hidden')
   }
 }
+
+function editarCliente(campo, id, viejo, form, nombre){
+  document.getElementById("eliminar").value = id;
+  document.getElementById("nota").value = viejo
+  document.getElementById("accion").value = campo;
+  document.getElementById("cliente").value = nombre;
+
+  let respuesta = prompt("Nuevo "+campo+":",viejo);
+  if (respuesta != null){
+      document.getElementById('agentenuevo').value = respuesta;
+      document.getElementById(form).action = '/registros/editarregistro/actualizar';
+      document.getElementById(form).submit()
+  }
+}
+
+function editarSelect(accion, id, nuevo, viejo, nombre, form){
+  document.getElementById("eliminar").value = id;
+  document.getElementById("accion").value = accion;
+  document.getElementById("agentenuevo").value = nuevo;
+  document.getElementById("nota").value = viejo;
+  document.getElementById("cliente").value = nombre;
+  document.getElementById(form).submit();
+}
+
+function comprobarEnTabla(idtabla, idinput, idlabel){
+  let telefono = document.getElementById(idinput).value;
+  let tablaTelefonos = document.getElementById(idtabla).getElementsByTagName('td');
+  let notification = document.getElementById(idlabel);
+
+  let encontrado = false;
+
+  telefono = telefono.replace(/\D/g,'');
+
+  for (let i=0; i< tablaTelefonos.length; i++){
+    if (tablaTelefonos[i].textContent.trim() === telefono){
+      encontrado = true;
+      break;
+    }
+  }
+  if (encontrado){
+    notification.removeAttribute('hidden')
+  }else{
+    notification.setAttribute('hidden', 'hidden')
+  }
+  }
