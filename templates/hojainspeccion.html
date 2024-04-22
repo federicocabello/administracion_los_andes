@@ -10,7 +10,8 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
 
 {% block body %}
 <div id="main-content">
-    <h1>Hoja de inspección N° {{ n_hoja[0] }}</h1><input type="hidden" id="idhoja" value="{{n_hoja[0]}}"><input type="hidden" id="idfecha" value="{{hoja[9]}}"><input type="hidden" id="accion" value="{% if condicional != 0 %}actualizar{% else %}crear{% endif %}">
+    <h1>Hoja de inspección N°{{ n_hoja[0] }}</h1>
+    <input type="text" id="empresa" value="{{hoja[26]}}" style="text-transform: uppercase; display: none;">
     <h3>
     <div style="display: flex; width: 100%; justify-content: space-around;">
     <span style="width: 40%;">
@@ -28,17 +29,23 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
     </div>
     </h3>
     <main>
-            <fieldset style="display: flex; justify-content: space-around; width: 97%;">
+        <div style="display: flex;">
+            <fieldset style="display: flex; justify-content: space-around; width: 50%; float: left;">
                 <legend style="text-align: center;"><h3><img src="{{ url_for('static', filename='img/toolbox-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> SERVICIO</h3></legend>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'MANTENIMIENTO PREVENTIVO';" {% if hoja[4] == "MANTENIMIENTO PREVENTIVO" %}checked{% endif %}>MANTENIMIENTO PREVENTIVO</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INSTALACIÓN';" {% if hoja[4] == "INSTALACIÓN" %}checked{% endif %}>INSTALACIÓN</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'MANTENIMIENTO CORRECTIVO';" {% if hoja[4] == "MANTENIMIENTO CORRECTIVO" %}checked{% endif %}>MANTENIMIENTO CORRECTIVO</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INSPECCIÓN';" {% if hoja[4] == "INSPECCIÓN" %}checked{% endif %}>INSPECCIÓN</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'CCTV';" {% if hoja[4] == "CCTV" %}checked{% endif %}>CCTV</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_servicio').setAttribute('hidden', 'hidden'); document.getElementById('servicio').value = 'INTERNET';" {% if hoja[4] == "INTERNET" %}checked{% endif %}>INTERNET</span>
-                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('servicio').value = '{{hoja[4]}}'; document.getElementById('p_servicio').removeAttribute('hidden'); document.getElementById('servicio').focus();" {% if hoja[4] != 'MANTENIMIENTO PREVENTIVO' and hoja[4] != 'INSTALACIÓN' and hoja[4] != 'MANTENIMIENTO CORRECTIVO' and hoja[4] != 'INSPECCIÓN' and hoja[4] != 'CCTV' and hoja[4] != 'INTERNET' and hoja[4] != '' %}checked{% endif %}>Otro</span>
+                <span><input type="radio" name="check2" onclick="onlyTwo(this); document.getElementById('servicio').value = 'MANTENIMIENTO PREVENTIVO';" {% if hoja[4] == "MANTENIMIENTO PREVENTIVO" %}checked{% endif %}>MANTENIMIENTO PREVENTIVO</span>
+                <span><input type="radio" name="check2" onclick="onlyTwo(this); document.getElementById('servicio').value = 'INSTALACIÓN';" {% if hoja[4] == "INSTALACIÓN" %}checked{% endif %}>INSTALACIÓN</span>
+                <span><input type="radio" name="check2" onclick="onlyTwo(this); document.getElementById('servicio').value = 'MANTENIMIENTO CORRECTIVO';" {% if hoja[4] == "MANTENIMIENTO CORRECTIVO" %}checked{% endif %}>MANTENIMIENTO CORRECTIVO</span>
+                <span><input type="radio" name="check2" onclick="onlyTwo(this); document.getElementById('servicio').value = 'INSPECCIÓN';" {% if hoja[4] == "INSPECCIÓN" %}checked{% endif %}>INSPECCIÓN</span>
             </fieldset>
-            <p id="p_servicio" {% if hoja[4] == 'MANTENIMIENTO PREVENTIVO' or hoja[4] == 'INSTALACIÓN' or hoja[4] == 'MANTENIMIENTO CORRECTIVO' or hoja[4] == 'INSPECCIÓN' or hoja[4] == 'CCTV' or hoja[4] == 'INTERNET' %}hidden{% endif %}>Otro:<input type="text" style="width: 99%; text-transform: uppercase;" id="servicio" value="{{hoja[4]}}"></p>
+            <fieldset style="display: flex; justify-content: space-around; width: 50%; float: right;">
+                <legend style="text-align: center;"><h3><img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="25" height="25" style="vertical-align: bottom;"></h3></legend>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_objeto').setAttribute('hidden', 'hidden'); document.getElementById('objeto').value = 'CCTV';" {% if hoja[5] == "CCTV" %}checked{% endif %}>CCTV</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('p_objeto').setAttribute('hidden', 'hidden'); document.getElementById('objeto').value = 'INTERNET';" {% if hoja[5] == "INTERNET" %}checked{% endif %}>INTERNET</span>
+                <span><input type="radio" name="check" onclick="onlyOne(this); document.getElementById('objeto').value = ''; document.getElementById('p_objeto').removeAttribute('hidden'); document.getElementById('objeto').focus();" value="{{hoja[5]}}" {% if hoja[5] != 'CCTV' and hoja[5] != 'INTERNET' and hoja[5] != '' %}checked{% endif %}>Otro</span>
+            </fieldset>
+        </div>
+            <p id="p_objeto" {% if hoja[5] == 'CCTV' or hoja[5] == 'INTERNET' %}hidden{% endif %}>Otro:<input type="text" style="width: 99%; text-transform: uppercase;" id="objeto" value="{{hoja[5]}}"></p>
+            <p hidden><input type="text" id="servicio" value="{{hoja[4]}}"></p>
             <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/ethernet-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> MATERIALES</h3>
             <table style="margin: 0 auto; width: 80%;" id="tabla_materiales">
                 <tr>
@@ -85,67 +92,108 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
             </table>
             <br>
             <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/clipboard-list-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> NOTAS TÉCNICAS</h3>
-            <input type="text" style="width: 80%; margin: 0 auto; text-transform: uppercase;" value="{{hoja[5]}}" id="notastecnicas" onkeypress="foco2('nota_pago');">
+            <input type="text" style="width: 80%; margin: 0 auto; text-transform: uppercase; font-size: 14px;" value="{{hoja[6]}}" id="notastecnicas" onkeypress="foco2('nota_pago');">
             <br>
             <h3 style="text-align: center;"><img src="{{ url_for('static', filename='img/file-invoice-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> ACUERDO DE PAGO</h3>
             <div style="display: flex; justify-content: center;">
-                <span>Precio total<input type="number" style="text-align: center;" value="{{hoja[6]}}" id="precio_total" onchange="saldoRestante()" onkeydown="saldoRestante()" onkeyup="saldoRestante()"></span>
-                <span>Enganche<input type="number" style="text-align: center; color: green;" value="{{hoja[7]}}" id="enganche" onchange="saldoRestante()" onkeydown="saldoRestante()" onkeyup="saldoRestante()"></span>
-                <span style="width: 10%;">Saldo restante<div style="display: flex; margin-top: 5px;"><input type="text" value="$" style="padding: 0; background: none; color: red; border: none; margin: 0; width: 15px;" disabled><input type="number" style="padding: 0; background: none; color: red; border: none; width: 100%; font-size: 22px;" value="{{hoja[8]}}" id="saldo_restante" disabled></div></span>
+                <span>Precio total<input type="number" style="text-align: center;" value="{{hoja[7]}}" id="precio_total" onkeypress="foco2('enganche')" onchange="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeydown="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeyup="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);"></span>
+                <span>Enganche<input type="number" style="text-align: center; color: green;" value="{{hoja[8]}}" id="enganche" onkeypress="foco2('nota_pago')" onchange="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeydown="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeyup="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" {% if hoja[11] == 'totalidad' %}disabled{% endif %}></span>
+                <span style="width: 10%;">Saldo restante<div style="display: flex; margin-top: 5px;"><input type="text" value="$" style="padding: 0; background: none; color: red; border: none; margin: 0; width: 15px;" disabled><input type="number" style="padding: 0; background: none; color: red; border: none; width: 100%; font-size: 22px;" value="{{hoja[9]}}" id="saldo_restante" disabled></div></span>
                 <span>
                     <table style="background: none; box-shadow: none; border: none; margin: 0 30px 0 0; padding: 0;" id="tabla_acuerdos">
                         <tr>
                             <th style="background: none; margin: 0; padding: 0; text-align: center;">
-                                <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" id="acuerdo_cantidad" onchange="acuerdosPago()">
-                                    <option value="0" style="color: gainsboro;">Acuerdos de pago...</option>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
+                                <select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; background-color: #008080; color:white; margin-bottom: 5px;" onchange="formasPago(this.value)" {% if hoja[11] == 'totalidad'%}disabled{% endif %}>
+                                    <option value="" style="background-color: white; color: gainsboro;" {% if hoja[11] == '' %}selected{% endif %}>Forma de pago</option>
+                                    {% if condicional != 0 and hoja[11] == 'totalidad' %}
+                                    <option value="totalidad" style="background-color: green;" {% if hoja[11] == 'totalidad' %}selected{% endif %}>Abona todo</option>
+                                    {% endif %}
+                                    <option value="semanal" {% if hoja[11] == 'semanal' %}selected{% endif %}>Semanal</option>
+                                    <option value="mensual" {% if hoja[11] == 'mensual' %}selected{% endif %}>Mensual</option>
+                                </select>
+                                <br>
+                                <select id="totalidad" style="font-family: 'Rubik', sans-serif; font-size: 16px;" hidden>
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="PAYPAL">PayPal</option>
+                                    <option value="CASH APP">Cash App</option>
+                                    <option value="CHEQUE">Cheque</option>
+                                    <option value="ZELLE">Zelle</option>
+                                    <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
                                 </select>
                             </th>
-                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_interes" hidden>
-                                Porcentaje de interés
+                        </tr>
+                        <tr>
+                            <th style="background: none; margin: 0; padding: 0; text-align: center;">
+                                <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" id="acuerdo_cantidad" onchange="acuerdosPago(this.value)" {% if n_cuotas == 0 %}hidden{% endif %}>
+                                    <option value="0" style="color: gainsboro;">Cuotas...</option>
+                                    <option value="1" {% if n_cuotas == 1 %}selected{% endif %}>1</option>
+                                    <option value="2" {% if n_cuotas == 2 %}selected{% endif %}>2</option>
+                                    <option value="3" {% if n_cuotas == 3 %}selected{% endif %}>3</option>
+                                    <option value="4" {% if n_cuotas == 4 %}selected{% endif %}>4</option>
+                                </select>
+                            </th>
+                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_interes" {% if n_cuotas == 0 %}hidden{% endif %}>
+                                Porcentaje de interés (%)
+                            </td>
+                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_vencimiento" {% if n_cuotas == 0 %}hidden{% endif %}>
+                                Vencimiento
                             </td>
                         </tr>
-                        <tr id="acuerdo_1" hidden>
+                        <tr id="acuerdo_1" {% if hoja[12] == '' or hoja[12] == None %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
-                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #1" id="acuerdo_campo1">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #1" id="acuerdo_campo1" value="{{hoja[12]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
                             <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
-                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje1">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje1" value="{{hoja[13]}}">
+                            </td>
+                            <td>
+                                <input type="date" style="width: 100%; color: black" id="acuerdo_fecha1" value="{{hoja[14]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_2" hidden>
+                        <tr id="acuerdo_2" {% if hoja[15] == '' or hoja[15] == None %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
-                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #2" id="acuerdo_campo2">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #2" id="acuerdo_campo2" value="{{hoja[15]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
                             <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
-                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje2">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje2" value="{{hoja[16]}}">
+                            </td>
+                            <td>
+                                <input type="date" style="width: 100%; color: black ;" id="acuerdo_fecha2" value="{{hoja[17]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_3" hidden>
+                        <tr id="acuerdo_3" {% if hoja[18] == '' or hoja[18] == None %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
-                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #3" id="acuerdo_campo3">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #3" id="acuerdo_campo3" value="{{hoja[18]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
                             <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
-                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje3">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje3" value="{{hoja[19]}}">
+                            </td>
+                            <td>
+                                <input type="date" style="width: 100%; color: black" id="acuerdo_fecha3" value="{{hoja[20]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_4" hidden>
+                        <tr id="acuerdo_4" {% if hoja[21] == '' or hoja[21] == None %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
-                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #4" id="acuerdo_campo4">
+                                <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #4" id="acuerdo_campo4" value="{{hoja[21]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
                             <td style="margin: 0; padding: 0; display: flex; justify-content: center; text-align: center;">
-                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje4">
+                                <input type="number" style="color: black; width: 50%; margin-top: 5px; text-align: center;" placeholder="%" id="acuerdo_porcentaje4" value="{{hoja[22]}}">
+                            </td>
+                            <td>
+                                <input type="date" style="width: 100%; color: black;" id="acuerdo_fecha4" value="{{hoja[23]}}">
+                            </td>
+                        </tr>
+                        <tr {% if hoja[11] == 'totalidad' %}hidden{% endif %}>
+                            <td style="text-align: center;" id="total_a_pagar">
+                                <span style="color: red; display: flex; justify-content: center; vertical-align: middle;"><input style="background: none; border: none; color: red; width: 115px; margin: 0; padding: 0;" type="text" value="Total a pagar: $" disabled><input type="number" style="padding: 0; margin: 0; width: 110px; color:red; background: none; border: none; font-size: 22px;" id="acuerdo_total_a_pagar" value="{{hoja[25]}}" disabled></span>
                             </td>
                         </tr>
                     </table>
                 </span>
-                <span>Notas de pago<textarea name="" id="nota_pago" cols="30" rows="8" style="width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase;"></textarea></span>
+                <span>Notas de pago<textarea id="nota_pago" cols="30" rows="10" style="width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase;">{{hoja[24]}}</textarea></span>
             </div>
             <p style="text-align: center;">
-                <button class="btn primary" style="margin: 0 auto;" id="btn-guardar">{% if condicional != 0 %}Actualizar{% else %}Crear nueva{% endif %} hoja de inspección</button>
+                <button class="btn primary" style="margin: 0 auto;" id="btn-guardar" onclick="guardarHoja('{{n_hoja[0]}}', '{{hoja[10]}}', '{{condicional}}', document.getElementById('servicio').value, document.getElementById('objeto').value);">{% if condicional != 0 %}Actualizar{% else %}Crear nueva{% endif %} hoja de inspección</button>
             </p>
     </main>
 </div>
@@ -153,20 +201,89 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
 
 {% block js %}
 <script>
-function acuerdosPago(){
-    cantidad_acuerdos = parseInt(document.getElementById('acuerdo_cantidad').value);
+    function totalAPagar(){
+        var total = 0;
+        for (let i = 1; i<=4; i++){
+        if (document.getElementById('acuerdo_campo'+i).style.display != 'none'){
+            total += parseFloat(document.getElementById('acuerdo_campo'+i).value) || 0;
+        }
+    }
+        document.getElementById('acuerdo_total_a_pagar').value = total;
+    }
+    
+    function fechas(n){
+        var input1Value = new Date (document.getElementById('fecha_emision').value);
+        var nextMonth = new Date(input1Value.getFullYear(), input1Value.getMonth()+n, input1Value.getDate()+1);
+        var formattedDate = nextMonth.toISOString().slice(0,10);
+        document.getElementById('acuerdo_fecha'+n).value = formattedDate;
+    }
+
+    function formasPago(value){
+        canti = document.getElementById('acuerdo_cantidad').value;
+        if (value == 'semanal' || value == 'mensual'){
+        document.getElementById('acuerdo_cantidad').removeAttribute('hidden');
+        document.getElementById('totalidad').setAttribute('hidden', 'hidden');
+        document.getElementById('enganche').removeAttribute('disabled');
+        acuerdosPago(canti)
+        }else if(value == 'totalidad'){
+            document.getElementById('totalidad').removeAttribute('hidden');
+            document.getElementById('acuerdo_cantidad').setAttribute('hidden', 'hidden');
+            document.getElementById('acuerdo_cantidad').value = '0';
+            document.getElementById('enganche').value = 0;
+            document.getElementById('saldo_restante').value = document.getElementById('precio_total').value;
+            document.getElementById('enganche').setAttribute('disabled', 'disabled');
+            acuerdosPago(0)
+        }else{
+            document.getElementById('acuerdo_cantidad').setAttribute('hidden', 'hidden');
+            document.getElementById('totalidad').setAttribute('hidden', 'hidden');
+            document.getElementById('acuerdo_cantidad').value = '0';
+            document.getElementById('enganche').removeAttribute('disabled');
+            acuerdosPago(0)
+        }
+    }
+    
+function acuerdosPago(cant){
+    cantidad_acuerdos = parseInt(cant);
     document.getElementById('acuerdo_interes').setAttribute('hidden', 'hidden');
+    document.getElementById('acuerdo_vencimiento').setAttribute('hidden', 'hidden');
+    document.getElementById('total_a_pagar').setAttribute('hidden', 'hidden');
     for (let oculto = 1; oculto<=4; oculto++){
         document.getElementById('acuerdo_'+oculto).setAttribute('hidden', 'hidden');
     }
     for (let vacio = cantidad_acuerdos; vacio<=4; vacio++){
         document.getElementById('acuerdo_campo'+vacio).value='';
         document.getElementById('acuerdo_porcentaje'+vacio).value='';
+        document.getElementById('acuerdo_fecha'+vacio).value='';
     }
+    
     if (cantidad_acuerdos>0){
+        var input1Value = new Date (document.getElementById('fecha_emision').value);
         document.getElementById('acuerdo_interes').removeAttribute('hidden');
+        document.getElementById('acuerdo_vencimiento').removeAttribute('hidden');
+        document.getElementById('total_a_pagar').removeAttribute('hidden');
+        tipo = document.getElementById('forma_pago').value;
+        total = parseInt(document.getElementById('saldo_restante').value);
+        resultado = total/cantidad_acuerdos;
+        interes =(total*0.1);
+        var dias = 11;
         for (let i = 1; i<=cantidad_acuerdos; i++){
             document.getElementById('acuerdo_'+i).removeAttribute('hidden');
+            if (tipo == 'mensual'){
+                document.getElementById('acuerdo_campo'+i).value = resultado+interes;
+                document.getElementById('acuerdo_porcentaje'+i).value = '10';
+                var nextMonth = new Date(input1Value.getFullYear(), input1Value.getMonth()+i, input1Value.getDate()+1);
+                var formattedDate = nextMonth.toISOString().slice(0,10);
+                document.getElementById('acuerdo_fecha'+i).value = formattedDate;
+            }else{
+                document.getElementById('acuerdo_campo'+i).value = resultado;
+                document.getElementById('acuerdo_porcentaje'+i).value = '';
+                //var nextMonth = new Date(input1Value.getTime() + 10 *24 * 60 * 60 * 1000);
+                var nextMonth = new Date(input1Value.getFullYear(), input1Value.getMonth(), input1Value.getDate()+dias);
+                var formattedDate = nextMonth.toISOString().slice(0,10);
+                document.getElementById('acuerdo_fecha'+i).value = formattedDate;
+            }
+            dias = dias+10;
+            totalAPagar();
         }
     }
     var hiddenInputs = document.querySelectorAll('input[type="hidden"]')
@@ -222,19 +339,66 @@ if(rowCount>1){
 
 //document.getElementById('btn-guardar').addEventListener('click', function() {var table = document.getElementById('tabla_materiales'); var data = []; var rows = table.getElementsByTagName('tr'); for (var i = 0; i< table.rows.length; i++){var row = rows[i]; var rowData = []; var inputs = row.getElementsByTagName('input'); for (var j= 0; j < inputs.length; j++) {rowData.push(inputs[j].value);} data.push(rowData);} var xhr = new XMLHttpRequest(); xhr.open('POST', '/guardar_en_mysql', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify(data));});
 
-document.getElementById('btn-guardar').addEventListener('click', function() {var table = document.getElementById('tabla_materiales'); var tableData = []; var rows = table.getElementsByTagName('tr'); for (var i = 0; i<rows.length; i++){var row = rows[i]; var rowData = []; var inputs = row.getElementsByTagName('input'); for (var j= 0; j < inputs.length; j++) {rowData.push(inputs[j].value);} tableData.push(rowData);}
-var idhoja = document.getElementById('idhoja').value;
-var idfecha = document.getElementById('idfecha').value;
+function guardarHoja(id_hoja, id_fecha, id_accion, servicio, objeto){
+var table = document.getElementById('tabla_materiales'); var tableData = []; var rows = table.getElementsByTagName('tr'); for (var i = 0; i<rows.length; i++){var row = rows[i]; var rowData = []; var inputs = row.getElementsByTagName('input'); for (var j= 0; j < inputs.length; j++) {rowData.push(inputs[j].value);} tableData.push(rowData);}
 var fecha_emision = document.getElementById('fecha_emision').value;
 var nombre = document.getElementById('nombre').value;
 var direccion = document.getElementById('direccion').value;
 var telefono = document.getElementById('telefono').value;
-var servicio = document.getElementById('servicio').value;
 var notas = document.getElementById('notastecnicas').value;
-var precio_total = document.getElementById('precio_total').value;
+var total = document.getElementById('precio_total').value;
 var enganche = document.getElementById('enganche').value;
-var accion = document.getElementById('accion').value;
-var xhr = new XMLHttpRequest(); xhr.open('POST', '/hoja_de_inspeccion/guardar', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({materiales: tableData, accion: accion, datos: [idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, notas, precio_total, enganche]}));});
+var tipopago = document.getElementById('forma_pago').value;
+
+var acuerdo1 = document.getElementById('acuerdo_campo1').value;
+var interes1 = document.getElementById('acuerdo_porcentaje1').value;
+var fecha1 = document.getElementById('acuerdo_fecha1').value;
+
+var acuerdo2 = document.getElementById('acuerdo_campo2').value;
+var interes2 = document.getElementById('acuerdo_porcentaje2').value;
+var fecha2 = document.getElementById('acuerdo_fecha2').value;
+
+var acuerdo3 = document.getElementById('acuerdo_campo3').value;
+var interes3 = document.getElementById('acuerdo_porcentaje3').value;
+var fecha3 = document.getElementById('acuerdo_fecha3').value;
+
+var acuerdo4 = document.getElementById('acuerdo_campo4').value;
+var interes4 = document.getElementById('acuerdo_porcentaje4').value;
+var fecha4 = document.getElementById('acuerdo_fecha4').value;
+
+if (tipopago == '' || tipopago == 'totalidad'){
+    acuerdo1 = 'null';
+    interes1 = 'null';
+    fecha1 = null;
+
+    acuerdo2 = 'null';
+    interes2 = 'null';
+    fecha2 = null;
+
+    acuerdo3 = 'null';
+    interes3 = 'null';
+    fecha3 = null;
+
+    acuerdo4 = 'null';
+    interes4 = 'null';
+    fecha4 = null;
+}
+
+var notapago = document.getElementById('nota_pago').value;
+var forma_pago_totalidad = document.getElementById('totalidad').value;
+
+if (id_accion != 0 ){
+    id_accion = 'actualizar'
+}else{
+    id_accion = 'crear'
+}
+
+var empresa = document.getElementById('empresa').value;
+
+var xhr = new XMLHttpRequest(); xhr.open('POST', '/hoja_de_inspeccion/guardar', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({materiales: tableData, accion: id_accion, datos: [id_hoja, id_fecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo1, interes1, fecha1, acuerdo2, interes2, fecha2, acuerdo3, interes3, fecha3, acuerdo4, interes4, fecha4, notapago, empresa, forma_pago_totalidad]}))
+registroListo('La hoja de inspección fue guardada con éxito!');
+window.location.replace('/registros');
+};
 
 function saldoRestante(){
     let saldorestante = parseFloat(document.getElementById('precio_total').value)-parseFloat(document.getElementById('enganche').value)

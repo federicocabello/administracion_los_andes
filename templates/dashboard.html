@@ -8,31 +8,38 @@ Administración Los Andes | Inicio
 <div id="main-content">
   <h1>Bienvenido {{ current_user.fullname }} al sistema.</h1>
   <p><-- Recuerda nuestro dashboard para selecionar una opción en el menú lateral.</p>
-  {% if pendiente == () %}
-  <p> 
-  <table style="text-align: center; margin: 0 auto;">
-    <tr>
-      <th style="background: #04AA6D;">No tiene tareas pendientes para hoy</th>
-    </tr>
-  </table>
-  </p>
+  {% if porvencer == () and vencidos == () and vencehoy == () %}
+  <div style="margin-bottom: 25px;">
   {% else %}
-  <p>
-    <table style="box-shadow: none; background: none; margin: 0 auto;;">
-      <th style="background: grey; background: none; color: #008080; padding: 0; font-size: 20px;">Tareas pendientes para hoy {{ pendiente[0][0] }}</th>
-    </table>
-    <table style="margin: 0 auto">
+  <div style="display: flex; margin-bottom: 25px;">
+  {% endif %}
+  <span style="width: 70%;">
+    {% if porvencer == () and vencidos == () and vencehoy == () %}
+    <table style="width: 70%; margin: 0 auto; margin-bottom: 25px;">
+    {% else %}
+    <table style="width: 100%; margin-bottom: 25px;">
+    {% endif %}
+    {% if pendiente != () %}
+    <tr>
+      <th style="color: #008080; font-size: 20px; background: none; text-align: center;" colspan="6">Tareas para HOY • {{ nombre_dia_hoy }}</th>
+    </tr>
       <tr>
         <td></td>
         <th>Empresa</th>
         <th>Cliente</th>
-        <th colspan="2">Notas de llamada</th>
-        <th colspan="4">Tarea pendiente</th>
+        <th>Notas de llamada</th>
+        <th>Tarea</th>
       </tr>
+    {% else %}
+    <tr>
+      <th style="color: #00ba00; font-size: 22px; background: none; text-align: center;"><img src="{{ url_for('static', filename='img/cheque.png') }}" width="20" height="20"> No tiene tareas para hoy • {{ nombre_dia_hoy }}</th>
+    </tr>
+    {% endif %}
     {% for t in pendiente %}
       <tr>
-        <td>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'agente',this.value)">
+        <td style="margin: 0; padding: 0;">
+          <span class="icon-container"><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="20" height="20" onclick="document.getElementById('{{t[9]}}_select_agnt').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden')" style="margin: 0; padding: 0;"><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'agente',this.value)" id="{{t[9]}}_select_agnt" hidden>
             {% for agente in agentes %}
             {% if agente [0] == current_user.fullname %}
             <option value="{{ agente[0] }}" selected>{{ agente[0] }}</option>
@@ -42,31 +49,28 @@ Administración Los Andes | Inicio
             {% endfor %}
           </select>
         </td>
-        <td style="color: #008080; text-align: center;">{{ t[1] }}</td>
-        <td>{% if t[3] != '' %}<a type="button" onclick="editarCliente('nombre','{{t[3]}}', '{{t[2]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[2] }}{% if t[3] != '' %}</a>{% endif %}
-          {% if t[3] != '' %}
-          <br><a type="button" onclick="editarCliente('telefono', '{{t[3]}}', '{{t[3]}}', 'formulario_actualizacion', '{{t[2]}}')"><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[3]}}
+        <td style="color: hsl(180, 100%, 25%); text-align: center;">{{ t[1] }}</td>
+        <td>
+          {% if t[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('nombre','{{t[3]}}', '{{t[2]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if t[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span>{% endif %} {{t[2]}}
+          {% if t[3] != '' %}<br><span class="icon-container"><a type="button" onclick="editarCliente('telefono', '{{t[3]}}', '{{t[3]}}', 'formulario_actualizacion', '{{t[2]}}')"><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></a><span class="tooltip" id="tooltip-editar">Editar teléfono</span></span> {{t[3]}}{% endif %}
+          {% if t[12] != '' %}<br>{% if t[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('ubicacion', '{{t[3]}}', '{{t[12]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if t[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span>{% endif %} {{t[12]}}
           {% endif %}
-          {% if t[12] != '' %}
-          <br>{% if t[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{t[3]}}', '{{t[12]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[12]}}{% if t[3] != '' %}</a>{% endif %}
-          {% endif %}
-          {% if t[6] != '' %}
-          <br>{% if t[3] != '' %}<a type="button" onclick="editarCliente('email', '{{t[3]}}', '{{t[6]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{t[6]}}{% if t[3] != '' %}</a>{% endif %}
+          {% if t[6] != '' %}<br>{% if t[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('email', '{{t[3]}}', '{{t[6]}}', 'formulario_actualizacion', '{{t[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {% if t[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar email</span></span>{% endif %} {{t[6]}}
           {% endif %}
         </td>
-        {% if t[4] != '' %}
-        <td><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[4] }}</td>
-        {% else %}
-        <td>No tiene ningún motivo cargado</td>
-        {% endif %}
-        <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" onclick="pedirDatos('{{t[9]}}', 'motivo', 'Nota nueva:')" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20"></button></td>
+        <td {% if t[4] == '' %}style="color: red"{% endif %}>
+          <div style="color: black;"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Registrado el {{t[0]}}</div>
+          <span class="icon-container">
+          <button type="button" onclick="pedirDatos('{{t[9]}}', 'motivo', 'Nota nueva:')" style="border-radius: 5px; background: none; border: none; margin: 0; padding: 0;"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if t[4] != '' %} {{t[4]}}{% else %} No tiene notas cargadas{% endif %}
+        </td>
         <td><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ t[5] }} 
         {% if t[10] != '' %}
          a las {{ t[10]}}
         {% endif %}
         </td>
         <td>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'tarea',this.value)">
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{t[9]}}_select_tarea').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'tarea',this.value)" id="{{t[9]}}_select_tarea" hidden>
             {% for tarea in tareas %}
             {% if tarea[1] != 'NO LE INTERESA' %}
             {% if tarea[1] == t[5] %}
@@ -77,36 +81,344 @@ Administración Los Andes | Inicio
             {% endif %}
             {% endfor %}
           </select>
-        </td>
-        <td>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'fecha',this.value)">
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{t[9]}}_select_fecha_tarea').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'fecha',this.value)" id="{{t[9]}}_select_fecha_tarea" hidden>
             {% for fecha in calendario %}
             <option value="{{fecha[0] }}">{{ fecha[1]}}</option>
             {% endfor %}
           </select>
-        </td>
-        <td>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'hora',this.value)">
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{t[9]}}_select_hora').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar hora de tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{t[9]}}', 'hora',this.value)" id="{{t[9]}}_select_hora" hidden>
             <option value="" style="color: #008080;" selected>{{ t[10] }}</option>
             {% for h in range (9,20) %}
             <option value="{{h}}:00 h">{{h}}:00 h</option>
             {% endfor %}
           </select>
+          <span class="icon-container"><button type="button" onclick="pedirDatos('{{ t[9] }}', 'rechazo', 'Razón del rechazo:')" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/youtube-dislike.png') }}" width="18" height="18" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+          <span class="icon-container"><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/send-blue.png') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: blue;">Enviar cotización</span></span>
         </td>
-        <td><button type="button" style="margin: 0; padding: 5px; font-size: 16px;" class="btn danger" onclick="pedirDatos('{{ t[9] }}', 'rechazo', 'Razón del rechazo:')">No le interesó</button></td>
-        <td><button type="button" onclick="Cancelar('{{ t[2] }}','{{ t[6] }}',document.getElementById('{{ t[9] }}').value,'{{ t[8] }}','{{ t[9] }}')" style="margin: 0; padding: 5px; font-size: 16px;" class="btn primary">Enviar cotización</button></td>
-        <td><textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea></td>
+        <textarea id='{{ t[9] }}' cols="30" rows="10" style="display: None;">{{ t[7] }}</textarea>
       </tr>
       <tr>
-      <td colspan="12" style="border-top: 1px solid #BDBDBD;"></td>
+      <td colspan="6" style="border-top: 1px solid #BDBDBD;"></td>
       </tr>
     {% endfor %}
     </table>
-  </p>
+    {% if atrasados != () %}
+    {% if porvencer == () and vencidos == () and vencehoy == () %}
+    <table style="width: 70%; margin: 0 auto; margin-bottom: 25px; border: 3px solid transparent;" class="animated-border">
+    {% else %}
+    <table style="width: 100%; margin-bottom: 25px; border: 3px solid transparent;" class="animated-border">
+    {% endif %}
+      <style>
+        @keyframes borderAnimation {
+          25% {
+            border-color: red;
+          }
+          75% {
+            border-color: orangered;
+          }
+        }
+
+        table.animated-border {
+          animation: borderAnimation 2s infinite;
+        }
+      </style>
+      <tr>
+        <th colspan="6" style="background: none; color: #2cbfb1;"><img src="{{ url_for('static', filename='img/reloj-pendiente.png') }}" width="20" height="20" style="vertical-align: middle;"> Tareas pendientes</th>
+      </tr>
+      <tr>
+        <td></td>
+        <th>Empresa</th>
+        <th>Cliente</th>
+        <th>Notas de llamada</th>
+        <th>Tarea pendiente</th>
+      </tr>
+      {% for a in atrasados %}
+      <tr>
+        <td style="margin: 0; padding: 0;">
+          <span class="icon-container"><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="20" height="20" onclick="document.getElementById('{{a[9]}}_select_agnt').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden')" style="margin: 0; padding: 0;"><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{a[9]}}', 'agente',this.value)" id="{{a[9]}}_select_agnt" hidden>
+            {% for agente in agentes %}
+            {% if agente [0] == current_user.fullname %}
+            <option value="{{ agente[0] }}" selected>{{ agente[0] }}</option>
+            {% else %}
+            <option value="{{ agente[0] }}">{{ agente[0] }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </td>
+        <td style="color: hsl(180, 100%, 25%); text-align: center;">{{ a[1] }}</td>
+        <td>
+          {% if a[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('nombre','{{a[3]}}', '{{a[2]}}', 'formulario_actualizacion', '{{a[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if a[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span>{% endif %} {{a[2]}}
+          {% if a[3] != '' %}<br><span class="icon-container"><a type="button" onclick="editarCliente('telefono', '{{a[3]}}', '{{a[3]}}', 'formulario_actualizacion', '{{a[2]}}')"><img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></a><span class="tooltip" id="tooltip-editar">Editar teléfono</span></span> {{a[3]}}{% endif %}
+          {% if a[12] != '' %}<br>{% if a[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('ubicacion', '{{a[3]}}', '{{a[12]}}', 'formulario_actualizacion', '{{a[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if a[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span>{% endif %} {{a[12]}}
+          {% endif %}
+          {% if a[6] != '' %}<br>{% if a[3] != '' %}<span class="icon-container"><a type="button" onclick="editarCliente('email', '{{a[3]}}', '{{a[6]}}', 'formulario_actualizacion', '{{a[2]}}')">{% endif %}<img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {% if a[3] != '' %}</a><span class="tooltip" id="tooltip-editar">Cambiar email</span></span>{% endif %} {{a[6]}}
+          {% endif %}
+        </td>
+        <td {% if a[4] == '' %}style="color: red"{% endif %}>
+          <span class="icon-container">
+          <div style="color: black;"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Registrado el {{a[0]}}</div>
+          <button type="button" onclick="pedirDatos('{{a[9]}}', 'motivo', 'Nota nueva:')" style="border-radius: 5px; background: none; border: none; margin: 0; padding: 0;"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if a[4] != '' %} {{a[4]}}{% else %} No tiene notas cargadas{% endif %}
+        </td>
+        <td>
+        <img src="{{ url_for('static', filename='img/list-check-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ a[13] }}
+        <br>
+        <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ a[5] }}
+        {% if a[10] != '' %}
+         a las {{ a[10]}}
+        {% endif %}
+        <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> Debió realizarse {% if a[14] == 1 %}ayer.{% else %}hace {{a[14]}} días.{% endif %}</div>
+        </td>
+        <td>
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{a[9]}}_select_tarea').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{a[9]}}', 'tarea',this.value)" id="{{a[9]}}_select_tarea" hidden>
+            {% for tarea in tareas %}
+            {% if tarea[1] != 'NO LE INTERESA' %}
+            {% if tarea[1] == a[5] %}
+            <option value="{{tarea[0]}}" selected>{{tarea[1]}}</option>
+            {% else %}
+            <option value="{{tarea[0]}}">{{tarea[1]}}</option>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+          </select>
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{a[9]}}_select_fecha_tarea').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{a[9]}}', 'fecha',this.value)" id="{{a[9]}}_select_fecha_tarea" hidden>
+            {% for fecha in calendario %}
+            <option value="{{fecha[0] }}">{{ fecha[1]}}</option>
+            {% endfor %}
+          </select>
+          <span class="icon-container"><button type="button" onclick="document.getElementById('{{a[9]}}_select_hora').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar hora de tarea</span></span>
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="actualizarRegistro('{{a[9]}}', 'hora',this.value)" id="{{a[9]}}_select_hora" hidden>
+            <option value="" style="color: #008080;" selected>{{ a[10] }}</option>
+            {% for h in range (9,20) %}
+            <option value="{{h}}:00 h">{{h}}:00 h</option>
+            {% endfor %}
+          </select>
+          <span class="icon-container"><button type="button" onclick="pedirDatos('{{ a[9] }}', 'rechazo', 'Razón del rechazo:')" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/youtube-dislike.png') }}" width="18" height="18" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+          <span class="icon-container"><button type="button" onclick="Cancelar('{{ a[2] }}','{{ a[6] }}',document.getElementById('{{ a[9] }}').value,'{{ a[8] }}','{{ a[9] }}')" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/send-blue.png') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: blue;">Enviar cotización</span></span>
+        </td>
+        <textarea id='{{ a[9] }}' cols="30" rows="10" style="display: None;">{{ a[7] }}</textarea>
+      </tr>
+      <tr>
+      <td colspan="6" style="border-top: 1px solid #BDBDBD;"></td>
+      </tr>
+    {% endfor %}
+    </table>
+    {% endif %}
+  </span>
+  <span style="width: 30%; margin-bottom: 25px;">
+    {% if vencehoy != () %}
+    <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
+      <tr>
+          <th colspan="3" style="background-color: orange;">
+              Vencimientos de HOY
+          </th>
+      </tr>
+      <tr>
+        <th>Datos</th>
+        <th>Monto</th>
+        <th>Servicio</th>
+      </tr>
+      {% for hoy in vencehoy %}
+      <tr>
+        <td>
+            <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{hoy[0]}}</span>
+            <br>
+            <span class="icon-container">
+            <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;" onclick="document.getElementById('eliminar').value = '{{hoy[8]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span><span> {{hoy[2]}}</span>
+            <br>
+            <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[3]}}</span>
+            {% if hoy[4] != '' %}
+            <br>
+            <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[4]}}</span>
+            {% endif %}
+        </td>
+        <td style="font-size: 22px; text-align: center; color: #008080">
+          <span class="icon-container">
+          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{hoy[0]}}{{hoy[8]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{hoy[1]}}</span>
+          <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{hoy[0]}}{{hoy[8]}}" hidden>
+            <select id="registrar_pago_forma{{hoy[0]}}{{hoy[8]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="CASH APP">Cash App</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="ZELLE">Zelle</option>
+              <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
+            </select>
+            <br>
+            <input type="date" id="registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
+            <br>
+            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{hoy[9]}}','{{hoy[0]}}','{{hoy[2]}}','{{hoy[3]}}','{{hoy[4]}}', '{{dia_hoy}}', document.getElementById('registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}').value, document.getElementById('registrar_pago_forma{{hoy[0]}}{{hoy[8]}}').value,'{{hoy[1]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
+          </div>
+        </td>
+        <td>
+          <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[9]}}</span>
+          <br>
+          <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[5]}}</span>
+          {% if hoy[6] != '' %}
+          <br>
+          <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[6]}}</span>
+          {% endif %}
+          {% if hoy[7] != '' %}
+          <br>
+          <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[7]}}</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" style="border-top: 1px solid #BDBDBD;"></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if vencidos != () %}
+    <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
+      <tr>
+        <th style="background-color: red;" colspan="4">
+          Pagos vencidos
+        </th>
+      </tr>
+      <tr>
+        <th>Datos</th>
+        <th>Vencimiento</th>
+        <th>Monto</th>
+        <th>Servicio</th>
+      </tr>
+      {% for venc in vencidos %}
+      <tr>
+        <td>
+          <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{venc[0]}}</span>
+          <br>
+          <span class="icon-container">
+          <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"  onclick="document.getElementById('eliminar').value = '{{venc[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{venc[3]}}</span>
+          <br>
+          <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[4]}}</span>
+          {% if venc[5] != '' %}
+          <br>
+          <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[5]}}</span>
+          {% endif %}
+      </td>
+      <td style="color: red;">
+        <img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[1]}}</span>
+        <br>
+        <span style="color: black">{% if venc[9] == 1 %}Ayer{% else %}Hace {{venc[9]}} días{% endif %}</span>
+      </td>
+      <td style="font-size: 22px; text-align: center; color: #008080">
+        <span class="icon-container">
+          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{venc[10]}}{{venc[0]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{venc[2]}}</span>
+          <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{venc[10]}}{{venc[0]}}" hidden>
+            <select id="registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="CASH APP">Cash App</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="ZELLE">Zelle</option>
+              <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
+            </select>
+            <br>
+            <input type="date" id="registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
+            <br>
+            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{venc[11]}}','{{venc[0]}}','{{venc[3]}}','{{venc[4]}}','{{venc[5]}}', '{{venc[1]}}', document.getElementById('registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}').value, document.getElementById('registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}').value, '{{venc[2]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
+          </div>
+      </td>
+      <td>
+        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[11]}}</span>
+        <br>
+        <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[6]}}</span>
+        {% if venc[7] != '' %}
+        <br>
+        <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[7]}}</span>
+        {% endif %}
+        {% if venc[8] != '' %}
+        <br>
+        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[8]}}</span>
+        {% endif %}
+      </td>
+      </tr>
+      <tr>
+        <td colspan="4" style="border-top: 1px solid #BDBDBD;"></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    {% if porvencer != () %}
+    <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
+      <tr>
+        <th style="background-color: #5DADE2;" colspan="4">
+          Próximos vencimientos
+        </th>
+      </tr>
+      <tr>
+        <th>Datos</th>
+        <th>Vencimiento</th>
+        <th>Monto</th>
+        <th>Servicio</th>
+      </tr>
+      {% for prox in porvencer %}
+      <tr>
+        <td>
+          <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{prox[0]}}</span>
+          <br>
+          <span class="icon-container">
+          <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;" onclick="document.getElementById('eliminar').value = '{{prox[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{prox[3]}}</span>
+          <br>
+          <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[4]}}</span>
+          {% if prox[5] != '' %}
+          <br>
+          <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[5]}}</span>
+          {% endif %}
+      </td>
+      <td style="color: red;">
+        <img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[1]}}</span>
+        <br>
+        <span style="color: black">{% if prox[9] == 1 %}Mañana{% else %}En {{prox[9]}} días{% endif %}</span>
+      </td>
+      <td style="font-size: 22px; text-align: center; color: #008080">
+        <span class="icon-container">
+          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{prox[0]}}{{prox[10]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{prox[2]}}</span>
+          <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{prox[0]}}{{prox[10]}}" hidden>
+            <select id="registrar_pago_forma_prox{{prox[0]}}{{prox[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="PAYPAL">PayPal</option>
+              <option value="CASH APP">Cash App</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="ZELLE">Zelle</option>
+              <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
+            </select>
+            <br>
+            <input type="date" id="registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
+            <br>
+            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{prox[11]}}','{{prox[0]}}','{{prox[3]}}','{{prox[4]}}','{{prox[5]}}', '{{prox[1]}}', document.getElementById('registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}').value, document.getElementById('registrar_pago_forma_prox{{prox[0]}}{{prox[10]}}').value, '{{prox[2]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
+          </div>
+      </td>
+      <td>
+        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[11]}}</span>
+        <br>
+        <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[6]}}</span>
+        {% if prox[7] != '' %}
+        <br>
+        <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[7]}}</span>
+        {% endif %}
+        {% if prox[8] != '' %}
+        <br>
+        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[8]}}</span>
+        {% endif %}
+      </td>
+      </tr>
+      <tr>
+        <td colspan="4" style="border-top: 1px solid #BDBDBD;"></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </span>
+  </div>
   <form action="/cotizacion/listo" method="POST" name="form_cotizacion_listo">
   <input type="hidden" id="cotizacion_listo" name="cotizacion_listo" value="0">
   </form>
-  {% endif %}
   {% for i in tablas %} 
   <button type="button" onclick="document.formulario.action='/menu'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="background: none; border: none; font-size: 26px; font-family: 'Rubik', sans-serif;;"><div style="font-size: 26px; text-align: center; max-width: 200px;" class="btn_imagen">{{ i[0] }}
     {% if i[1] != None %}

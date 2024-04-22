@@ -20,6 +20,12 @@ function toggleSidebar(tamanio) {
         if (item !== checkbox) item.checked = false
     })
 }
+function onlyTwo(checkbox) {
+  var checkboxes2 = document.getElementsByName('check2')
+  checkboxes2.forEach((item) => {
+      if (item !== checkbox) item.checked = false
+  })
+}
 
 function btnCliente(telefono, email, cotizacion, total){
   alert("Teléfono: "+telefono+"\nEmail: "+email+"\nCotización: "+cotizacion+"\nCotización total: $"+total)

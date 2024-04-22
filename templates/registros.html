@@ -152,9 +152,11 @@ Administración Los Andes | Registros
                     {% else %}
                     <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"><img src="{{ url_for('static', filename='img/phone-volume-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
                     {% endif %}
-                    {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
-                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
-                    {% endif %}
+                    
+                        {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
+                            <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.getElementById('empresa').value='{{i[0]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
+                        {% endif %}
+                    
                 </td>
                 <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Llamada el {{i[8]}}
                 <br><a type="button" onclick="motivo('{{i[8]}}')"><span class="icon-container"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Editar nota</span></span> {% if i[5] != '' %}{{ i[5] }}{% else %}No tiene notas de llamada cargadas.{% endif %}</a>
@@ -235,6 +237,7 @@ Administración Los Andes | Registros
         <input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
         <input type="hidden" id="telefono_seg" name="telefono_seg" value="">
         <input type="hidden" id="cliente" name="cliente">
+        <input type="hidden" id="empresa" name="empresa">
         </form>
     </table>
 </div>
