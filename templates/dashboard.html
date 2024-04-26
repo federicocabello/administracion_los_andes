@@ -15,9 +15,9 @@ Administración Los Andes | Inicio
   {% endif %}
   <span style="width: 70%;">
     {% if porvencer == () and vencidos == () and vencehoy == () %}
-    <table style="width: 70%; margin: 0 auto; margin-bottom: 25px;">
+    <table style="width: 70%; margin: 0 auto; margin-bottom: 25px; {% if pendiente == () %}box-shadow: none; padding: 0;{% endif %}">
     {% else %}
-    <table style="width: 100%; margin-bottom: 25px;">
+    <table style="width: 100%; margin-bottom: 25px; {% if pendiente == () %}box-shadow: none; padding: 0;{% endif %}">
     {% endif %}
     {% if pendiente != () %}
     <tr>
@@ -163,13 +163,19 @@ Administración Los Andes | Inicio
           <button type="button" onclick="pedirDatos('{{a[9]}}', 'motivo', 'Nota nueva:')" style="border-radius: 5px; background: none; border: none; margin: 0; padding: 0;"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if a[4] != '' %} {{a[4]}}{% else %} No tiene notas cargadas{% endif %}
         </td>
         <td>
+        {% if a[13] != None %}
         <img src="{{ url_for('static', filename='img/list-check-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ a[13] }}
         <br>
+        {% endif %}
+        {% if a[5] != '' %}
         <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ a[5] }}
         {% if a[10] != '' %}
          a las {{ a[10]}}
         {% endif %}
-        <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> Debió realizarse {% if a[14] == 1 %}ayer.{% else %}hace {{a[14]}} días.{% endif %}</div>
+        {% else %}
+        <span style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> No tiene ninguna tarea asignada.</span>
+        {% endif %}
+        <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> {% if a[14] != None %}Debió realizarse {% if a[14] == 1 %}ayer.{% else %}hace {{a[14]}} días.{% endif %}{% else %}No tiene asignada ninguna fecha de tarea{% endif %}</div>
         </td>
         <td>
           <span class="icon-container"><button type="button" onclick="document.getElementById('{{a[9]}}_select_tarea').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>

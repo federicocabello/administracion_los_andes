@@ -1,0 +1,108 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | Pagos
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de registros de pagos. <button style="vertical-align: bottom;" class="btn success" onclick="document.getElementById('nuevo_pago').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden'); document.getElementById('nombre').focus();">Registrar nuevo pago</button></h1>
+    <h3 id="nuevo_pago" hidden>    
+    <div style="width: 95%; margin: 0 auto; display: flex; justify-content: space-around; margin-bottom: 20px;">
+        <span style="width: 35%; margin-right: 10px;">
+        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Empresa<br><select id="empresa" style="font-family: 'Rubik', sans-serif; font-size: 16px; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;">
+            {% for e in empresas %}
+            <option value="{{e[0]}}">{{e[0]}}</option>
+            {% endfor %}
+        </select>
+        </span>
+        <span style="width: 50%; margin-right: 10px;">
+        <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Nombre<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="nombre" onkeypress="foco2('telefono');">
+        </span>
+        <span style="width: 30%; margin-right: 10px;">
+        <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Teléfono<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="telefono" onkeypress="foco2('motivo');">
+        </span>
+        <span style="width: 140%; margin-right: 10px;">
+            <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Datos de pago<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="motivo" onkeypress="foco2('pago');">
+        </span>
+        <span style="width: 25%; margin-right: 10px;">
+            <img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Pago<input type="number" style="color: #008080; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="pago" >
+        </span>
+        <span style="width: 35%; margin-right: 10px;">
+            <img src="{{ url_for('static', filename='img/landmark-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Medio<br><select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;">
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="PAYPAL">PayPal</option>
+                <option value="CASH APP">Cash App</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="ZELLE">Zelle</option>
+                <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
+            </select>
+        </span>
+        <span style="width: 35%; margin-right: 10px;">
+            <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Fecha<input type="date" id="fecha_pago" style="padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" value="{{hoy}}">
+        </span>
+        <span style="width: 40%; display: grid;">
+            <button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: [document.getElementById('empresa').value, document.getElementById('motivo').value, null, document.getElementById('nombre').value, document.getElementById('telefono').value, '0000-00-00', document.getElementById('fecha_pago').value, document.getElementById('forma_pago').value, document.getElementById('pago').value]})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/pagos');" class="btn success" style="padding-top: 7px; padding-bottom: 7px; vertical-align: bottom; width: 100%;"><img src="{{ url_for('static', filename='img/reduction.png') }}" width="30" height="30" style="vertical-align: middle; margin-right: 5px;">Registrar pago</button>
+        </span>
+        </div>
+    </h3>
+    <table style="width: 95%; margin: 0 auto;">
+        {% if pagos == () %}
+        <tr>
+            <th style="background: none; color: black; text-align: center;">
+                <img src="{{ url_for('static', filename='img/file-circle-exclamation-solid.svg') }}" height="20" width="20" style="vertical-align: bottom; margin: 0; padding: 0;"> No hay registros de pagos cargados en el sistema.
+            </th>
+        </tr>
+        {% else %}
+        <tr>
+            <th>Empresa</th>
+            <th>Cliente</th>
+            <th>Datos del pago</th>
+            <th colspan="2">Pago</th>
+            <th>Fecha de pago</th>
+        </tr>
+        {% for pago in pagos %}
+        <tr>
+            <td><img src="{{ url_for('static', filename='img/industry-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[1]}} • <img src="{{ url_for('static', filename='img/headset-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[10]}}</td>
+            <td><img src="{{ url_for('static', filename='img/person-circle.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[4]}} • <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[5]}}</td>
+            <td>{% if pago[3] != None %}<img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Hoja N°{{pago[3]}} • {% endif %}{% if pago[2] != '' %}<img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[2]}}{% endif %}{% if pago[6] != None %} • <span style="color: red;"><img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Vencimiento: {{pago[6]}}</span>{% endif %}</td>
+            <td style="text-align: center; color: #008080">$ {{pago[9]}}</td>
+            <td style="width: 10px;"><img src="{{ url_for('static', filename='img/logo_'+ pago[8] +'.png') }}" height="20" style="vertical-align: middle; margin: 0; padding: 0;"></td>
+            <td><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[7]}}</td>
+            <td style="text-align: center;">
+                <span class="icon-container"><button type="button" onclick="eliminarRegistroPago('{{pago[0]}}', '{{pago[4]}}', '{{pago[9]}}');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/delete.png') }}" width="15" height="15" style="vertical-align: middle; margin: 0; padding: 0;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">Eliminar registro</span></span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7" style="border-top: 1px solid gainsboro;"></td>
+          </tr>
+        {% endfor %}
+        {% endif %}
+    </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    function eliminarRegistroPago(idpago, cliente, total){
+        let opcion = confirm("¿Está seguro de eliminar el pago N° de registro "+idpago+" de "+cliente+" de $"+total);
+        if (opcion == true) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/pagos/eliminar_pago', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({pagosid: [idpago, cliente]}));
+            Swal.fire
+            ({
+                title: "Listo!",
+                text: "Registro de pago eliminado con éxito!",
+                icon: "success"
+            });
+            window.location.replace('/pagos')
+        }
+    }
+</script>
+{% endblock %}

@@ -596,13 +596,13 @@ def dashboard():
     tareas = cursor.fetchall()
     cursor.execute("select * from calendario")
     calendario = cursor.fetchall()
-    cursor.execute("select CASE WHEN fecha_1 = current_date() THEN 'CUOTA 1' WHEN fecha_2 = current_date() THEN 'CUOTA 2' WHEN fecha_3 = current_date() THEN 'CUOTA 3' WHEN fecha_4 = current_date() THEN 'CUOTA 4' END AS cuota, CASE WHEN fecha_1 = current_date() THEN acuerdo_1 WHEN fecha_2 = current_date() THEN acuerdo_2 WHEN fecha_3 = current_date() THEN acuerdo_3 WHEN fecha_4 = current_date() THEN acuerdo_4 END AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, idfecha, empresa FROM hojas WHERE fecha_1 = CURRENT_DATE() OR fecha_2 = current_date() or fecha_3 = current_date or fecha_4 = current_date();")
+    cursor.execute("select CASE WHEN fecha_1 = current_date() THEN 'CUOTA 1' WHEN fecha_2 = current_date() THEN 'CUOTA 2' WHEN fecha_3 = current_date() THEN 'CUOTA 3' WHEN fecha_4 = current_date() THEN 'CUOTA 4' END AS cuota, CASE WHEN fecha_1 = current_date() THEN acuerdo_1 WHEN fecha_2 = current_date() THEN acuerdo_2 WHEN fecha_3 = current_date() THEN acuerdo_3 WHEN fecha_4 = current_date() THEN acuerdo_4 END AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, idfecha, empresa FROM hojas WHERE fecha_1 = CURRENT_DATE() OR fecha_2 = current_date() or fecha_3 = current_date or fecha_4 = current_date();")
     vencehoy = cursor.fetchall()
-    cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_1) as diferencia, idfecha, empresa FROM hojas where fecha_1 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_2) as diferencia, idfecha, empresa FROM hojas where fecha_2 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_3) as diferencia, idfecha, empresa FROM hojas where fecha_3 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_4) as diferencia, idfecha, empresa FROM hojas where fecha_4 < CURRENT_DATE() order by diferencia;")
+    cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_1) as diferencia, idfecha, empresa FROM hojas where fecha_1 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_2) as diferencia, idfecha, empresa FROM hojas where fecha_2 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_3) as diferencia, idfecha, empresa FROM hojas where fecha_3 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_4) as diferencia, idfecha, empresa FROM hojas where fecha_4 < CURRENT_DATE() order by diferencia;")
     vencidos = cursor.fetchall()
-    cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(fecha_1, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_1, current_date()) > 0 and datediff(fecha_1, current_date()) < 6 UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(fecha_2, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_2, current_date()) > 0 and datediff(fecha_2, current_date()) < 6 UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(fecha_3, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_3, current_date()) > 0 and datediff(fecha_3, current_date()) < 6 UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, idhoja, nombre, telefono, servicio, objeto, notapago, datediff(fecha_4, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_4, current_date()) > 0 and  datediff(fecha_4, current_date()) < 6 order by diferencia;")
+    cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_1, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_1, current_date()) > 0 and datediff(fecha_1, current_date()) < 6 UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_2, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_2, current_date()) > 0 and datediff(fecha_2, current_date()) < 6 UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_3, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_3, current_date()) > 0 and datediff(fecha_3, current_date()) < 6 UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_4, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_4, current_date()) > 0 and  datediff(fecha_4, current_date()) < 6 order by diferencia;")
     porvencer = cursor.fetchall()
-    cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion, DATE_FORMAT(fecha_tarea, '%d %M'), datediff(current_date(), fecha_tarea) as dias from registros JOIN tareas ON registros.tarea = tareas.idtarea where fecha_tarea < current_date() and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 18) order by dias, hora asc;")
+    cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion, DATE_FORMAT(fecha_tarea, '%d %M'), datediff(current_date(), fecha_tarea) as dias from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 18) order by dias, hora, fecha asc;")
     atrasados = cursor.fetchall()
     nombre_dia_hoy = f'{dt.date.today().strftime("%A")} {dt.date.today().strftime("%d")}'
     return render_template('dashboard.html', tablas=tablas, tareas=tareas, agentes=agentes, pendiente=pendiente, calendario=calendario, vencehoy=vencehoy, vencidos=vencidos, porvencer=porvencer, dia_hoy = dt.date.today(), nombre_dia_hoy=nombre_dia_hoy, atrasados=atrasados)
@@ -613,11 +613,45 @@ def registrarPago():
     data = request.json
     pago = data['pago']
     cursor = db.connection.cursor()
-    cursor.execute(f"INSERT INTO pagos VALUES ('{pago[0].upper().strip()}', '{pago[1].upper().strip()}', {pago[2]}, '{pago[3].upper().strip()}', '{pago[4]}', '{pago[5]}', '{pago[6]}', '{pago[7]}', {pago[8]}, '{current_user.fullname}')")
-    cursor.execute(f"UPDATE hojas SET acuerdo_{pago[1][6]} = null, fecha_{pago[1][6]} = null, interes_{pago[1][6]} = null WHERE idhoja = {pago[2]};")
+    if pago[2] == None:
+        pago[2] = 'null'
+    telefono_sn = pago[4]
+    telefono = ''
+    for n in telefono_sn:
+        if n.isdigit():
+            telefono = telefono+n
+    cursor.execute(f"INSERT INTO pagos (empresa, motivo, idhoja, cliente, telefono, fecha_vencimiento, fecha_pago, forma_pago, pago, agente) VALUES ('{pago[0]}', '{pago[1].upper().strip()}', {pago[2]}, '{pago[3].upper().strip()}', '{telefono}', '{pago[5]}', '{pago[6]}', '{pago[7]}', {pago[8]}, '{current_user.fullname}')")
+    if pago[5] == '0000-00-00':
+        cursor.execute("UPDATE pagos SET fecha_vencimiento = null where fecha_vencimiento = '0000-00-00';")
+    if pago[1] == 'CUOTA 1' or pago[1] == 'CUOTA 2' or pago[1] == 'CUOTA 3' or pago[1] == 'CUOTA 4':
+        if pago[2] != None: 
+            cursor.execute(f"UPDATE hojas SET acuerdo_{pago[1][6]} = null, fecha_{pago[1][6]} = null, interes_{pago[1][6]} = null WHERE idhoja = {pago[2]};")
+    cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró un pago de $ {pago[8]} de {pago[0]} del cliente {pago[3].upper().strip()}', date_add(now(), interval -5 hour))")
     db.connection.commit()
     cursor.close()
     return redirect(url_for('dashboard'))
+
+@app.route('/pagos')
+@login_required
+def pagos():
+    cursor = db.connection.cursor()
+    cursor.execute("select idpagos, empresa, motivo, LPAD( idhoja, 8, '0'), cliente, telefono, date_format(fecha_vencimiento, '%d %M %Y'), date_format(fecha_pago, '%d %M %Y'), forma_pago, pago, agente from pagos order by fecha_pago desc, idpagos desc;")
+    pagos = cursor.fetchall()
+    cursor.execute("SELECT empresa from clientes order by empresa;")
+    empresas = cursor.fetchall()
+    return render_template('pagos.html', pagos=pagos, empresas=empresas, hoy=dt.date.today())
+
+@app.route('/pagos/eliminar_pago', methods=['GET', 'POST'])
+@login_required
+def eliminarPago():
+    data = request.json
+    pago = data['pagosid']
+    cursor = db.connection.cursor()
+    cursor.execute(f"DELETE from pagos where idpagos = {pago[0]}")
+    cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} eliminó el pago N°{pago[0]} del cliente {pago[1]}', date_add(now(), interval -5 hour))")
+    db.connection.commit()
+    cursor.close()
+    return redirect(url_for('pagos'))
     
 @app.route('/usuarios')
 @login_required
@@ -1219,7 +1253,7 @@ def guardar_en_mysql():
             if row != [] and row != ['', '']:
                 cursor.execute(f"INSERT INTO hojas (idhoja, idfecha, cantidad, material) VALUES ({datos_data[0]}, '{datos_data[1]}', {row[0]}, '{row[1].upper().strip()}')")
     if datos_data[11] == 'totalidad':
-        cursor.execute(f"INSERT INTO pagos VALUES ('{datos_data[25].strip().upper()}', 'ABONÓ TODO', {datos_data[0]}, '{datos_data[3].upper(). strip()}', '{telefono}', '{datos_data[2]}', '{datos_data[2]}', '{datos_data[26].upper().strip()}', {datos_data[9]}, '{current_user.fullname}');")
+        cursor.execute(f"INSERT INTO pagos (empresa, motivo, idhoja, cliente, telefono, fecha_vencimiento, fecha_pago, forma_pago, pago, agente) VALUES ('{datos_data[25].strip().upper()}', 'ABONÓ TODO', {datos_data[0]}, '{datos_data[3].upper(). strip()}', '{telefono}', '{datos_data[2]}', '{datos_data[2]}', '{datos_data[26].upper().strip()}', {datos_data[9]}, '{current_user.fullname}');")
     #print(datos_data)
     cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} {movimiento} hoja de inspección N°´{datos_data[0]}´ del cliente {datos_data[3].upper().strip()}', date_add(now(), interval -5 hour));")
     db.connection.commit()

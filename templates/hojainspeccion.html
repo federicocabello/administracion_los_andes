@@ -105,7 +105,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                             <th style="background: none; margin: 0; padding: 0; text-align: center;">
                                 <select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; background-color: #008080; color:white; margin-bottom: 5px;" onchange="formasPago(this.value)" {% if hoja[11] == 'totalidad'%}disabled{% endif %}>
                                     <option value="" style="background-color: white; color: gainsboro;" {% if hoja[11] == '' %}selected{% endif %}>Forma de pago</option>
-                                    {% if condicional != 0 and hoja[11] == 'totalidad' %}
+                                    {% if condicional == 0 or hoja[11] == 'totalidad' %}
                                     <option value="totalidad" style="background-color: green;" {% if hoja[11] == 'totalidad' %}selected{% endif %}>Abona todo</option>
                                     {% endif %}
                                     <option value="semanal" {% if hoja[11] == 'semanal' %}selected{% endif %}>Semanal</option>
