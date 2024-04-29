@@ -703,6 +703,10 @@ def registros():
     fecha_final = ''
     fecha_final = ''
     editar_telefono = 'SI'
+    categoria = 'fecha'
+    habilitar_tareas = 'no'
+    tareas_empresa = ()
+    empresa = None
     if request.method == 'POST':
         filtro = request.form['filtro']
         if filtro == 'fecha_unica':
@@ -714,17 +718,29 @@ def registros():
         if filtro == 'fechas':
             fecha_inicial = request.form['fecha_inicial']
             fecha_final = request.form['fecha_final']
-            cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}';")
-            one = cursor.fetchone()
-            mostrados = one[0]
-            cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
+            categoria = request.form['limite']
+            habilitar_tareas = 'si'
+            if categoria == 'fecha':
+                cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}';")
+                one = cursor.fetchone()
+                mostrados = one[0]
+                cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
+                tareas_empresa = cursor.fetchall()
+                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
+            else:
+                cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and tarea != 1 and tarea != 0 and tarea != 2 and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}';")
+                one = cursor.fetchone()
+                mostrados = one[0]
+                cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 and estado = 'registro' and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
+                tareas_empresa = cursor.fetchall()
+                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
         if filtro == 'limite':
             limite = request.form['limite']
             if limite != 'all':
                 cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea,   (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {limite};")
                 mostrados = limite
             else:
-                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1)  from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {n_registros[0]};")
+                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {n_registros[0]};")
                 mostrados = n_registros[0]
         if filtro == 'duplicados':
             cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado ='registro' and telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1)")
@@ -733,32 +749,26 @@ def registros():
         if filtro == 'faltantes':
             cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (nombre NOT LIKE '% %' or direccion = '')")
             mostrados = faltantes[0]
+        if filtro == 'empresa':
+            empresa = request.form['limite']
+            cursor.execute(f"SELECT COUNT(*) from registros where estado = 'registro' and empresa = '{empresa}';")
+            one = cursor.fetchone()
+            mostrados = one[0]
+            habilitar_tareas = 'si'
+            cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' group by registros.tarea order by registros.tarea")
+            tareas_empresa = cursor.fetchall()
+            cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' order by registros.fecha desc;")
     else:
         cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit 25;")
         mostrados = 25
     tablas = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname asc")
     agentes = cursor.fetchall()
-    cursor.execute("select * from calendario order by date asc")
-    calendario = cursor.fetchall()
-    #print(calendario[0][0])
-    #print(dt.date.today())
-    if dt.date.today() != calendario[0][0]:
-        cursor.execute("delete from calendario;")
-        cursor.execute("insert into calendario values (current_date(), DATE_FORMAT(current_date(), '%W %e'))")
-        for i in range (1,18):
-            cursor.execute(f"insert into calendario values (date_add(current_date(), interval {i} day), DATE_FORMAT(date_add(current_date(), interval {i} day), '%W %e'))")
-            cursor.execute("delete from calendario where date_format like 'Sunday%'")
-    db.connection.commit()
-    cursor.execute("select * from calendario order by date asc")
-    calendario = cursor.fetchall()
     cursor.execute("select * from tareas")
     tareas = cursor.fetchall()
-    #cursor.execute("select nombre, telefono from registros where telefono is not null group by telefono order by nombre asc")
-    #clientes = cursor.fetchall()
     cursor.execute("SELECT empresa from clientes order by empresa asc;")
     empresas = cursor.fetchall()
-    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, calendario=calendario, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes)
+    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, habilitar_tareas=habilitar_tareas, tareas_empresa=tareas_empresa, empresa=empresa)
 
 @app.route('/preguntas')
 @login_required
@@ -1281,5 +1291,5 @@ if __name__ == '__main__':
     app.config.from_object(config['development'])
     app.register_error_handler(401, pagina_no_autorizada)
     app.register_error_handler(404, pagina_no_encontrada)
-    app.run(debug=True, port=5001)
-    #app.run(debug=False, port=30358, host='admin.losandestx.com')
+    #app.run(debug=True, port=5001)
+    app.run(debug=False, port=30358, host='admin.losandestx.com')
