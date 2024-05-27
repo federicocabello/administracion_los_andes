@@ -105,7 +105,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                             <th style="background: none; margin: 0; padding: 0; text-align: center;">
                                 <select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; background-color: #008080; color:white; margin-bottom: 5px;" onchange="formasPago(this.value)" {% if hoja[11] == 'totalidad'%}disabled{% endif %}>
                                     <option value="" style="background-color: white; color: gainsboro;" {% if hoja[11] == '' %}selected{% endif %}>Forma de pago</option>
-                                    {% if condicional == 0 or hoja[11] == 'totalidad' %}
+                                    {% if hoja[11] == None %}
                                     <option value="totalidad" style="background-color: green;" {% if hoja[11] == 'totalidad' %}selected{% endif %}>Abona todo</option>
                                     {% endif %}
                                     <option value="semanal" {% if hoja[11] == 'semanal' %}selected{% endif %}>Semanal</option>
@@ -183,14 +183,24 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                 <input type="date" style="width: 100%; color: black;" id="acuerdo_fecha4" value="{{hoja[23]}}">
                             </td>
                         </tr>
-                        <tr {% if hoja[11] == 'totalidad' %}hidden{% endif %}>
+                        <tr {% if hoja[11] == 'totalidad' or hoja[11] == ''%}hidden{% endif %}>
                             <td style="text-align: center;" id="total_a_pagar">
                                 <span style="color: red; display: flex; justify-content: center; vertical-align: middle;"><input style="background: none; border: none; color: red; width: 115px; margin: 0; padding: 0;" type="text" value="Total a pagar: $" disabled><input type="number" style="padding: 0; margin: 0; width: 110px; color:red; background: none; border: none; font-size: 22px;" id="acuerdo_total_a_pagar" value="{{hoja[25]}}" disabled></span>
                             </td>
                         </tr>
                     </table>
                 </span>
-                <span>Notas de pago<textarea id="nota_pago" cols="30" rows="10" style="width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase;">{{hoja[24]}}</textarea></span>
+                <span style="margin-right: 25px;">Notas de pago<textarea id="nota_pago" cols="30" rows="10" style="width: 100%; font-size: 14px; margin-top: 5px; text-transform: uppercase;">{{hoja[24]}}</textarea></span>
+                <span>
+                    <img src="{{ url_for('static', filename='img/map.png') }}" width="20" height="20" style="vertical-align: bottom;"> Mapa<br>
+                    <input type="file" id="mapa" {% if hoja[27] != None %}style="display: none;"{% endif %}>
+                    {% if hoja[27] != None %}
+                    <div id="div_mapa" style="margin-top: 5px;">
+                    <img src="{{ url_for('mostrar_mapa', idhoja=n_hoja[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 300px; height: 300px; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px;">
+                    <button type="button" style="position: absolute; bottom: 200px; border-radius: 50%; border: 1px solid gray; cursor: pointer; font-size: 20px; color: grey; vertical-align: bottom; text-align: center;" onclick="document.getElementById('mapa').removeAttribute('style'); document.getElementById('div_mapa').setAttribute('hidden', 'hidden');">X</button>
+                    </div>
+                    {% endif %}
+                </span>
             </div>
             <p style="text-align: center;">
                 <button class="btn primary" style="margin: 0 auto;" id="btn-guardar" onclick="guardarHoja('{{n_hoja[0]}}', '{{hoja[10]}}', '{{condicional}}', document.getElementById('servicio').value, document.getElementById('objeto').value);">{% if condicional != 0 %}Actualizar{% else %}Crear nueva{% endif %} hoja de inspección</button>
@@ -367,21 +377,21 @@ var interes4 = document.getElementById('acuerdo_porcentaje4').value;
 var fecha4 = document.getElementById('acuerdo_fecha4').value;
 
 if (tipopago == '' || tipopago == 'totalidad'){
-    acuerdo1 = 'null';
-    interes1 = 'null';
-    fecha1 = null;
+    acuerdo1 = '';
+    interes1 = '';
+    fecha1 = '';
 
-    acuerdo2 = 'null';
-    interes2 = 'null';
-    fecha2 = null;
+    acuerdo2 = '';
+    interes2 = '';
+    fecha2 = '';
 
-    acuerdo3 = 'null';
-    interes3 = 'null';
-    fecha3 = null;
+    acuerdo3 = '';
+    interes3 = '';
+    fecha3 = '';
 
-    acuerdo4 = 'null';
-    interes4 = 'null';
-    fecha4 = null;
+    acuerdo4 = '';
+    interes4 = '';
+    fecha4 = '';
 }
 
 var notapago = document.getElementById('nota_pago').value;
@@ -394,8 +404,40 @@ if (id_accion != 0 ){
 }
 
 var empresa = document.getElementById('empresa').value;
+/*
+var formData = new FormData()
+formData.append('mapa', document.getElementById('mapa').files[0]);
 
-var xhr = new XMLHttpRequest(); xhr.open('POST', '/hoja_de_inspeccion/guardar', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({materiales: tableData, accion: id_accion, datos: [id_hoja, id_fecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo1, interes1, fecha1, acuerdo2, interes2, fecha2, acuerdo3, interes3, fecha3, acuerdo4, interes4, fecha4, notapago, empresa, forma_pago_totalidad]}))
+var xhr = new XMLHttpRequest();
+xhr.open('POST', '/hoja_de_inspeccion/guardar', true);
+xhr.setRequestHeader('Content-Type', 'application/json');
+xhr.send(JSON.stringify({materiales: tableData, accion: id_accion, datos: [id_hoja, id_fecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo1, interes1, fecha1, acuerdo2, interes2, fecha2, acuerdo3, interes3, fecha3, acuerdo4, interes4, fecha4, notapago, empresa, forma_pago_totalidad]}));
+xhr.send(formData)
+*/
+
+var formData = new FormData();
+var condicional_mapa = getComputedStyle(document.getElementById('mapa')).display;
+if (document.getElementById('mapa').value == ''){
+    if (condicional_mapa != 'none'){
+        //eliminar
+        formData.append('condicional_mapa', 'eliminar')
+    }else{
+        //no hacer nada
+        formData.append('condicional_mapa', 'nada')
+    }
+}else{
+    //cargar
+    formData.append('condicional_mapa', 'cargar')
+    formData.append('mapa', document.getElementById('mapa').files[0]);
+}
+formData.append('materiales', JSON.stringify(tableData));
+formData.append('accion', JSON.stringify(id_accion));
+formData.append('datos', JSON.stringify([id_hoja, id_fecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo1, interes1, fecha1, acuerdo2, interes2, fecha2, acuerdo3, interes3, fecha3, acuerdo4, interes4, fecha4, notapago, empresa, forma_pago_totalidad]));
+
+var xhr = new XMLHttpRequest();
+xhr.open('POST', '/hoja_de_inspeccion/guardar', true);
+xhr.send(formData);
+
 registroListo('La hoja de inspección fue guardada con éxito!');
 window.location.replace('/registros');
 };

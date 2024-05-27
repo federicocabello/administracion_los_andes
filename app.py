@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, Response, send_file
+from flask import Flask, render_template, request, redirect, url_for, Response, send_file, json
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user, UserMixin
 from config import config
@@ -9,6 +9,16 @@ import io
 import os
 import zipfile
 import smtplib, ssl
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Image as RLImage, Paragraph, PageBreak, Frame, PageTemplate
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.fonts import addMapping
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+
+from PIL import Image
+
 app = Flask(__name__)
 
 db = MySQL(app)
@@ -604,7 +614,8 @@ def dashboard():
     porvencer = cursor.fetchall()
     cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion, DATE_FORMAT(fecha_tarea, '%d %M'), datediff(current_date(), fecha_tarea) as dias from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 18) order by dias, hora, fecha asc;")
     atrasados = cursor.fetchall()
-    nombre_dia_hoy = f'{dt.date.today().strftime("%A")} {dt.date.today().strftime("%d")}'
+    dias = ("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
+    nombre_dia_hoy = f'{dias[int(dt.date.today().strftime("%w"))]} {dt.date.today().strftime("%d")}'
     return render_template('dashboard.html', tablas=tablas, tareas=tareas, agentes=agentes, pendiente=pendiente, calendario=calendario, vencehoy=vencehoy, vencidos=vencidos, porvencer=porvencer, dia_hoy = dt.date.today(), nombre_dia_hoy=nombre_dia_hoy, atrasados=atrasados)
 
 @app.route('/pagos/registrar_pago', methods=['GET', 'POST'])
@@ -631,15 +642,42 @@ def registrarPago():
     cursor.close()
     return redirect(url_for('dashboard'))
 
-@app.route('/pagos')
+@app.route('/pagos', methods=['GET', 'POST'])
 @login_required
 def pagos():
     cursor = db.connection.cursor()
-    cursor.execute("select idpagos, empresa, motivo, LPAD( idhoja, 8, '0'), cliente, telefono, date_format(fecha_vencimiento, '%d %M %Y'), date_format(fecha_pago, '%d %M %Y'), forma_pago, pago, agente from pagos order by fecha_pago desc, idpagos desc;")
+    fecha_inicial = None
+    fecha_final = None
+    if request.method == 'POST':
+        mes = request.form['cambiar_mes']
+        if mes == 'entrefechas':
+            meses = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
+            fecha_inicial = request.form['fecha_inicial']
+            fecha_final = request.form['fecha_final']
+            cursor.execute(f"SELECT LPAD(idhoja, 8, '0'), empresa, nombre, telefono, servicio, objeto, CASE WHEN fecha_1 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_1 ELSE null END as '1', CASE WHEN fecha_2 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_2 ELSE null END as '2', CASE WHEN fecha_3 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_3 ELSE null END as '3', CASE WHEN fecha_4 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_4 ELSE null END as '4', COALESCE(CASE WHEN fecha_1 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_1 ELSE 0 END,0)+COALESCE(CASE WHEN fecha_2 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_2 ELSE 0 END,0)+COALESCE(CASE WHEN fecha_3 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_3 ELSE 0 END,0)+COALESCE(CASE WHEN fecha_4 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN acuerdo_4 ELSE 0 END,0) as total, TRIM(CONCAT(CASE WHEN fecha_1 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN 'CUOTA 1' ELSE '' END,' ', CASE WHEN fecha_2 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN 'CUOTA 2' ELSE '' END, ' ',CASE WHEN fecha_3 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN 'CUOTA 3' ELSE '' END, ' ',CASE WHEN fecha_4 BETWEEN '{fecha_inicial}' and '{fecha_final}' THEN 'CUOTA 4' ELSE '' END)) as formateado from hojas where (COALESCE(acuerdo_1, 0)+COALESCE(acuerdo_2, 0)+COALESCE(acuerdo_3, 0)+COALESCE(acuerdo_4, 0) != 0) and (fecha_1 BETWEEN '{fecha_inicial}' and '{fecha_final}' or fecha_2 BETWEEN '{fecha_inicial}' and '{fecha_final}' or fecha_3 BETWEEN '{fecha_inicial}' and '{fecha_final}' or fecha_4 BETWEEN '{fecha_inicial}' and '{fecha_final}');")
+            impagos = cursor.fetchall()
+            cursor.execute(f"select idpagos, empresa, motivo, LPAD( idhoja, 8, '0'), cliente, telefono, date_format(fecha_vencimiento, '%d %M %Y'), date_format(fecha_pago, '%d %M %Y'), LOWER(forma_pago), pago, agente from pagos where fecha_pago BETWEEN '{fecha_inicial}' and '{fecha_final}' order by fecha_pago desc, idpagos desc;")
+            fecha_inicial = f"{int(fecha_inicial[8]+fecha_inicial[9])} de {meses[int(fecha_inicial[5]+fecha_inicial[6])-1]} de {fecha_inicial[0]+fecha_inicial[1]+fecha_inicial[2]+fecha_inicial[3]}"
+            fecha_final = f"{int(fecha_final[8]+fecha_final[9])} de {meses[int(fecha_final[5]+fecha_final[6])-1]} de {fecha_final[0]+fecha_final[1]+fecha_final[2]+fecha_final[3]}"
+        else:
+            cursor.execute(f"SELECT LPAD(idhoja, 8, '0'), empresa, nombre, telefono, servicio, objeto, CASE WHEN month(fecha_1) = {mes[5]+mes[6]} and year(fecha_1) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_1 ELSE null END as '1', CASE WHEN month(fecha_2) = {mes[5]+mes[6]} and year(fecha_2) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_2 ELSE null END as '2', CASE WHEN month(fecha_3) = {mes[5]+mes[6]} and year(fecha_3) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_3 ELSE null END as '3', CASE WHEN month(fecha_4) = {mes[5]+mes[6]} and year(fecha_4) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_4 ELSE null END as '4', COALESCE(CASE WHEN month(fecha_1) = {mes[5]+mes[6]} and year(fecha_1) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_1 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_2) = {mes[5]+mes[6]} and year(fecha_2) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_2 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_3) = {mes[5]+mes[6]} and year(fecha_3) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_3 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_4) = {mes[5]+mes[6]} and year(fecha_4) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN acuerdo_4 ELSE 0 END,0) as total, TRIM(CONCAT(CASE WHEN month(fecha_1) = {mes[5]+mes[6]} and year(fecha_1) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN 'CUOTA 1' ELSE '' END,' ', CASE WHEN month(fecha_2) = {mes[5]+mes[6]} and year(fecha_2) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN 'CUOTA 2' ELSE '' END, ' ',CASE WHEN month(fecha_3) = {mes[5]+mes[6]} and year(fecha_3) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN 'CUOTA 3' ELSE '' END, ' ',CASE WHEN month(fecha_4) = {mes[5]+mes[6]} and year(fecha_4) = {mes[0]+mes[1]+mes[2]+mes[3]} THEN 'CUOTA 4' ELSE '' END)) as formateado from hojas where (COALESCE(acuerdo_1, 0)+COALESCE(acuerdo_2, 0)+COALESCE(acuerdo_3, 0)+COALESCE(acuerdo_4, 0) != 0) and ((month(fecha_1) = {mes[5]+mes[6]} and year(fecha_1) = {mes[0]+mes[1]+mes[2]+mes[3]}) or (month(fecha_2) = {mes[5]+mes[6]} and year(fecha_2) = {mes[0]+mes[1]+mes[2]+mes[3]}) or (month(fecha_3) = {mes[5]+mes[6]} and year(fecha_3) = {mes[0]+mes[1]+mes[2]+mes[3]}) or (month(fecha_4) = {mes[5]+mes[6]} and year(fecha_4) = {mes[0]+mes[1]+mes[2]+mes[3]}));")
+            impagos = cursor.fetchall()
+            cursor.execute(f"select idpagos, empresa, motivo, LPAD( idhoja, 8, '0'), cliente, telefono, date_format(fecha_vencimiento, '%d %M %Y'), date_format(fecha_pago, '%d %M %Y'), LOWER(forma_pago), pago, agente from pagos where month(fecha_pago) = {mes[5]+mes[6]} and year(fecha_pago) = {mes[0]+mes[1]+mes[2]+mes[3]} order by fecha_pago desc, idpagos desc;")
+    else:
+        cursor.execute(f"SELECT LPAD(idhoja, 8, '0'), empresa, nombre, telefono, servicio, objeto, CASE WHEN month(fecha_1) = {dt.date.today().strftime('%m')} THEN acuerdo_1 ELSE null END as '1', CASE WHEN month(fecha_2) = {dt.date.today().strftime('%m')} THEN acuerdo_2 ELSE null END as '2', CASE WHEN month(fecha_3) = {dt.date.today().strftime('%m')} THEN acuerdo_3 ELSE null END as '3', CASE WHEN month(fecha_4) = {dt.date.today().strftime('%m')} THEN acuerdo_4 ELSE null END as '4', COALESCE(CASE WHEN month(fecha_1) = {dt.date.today().strftime('%m')} THEN acuerdo_1 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_2) = {dt.date.today().strftime('%m')} THEN acuerdo_2 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_3) = {dt.date.today().strftime('%m')} THEN acuerdo_3 ELSE 0 END,0)+COALESCE(CASE WHEN month(fecha_4) = {dt.date.today().strftime('%m')} THEN acuerdo_4 ELSE 0 END,0) as total, TRIM(CONCAT(CASE WHEN month(fecha_1) = {dt.date.today().strftime('%m')} THEN 'CUOTA 1' ELSE '' END,' ', CASE WHEN month(fecha_2) = {dt.date.today().strftime('%m')} THEN 'CUOTA 2' ELSE '' END, ' ',CASE WHEN month(fecha_3) = {dt.date.today().strftime('%m')} THEN 'CUOTA 3' ELSE '' END, ' ',CASE WHEN month(fecha_4) = {dt.date.today().strftime('%m')} THEN 'CUOTA 4' ELSE '' END)) as formateado from hojas where (COALESCE(acuerdo_1, 0)+COALESCE(acuerdo_2, 0)+COALESCE(acuerdo_3, 0)+COALESCE(acuerdo_4, 0) != 0) and (month(fecha_1) = {dt.date.today().strftime('%m')} or month(fecha_2) = {dt.date.today().strftime('%m')} or month(fecha_3) = {dt.date.today().strftime('%m')} or month(fecha_4) = {dt.date.today().strftime('%m')});")
+        impagos = cursor.fetchall()
+        cursor.execute(f"select idpagos, empresa, motivo, LPAD(idhoja, 8, '0'), cliente, telefono, date_format(fecha_vencimiento, '%d %M %Y'), date_format(fecha_pago, '%d %M %Y'), LOWER(forma_pago), pago, agente from pagos where month(fecha_pago) = {dt.date.today().strftime('%m')} and year(fecha_pago) = {dt.date.today().strftime('%Y')} order by fecha_pago desc, idpagos desc;")
+        mes = f"{dt.date.today().strftime('%Y')}-{dt.date.today().strftime('%m')}"
     pagos = cursor.fetchall()
+    suma = 0
+    sumaimpagos = 0
+    for i in range(0,len(pagos)):
+        suma = suma+float(pagos[i][9])
+    for p in range(0,len(impagos)):
+        sumaimpagos = sumaimpagos+float(impagos[p][10])
     cursor.execute("SELECT empresa from clientes order by empresa;")
     empresas = cursor.fetchall()
-    return render_template('pagos.html', pagos=pagos, empresas=empresas, hoy=dt.date.today())
+    return render_template('pagos.html', pagos=pagos, empresas=empresas, hoy=dt.date.today(), mes=mes, suma=suma,fecha_inicial=fecha_inicial, fecha_final   =fecha_final, impagos=impagos, sumaimpagos = sumaimpagos)
 
 @app.route('/pagos/eliminar_pago', methods=['GET', 'POST'])
 @login_required
@@ -687,7 +725,6 @@ def movimientos():
     tablas = cursor.fetchall()
     return render_template('movimientos.html', tablas=tablas, n_mov=n_mov, mostrados=mostrados, fecha=fecha)
     
-
 @app.route('/registros', methods=['GET', 'POST'])
 @login_required
 def registros():
@@ -704,8 +741,8 @@ def registros():
     fecha_final = ''
     editar_telefono = 'SI'
     categoria = 'fecha'
-    habilitar_tareas = 'no'
-    tareas_empresa = ()
+    cursor.execute("select tareas.tarea from registros join tareas on registros.tarea = tareas.idtarea where registros.estado = 'registro' group by tareas.tarea order by tareas.tarea")
+    tareas_empresa = cursor.fetchall()
     empresa = None
     if request.method == 'POST':
         filtro = request.form['filtro']
@@ -714,52 +751,59 @@ def registros():
             cursor.execute(f"SELECT count(*) from registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '';")
             one = cursor.fetchone()
             mostrados = one[0]
-            cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc;")
+            #cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc;")
+            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros join tareas on tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc")
         if filtro == 'fechas':
             fecha_inicial = request.form['fecha_inicial']
             fecha_final = request.form['fecha_final']
             categoria = request.form['limite']
-            habilitar_tareas = 'si'
             if categoria == 'fecha':
                 cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}';")
                 one = cursor.fetchone()
                 mostrados = one[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
-                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
+                #cursor.execute(f"SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color FROM registros JOIN tareas ON tareas.idtarea = registros.tarea WHERE registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
             else:
                 cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and tarea != 1 and tarea != 0 and tarea != 2 and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}';")
                 one = cursor.fetchone()
                 mostrados = one[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 and estado = 'registro' and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
-                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
+                #cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
         if filtro == 'limite':
             limite = request.form['limite']
             if limite != 'all':
-                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea,   (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {limite};")
+                #cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {limite};")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' order by registros.fecha desc LIMIT {limite};")
                 mostrados = limite
             else:
-                cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {n_registros[0]};")
+                #cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit {n_registros[0]};")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' order by registros.fecha desc LIMIT {n_registros[0]};")
                 mostrados = n_registros[0]
         if filtro == 'duplicados':
-            cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado ='registro' and telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1)")
+            #cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where estado ='registro' and telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1);")
+            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado ='registro' and registros.telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1);")
             mostrados = repetidos[0]
             editar_telefono = 'NO'
         if filtro == 'faltantes':
-            cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (nombre NOT LIKE '% %' or direccion = '')")
+            #cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (nombre NOT LIKE '% %' or direccion = '')")
+            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (registros.nombre NOT LIKE '% %' or registros.direccion = '');")
             mostrados = faltantes[0]
         if filtro == 'empresa':
             empresa = request.form['limite']
             cursor.execute(f"SELECT COUNT(*) from registros where estado = 'registro' and empresa = '{empresa}';")
             one = cursor.fetchone()
             mostrados = one[0]
-            habilitar_tareas = 'si'
             cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' group by registros.tarea order by registros.tarea")
             tareas_empresa = cursor.fetchall()
-            cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' order by registros.fecha desc;")
+            #cursor.execute(f"SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color from registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' order by registros.fecha desc;")
+            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.empresa = '{empresa}' order by registros.fecha desc;")
     else:
-        cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit 25;")
+        #cursor.execute("SELECT empresa, agente, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, direccion, tareas.color, (@row := @row + 1) from registros join tareas on tareas.idtarea = registros.tarea, (SELECT @row := 0) r where estado = 'registro' order by registros.fecha desc limit 25;")
+        cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC LIMIT 25;")
         mostrados = 25
     tablas = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname asc")
@@ -768,7 +812,280 @@ def registros():
     tareas = cursor.fetchall()
     cursor.execute("SELECT empresa from clientes order by empresa asc;")
     empresas = cursor.fetchall()
-    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, habilitar_tareas=habilitar_tareas, tareas_empresa=tareas_empresa, empresa=empresa)
+    cursor.execute("SELECT LPAD( idhoja, 8, '0'), idfecha, replace(nombre, ' ','_'), replace(idfecha, ':', '') from hojas where idfecha is not null group by idfecha;")
+    pdfs = cursor.fetchall()
+    cursor.execute("select * from calendario order by date asc")
+    calendario = cursor.fetchall()
+    if dt.date.today() != calendario[0][0]:
+        cursor.execute("delete from calendario;")
+        cursor.execute("insert into calendario values (current_date(), DATE_FORMAT(current_date(), '%W %e'))")
+        for i in range (1,18):
+            cursor.execute(f"insert into calendario values (date_add(current_date(), interval {i} day), DATE_FORMAT(date_add(current_date(), interval {i} day), '%W %e'))")
+            cursor.execute("delete from calendario where date_format like 'Sunday%'")
+    db.connection.commit()
+    cursor.execute("select * from calendario order by date asc")
+    calendario = cursor.fetchall()
+    cursor.execute("select LPAD( idhoja+1, 8, '0') from hojas where cantidad is null order by idhoja desc limit 1;")
+    ultimahoja = cursor.fetchone()
+    tablas = [
+        tupla[:8] + (tupla[8].strftime('%Y-%m-%d %H:%M:%S'),) + tupla[9:]
+        for tupla in tablas
+        ]
+    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, tareas_empresa=tareas_empresa, empresa=empresa, pdfs=pdfs, calendario=calendario, ultimahoja=ultimahoja)
+
+@app.route('/hoja_de_inspeccion/generarpdf', methods=['GET', 'POST'])
+@login_required
+def generarPdf():
+    addMapping("Helvetica-Bold", 1, 0, "Helvetica-Bold")
+    idregistro = request.json
+    existe = idregistro['existe']
+    idfecha = idregistro['idfecha']
+    cursor = db.connection.cursor()
+    if existe == 'si':
+        cursor.execute(f"select DAY(fecha_emision), DATE_FORMAT(fecha_emision, '%M'), YEAR(fecha_emision), LPAD( idhoja, 8, '0'), nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo_1, interes_1, DATE_FORMAT(fecha_1, '%d %M %Y'), acuerdo_2, interes_2, DATE_FORMAT(fecha_2, '%d %M %Y'), acuerdo_3, interes_3, DATE_FORMAT(fecha_3, '%d %M %Y'), acuerdo_4, interes_4, DATE_FORMAT(fecha_4, '%d %M %Y'), notapago, mapa from hojas where idfecha = '{idfecha}' and cantidad is null;")
+        #tabla = cursor.fetchall()
+        #pdf_filename = f"static/hojas/HOJA_{tabla[0][3].strip()}_{tabla[0][4].upper().strip().replace(' ','_')}_{idfecha.replace(':','')}.pdf"
+    else:
+        datos = idregistro['datos']
+        cursor.execute("select LPAD( idhoja+1, 8, '0') from hojas where cantidad is null order by idhoja desc limit 1;")
+        ultimahoja = cursor.fetchone()
+        cursor.execute("INSERT INTO hojas (idhoja, idfecha, fecha_emision, nombre, direccion, telefono, empresa, mapa, servicio, objeto, notas, total, enganche, notapago) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (ultimahoja[0], idfecha, dt.date.today(), datos[0].strip().upper(), datos[1].upper().strip(), datos[2].strip(), datos[3].upper().strip(), None, '', '', '', 0, 0,''))
+        db.connection.commit()
+        cursor.execute(f"select DAY(current_date()), DATE_FORMAT(current_date(), '%M'), YEAR(current_date()), LPAD( idhoja, 8, '0'), nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, '_______________', '', '', '_______________', '', '', '_______________', '', '', '_______________', '', '', notapago, mapa from hojas where idfecha = '{idfecha}' and cantidad is null;")
+        #pdf_filename = f"static/hojas/vacias/HOJA_VACIA_{ultimahoja[0]}_{tabla[0][4].upper().strip()}.pdf"
+        
+    tabla = cursor.fetchall()
+    saldo_restante = float(tabla[0][10]-tabla[0][11])
+    pdf_filename = f"static/hojas/HOJA_{tabla[0][3].strip()}_{tabla[0][4].upper().strip().replace(' ','_')}_{idfecha.replace(':','')}.pdf"
+    doc = SimpleDocTemplate(pdf_filename, pagesize = A4, leftMargin=15, rightMargin=15, topMargin=15, bottomMargin=15, title=f"HOJA DE INSPECCIÓN N°{tabla[0][3]} - {tabla[0][4].strip()}")
+    
+    estilo_normal = ParagraphStyle(name='Normal', fontName='Helvetica', leading=14, textColor=colors.black, alignment=TA_LEFT)
+    estilo_bold_italic = ParagraphStyle(name='BoldItalic', parent=estilo_normal, fontName='Helvetica-BoldOblique', fontSize=10, textColor=colors.black, alignment=TA_CENTER, spaceBefpte=10, spaceAfter=10, leading=14, wordWrap='LTR', leftIndent=0, rightIndent=0, firstLineIndent=0, underlineWidth=0, underlineColor=None, bulletFontName='Helvetica-BoldOblique', bulletFontSize=12, bulletIndent=0, textColorSpace=None)
+    estilo_bold = ParagraphStyle(name='Bold', fontName='Helvetica-Bold', parent=estilo_normal, leading=14, textColor=colors.black, alignment=TA_LEFT)
+    estilo_grande = ParagraphStyle(name="Grande", fontName="Helvetica-Bold", fontSize=18, alignment=TA_CENTER, leading=10)
+    
+    estilo_tabla1 = TableStyle([('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                ('SPAN', (0, 0), (2, 0)),
+                                ('BACKGROUND', (0,0), (2,0), colors.lightblue),
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('VALIGN', (0,0), (-1, -1), 'MIDDLE')])
+    
+    estilo_tabla2 = TableStyle([('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                                ('VALIGN', (0,0), (-1, -1), 'MIDDLE'),
+                                ('SPAN', (0, 1), (1, 1))])
+    
+    estilo_tabla3 = TableStyle([('GRID', (0, 0), (-1, -1), 1, colors.black),
+                                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                                ('ALIGN', (0, 0), (-1, -1), 'LEFT')])
+    
+    estilo_tabla4 = TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')])
+    
+    estilo_tabla_materiales = TableStyle([('GRID', (0,0), (-1,-1), 1, colors.black),
+                                          ('VALIGN', (0,0), (-1,-1), "MIDDLE"),
+                                          ('BACKGROUND', (0,0), (2,0), colors.lemonchiffon)])
+    
+    estilo_tabla_acuerdos = TableStyle([
+        ('SPAN', (0,0), (1,0)),
+        ('SPAN', (0,2), (1,2)),
+        ('VALIGN', (0,1), (1,1), "TOP")
+    ])
+    
+    estilo_tabla_firmas = TableStyle([
+        ('SPAN', (0, 2), (1, 2)),
+        ('SPAN', (0, 3), (1, 3)),
+        ('SPAN', (0, 4), (1, 4))
+    ])
+
+    contenido = []
+
+    datos_tabla1 = [
+        [Paragraph("<para align=center><b>FECHA DE EMISIÓN</b></para>", estilo_bold)],
+        [Paragraph("<para align=center><b>DÍA</b></para>", estilo_bold), Paragraph("<para align=center><b>MES</b></para>", estilo_bold), Paragraph("<para align=center><b>AÑO</b></para>", estilo_bold)],
+        [tabla[0][0], tabla[0][1], tabla[0][2]]
+    ]
+    datos_tabla_principal = [
+        [RLImage("static/img/portada_hoja_inspeccion.png", width=200, height=80), Table(datos_tabla1, style=estilo_tabla1)]
+    ]
+    #imagen_path = "portada_hoja_inspeccion.png"
+    #imagen = Image(imagen_path, width=200, height=80)
+    #imagen.hAlign = 'LEFT'
+    
+    contenido.append(Table(datos_tabla_principal))#, colWidths=[250, 250]))
+    contenido.append(Spacer(1, 5))
+    contenido.append(Paragraph(f"ORDEN DE SERVICIOS N° - {tabla[0][3]}", estilo_grande))
+    datos_tabla2 = [
+        [Paragraph(f"<b>Nombre:</b> {tabla[0][4]}",  estilo_normal), Paragraph(f"<b>Teléfono:</b> {tabla[0][6]}", estilo_normal)],
+        [Paragraph(f"<b>Dirección:</b> {tabla[0][5]}", estilo_normal)]
+    ]
+    contenido.append(Spacer(1, 20))
+    contenido.append(Table(datos_tabla2, style=estilo_tabla2))
+    contenido.append(Spacer(1, 5))
+    #contenido.append(Paragraph("Tipo de servicio:", estilo_bold))
+    #contenido.append(Spacer(1, 5))
+    if existe == 'si':
+        if tabla[0][8] != "CCTV" and tabla[0][8] != "INTERNET":
+            contenido.append(Paragraph(f"Otro: {tabla[0][8]}", estilo_bold))
+            contenido.append(Spacer(1, 5))
+    servicio = [
+        [Paragraph("MANTENIMIENTO PREVENTIVO", estilo_bold), ""],
+        [Paragraph("INSTALACIÓN", estilo_bold), ""],
+        [Paragraph("MANTENIMIENTO CORRECTIVO", estilo_bold), ""],
+        [Paragraph("INSPECCIÓN", estilo_bold), ""]
+    ]
+    objeto = [
+        [Paragraph("CCTV", estilo_bold), ""],
+        [Paragraph("INTERNET", estilo_bold), ""],
+        [Paragraph("Otro", estilo_bold), ""]
+    ]
+    
+    if tabla[0][7] == "MANTENIMIENTO PREVENTIVO":
+        servicio[0][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+    elif tabla[0][7] == "INSTALACIÓN":
+        servicio[1][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+    elif tabla[0][7] == "MANTENIMIENTO CORRECTIVO":
+        servicio[2][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+    elif tabla[0][7] == "INSPECCIÓN":
+        servicio[3][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+    
+    if existe == 'si':
+        if tabla[0][8] == "CCTV":
+            objeto[0][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+        elif tabla[0][8] == "INTERNET":
+            objeto[1][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+        else:
+            objeto[2][1] = RLImage("static/img/seleccionador-check.png", width=15, height=15)
+    
+        
+    datos_tabla_servicios = [
+        [Table(servicio, style=estilo_tabla3, colWidths=[235, 30]), Table(objeto, style=estilo_tabla3, colWidths=[235, 30])]
+    ]
+    contenido.append(Table(datos_tabla_servicios, style=estilo_tabla4))
+    contenido.append(Spacer(1, 7))
+    
+    estilo_tabla_notas = TableStyle([('GRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('VALIGN', (0,0), (-1,-1), "MIDDLE"),
+                                    ('BACKGROUND', (0,0), (0,0), colors.lemonchiffon)])
+    
+    if existe == 'si':
+        cursor.execute(f"SELECT cantidad, material from hojas where material is not null and idfecha = '{idfecha}';")
+        materiales = cursor.fetchall()
+        if materiales != ():
+            datos_tabla_materiales = [
+                [Paragraph("<para align=center><b>Cantidad</b></para>", estilo_bold), Paragraph("<para align=center><b>Materiales</b></para>", estilo_bold)]
+                ]
+            for material in materiales:
+                fila = [
+                    Paragraph(str(material[0]), estilo_bold),
+                    Paragraph(material[1], estilo_bold)
+                ]
+                datos_tabla_materiales.append(fila)
+            contenido.append(Table(datos_tabla_materiales, style=estilo_tabla_materiales, colWidths=[60, 495]))
+            contenido.append(Spacer(1, 10))
+        if tabla[0][9] != '':
+            datos_tabla_notas = [
+                [Paragraph("<para align=center><b>Notas técnicas</b></para>", estilo_bold)],
+                [Paragraph(f"{tabla[0][9]}", estilo_bold)]
+            ]
+            contenido.append(Table(datos_tabla_notas, style=estilo_tabla_notas))
+            contenido.append(Spacer(1, 10))
+    else:
+        datos_tabla_materiales = [
+                [Paragraph("<para align=center><b>Cantidad</b></para>", estilo_bold), Paragraph("<para align=center><b>Materiales</b></para>", estilo_bold)],
+                [],[],[],[],[],[],[]]
+        contenido.append(Table(datos_tabla_materiales, style=estilo_tabla_materiales, colWidths=[60, 495]))
+        contenido.append(Spacer(1, 10))
+        datos_tabla_notas = [
+            [Paragraph("<para align=center><b>Notas técnicas</b></para>", estilo_bold)],
+            [],[],[],[]
+        ]
+        contenido.append(Table(datos_tabla_notas, style=estilo_tabla_notas))
+        contenido.append(Spacer(1, 10))
+    
+    datos_tabla_pagos = [
+        [f"PRECIO TOTAL: ${str(tabla[0][10])}"],
+        [f"ENGANCHE: ${str(tabla[0][11])}"],
+        [f"SALDO RESTANTE: ${str(saldo_restante)}"]
+    ]
+    datos_tabla_fechas = []
+    
+    if tabla[0][12] == 'totalidad':
+        datos_tabla_fechas.append([Paragraph("ABONÓ EN SU TOTALIDAD")])
+    elif tabla[0][12] == 'semanal' or tabla[0][12] == 'mensual':
+        if tabla[0][15] != None:
+            datos_tabla_fechas.append([Paragraph(f"PAGO #1: ${tabla[0][13]}. Vencimiento: {tabla[0][15]}")])
+        if tabla[0][18] != None:
+            datos_tabla_fechas.append([Paragraph(f"PAGO #2: ${tabla[0][16]}. Vencimiento: {tabla[0][18]}")])
+        if tabla[0][21] != None:
+            datos_tabla_fechas.append([Paragraph(f"PAGO #3: ${tabla[0][19]}. Vencimiento: {tabla[0][21]}")])
+        if tabla[0][24] != None:
+            datos_tabla_fechas.append([Paragraph(f"PAGO #4: ${tabla[0][22]}. Vencimiento: {tabla[0][24]}")])
+    elif tabla[0][12] == '':
+        datos_tabla_fechas.append([Paragraph("NO SE HA CONFIRMADO NINGUNA FORMA DE PAGO")])
+    elif tabla[0][12] == None:
+        datos_tabla_fechas.append([Paragraph(f"PAGO #1: ${tabla[0][13]}. Vencimiento: {tabla[0][15]}")])
+        datos_tabla_fechas.append([Paragraph(f"PAGO #2: ${tabla[0][16]}. Vencimiento: {tabla[0][18]}")])
+        datos_tabla_fechas.append([Paragraph(f"PAGO #3: ${tabla[0][19]}. Vencimiento: {tabla[0][21]}")])
+        datos_tabla_fechas.append([Paragraph(f"PAGO #4: ${tabla[0][22]}. Vencimiento: {tabla[0][24]}")])
+        
+    tabla_acuerdos_pagos = [
+        [Paragraph("<para align=center><b>Acuerdo de pago</b></para>", estilo_bold)],
+        [Table(datos_tabla_pagos), Table(datos_tabla_fechas)],
+        [Paragraph("En caso de que el cliente no cumpla con los pagos tenemos derecho a retirar los equipos instalados.", estilo_bold_italic)]
+    ]
+    contenido.append(Table(tabla_acuerdos_pagos, style=estilo_tabla_acuerdos))
+    contenido.append(Spacer(1, 50))
+    datos_tabla_firmas = [
+        [Paragraph("<para align=center>_________________________</para>", estilo_bold), Paragraph("<para align=center>_________________________</para>", estilo_bold)],
+        [Paragraph("<para align=center>Firma Técnico Responsable</para>"), Paragraph("<para align=center>Firma y Sello Cliente</para>")],
+        [""],
+        [Paragraph("<para align=center>TS NETWORK al lado del hotel Texas Inn Brownsville.</para>")],
+        [Paragraph("<para align=center>845 N Expressway 77, Brownsville, TX 78520. (956) 640 6784.</para>")]
+    ]
+    contenido.append(Table(datos_tabla_firmas, style=estilo_tabla_firmas))
+    #MÓDULO DE CARGA DE IMAGEN
+    # Add the image from the database at the end
+    if tabla[0][26]:  # Verificar si los datos de la imagen no están vacíos
+        image_data = tabla[0][26]
+        image = Image.open(io.BytesIO(image_data))
+
+        # Redimensionar la imagen manteniendo la relación de aspecto
+        max_width, max_height = 550, 800
+        width_ratio = max_width / image.width
+        height_ratio = max_height / image.height
+        resize_ratio = min(width_ratio, height_ratio)
+        new_width = int(image.width * resize_ratio)
+        new_height = int(image.height * resize_ratio)
+        image = image.resize((new_width, new_height), Image.LANCZOS)
+
+        # Convertir la imagen PIL a un formato compatible con ReportLab
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+    
+        # Agregar la imagen al contenido del PDF
+        rl_image = RLImage(img_byte_arr, width=new_width, height=new_height)
+        contenido.append(Spacer(1, 190))
+        contenido.append(rl_image)
+    else:
+        pass
+    doc.build(contenido)
+    cursor.close()
+    #if os.path.exists(pdf_filename):
+    #    os.system(f'start "" "{pdf_filename}"')
+    #url_pdf =  f"http://www.admin.losandestx.com:30358/{pdf_filename}"
+    #webbrowser.open('file://' + pdf_filename, new=2)
+    #return f'<a href="{url_pdf}" target="_blank">Abrir PDF</a>'
+    return Response(status=200)
+    #print(pdf_filename)
+    #return send_file(f"/home/www/losandestx.com/administracion/app/{pdf_filename}", as_attachment=False)
+    #return pdf_filename
+    #return "PDF EN CHROME"
+    #return render_template('pdf.html', pdf_filename=pdf_filename)
+    
+@app.route('/pdf')
+def pdf():
+    return render_template('pdf.html', pdf_filename="datos.pdf")
 
 @app.route('/preguntas')
 @login_required
@@ -1197,6 +1514,15 @@ def modPlan():
         return redirect(url_for('planes'))
     return Response(status=204)
 
+@app.route('/hojas/imagenes/<string:idhoja>')
+@login_required
+def mostrar_mapa(idhoja):
+    cursor = db.connection.cursor()
+    cursor.execute(f"SELECT mapa FROM hojas WHERE idhoja = {idhoja} and cantidad is null;")
+    imagen_data = cursor.fetchone()[0]
+    if imagen_data:
+        return send_file(BytesIO(imagen_data), mimetype='image/jpeg')
+
 @app.route('/hoja_de_inspeccion', methods=['GET', 'POST'])
 @login_required
 def hoja():
@@ -1212,7 +1538,7 @@ def hoja():
         if condicional != 0:
             cursor.execute(f"SELECT LPAD( idhoja, 8, '0') from hojas where idfecha = '{fecha}' and cantidad is null and material is null;")
             n_hoja = cursor.fetchone()
-            cursor.execute(f"SELECT fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, total-enganche, idfecha, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, COALESCE(acuerdo_1, 0)+COALESCE(acuerdo_2, 0)+COALESCE(acuerdo_3, 0)+COALESCE(acuerdo_4, 0), empresa from hojas where idfecha = '{fecha}' and cantidad is null and material is null;")
+            cursor.execute(f"SELECT fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, total-enganche, idfecha, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, COALESCE(acuerdo_1, 0)+COALESCE(acuerdo_2, 0)+COALESCE(acuerdo_3, 0)+COALESCE(acuerdo_4, 0), empresa, mapa from hojas where idfecha = '{fecha}' and cantidad is null and material is null;")
             hoja = cursor.fetchone()
             cursor.execute(f"SELECT count(*) from hojas where idfecha = '{fecha}' and cantidad is not null and material is not null")
             n_materiales = cursor.fetchone()
@@ -1227,7 +1553,7 @@ def hoja():
             cursor.execute("SELECT LPAD( idhoja+1, 8, '0') from hojas where cantidad is null and material is null order by idhoja desc limit 1;")
             n_hoja = cursor.fetchone()
             n_materiales = 0
-            cursor.execute(f"SELECT current_date(), nombre, direccion, telefono, '', '', '', 0, 0, '', fecha, '', '', '', '','','','','','','','','','','','', '{empresa}' from registros where fecha = '{fecha}' and estado = 'registro';")
+            cursor.execute(f"SELECT current_date(), nombre, direccion, telefono, '', '', '', 0, 0, '', fecha, '', '', '', '','','','','','','','','','','','', '{empresa}', null from registros where fecha = '{fecha}' and estado = 'registro';")
             hoja = cursor.fetchone()
             materiales = None
             n_cuotas = 0
@@ -1238,10 +1564,13 @@ def hoja():
 @app.route('/hoja_de_inspeccion/guardar', methods=['POST'])
 @login_required
 def guardar_en_mysql():
-    data = request.json
-    tabla_data = data['materiales']
-    datos_data = data['datos']
-    accion_data = data['accion']
+    data = request.form
+    #tabla_data = data['materiales']
+    #datos_data = data['datos']
+    tabla_data = json.loads(data['materiales'])
+    datos_data = json.loads(data['datos'])
+    #accion_data = data['accion']
+    accion_data = json.loads(data['accion'])
     telefono_sn = datos_data[5]
     telefono = ''
     for n in telefono_sn:
@@ -1252,19 +1581,33 @@ def guardar_en_mysql():
         if datos_data[r] == '':
             datos_data[r] = 'null'
     movimiento = "creó una nueva"
-    if accion_data == 'actualizar':
-        cursor.execute(f"DELETE from hojas where idhoja = '{datos_data[0]}' and idfecha = '{datos_data[1]}'")
-        movimiento = "actualizó la"
-    cursor.execute(f"INSERT INTO hojas (idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, empresa) VALUES ({datos_data[0]}, '{datos_data[1]}', '{datos_data[2]}', '{datos_data[3].upper().strip()}', '{datos_data[4].upper().strip()}', '{telefono}', '{datos_data[6]}', '{datos_data[7].upper().strip()}', '{datos_data[8].upper().strip()}', {datos_data[9]}, {datos_data[10]}, '{datos_data[11]}', {datos_data[12]}, {datos_data[13]}, '{datos_data[14]}', {datos_data[15]}, {datos_data[16]}, '{datos_data[17]}', {datos_data[18]}, {datos_data[19]}, '{datos_data[20]}', {datos_data[21]}, {datos_data[22]}, '{datos_data[23]}', '{datos_data[24].strip().upper()}', '{datos_data[25].strip().upper()}')")
-    cursor.execute("UPDATE hojas SET fecha_1 = null, fecha_2 = null, fecha_3 = null, fecha_4 = null where tipopago = 'totalidad' or tipopago = '';")
+    
+    condicional_mapa = data['condicional_mapa']
+    if condicional_mapa == 'nada':
+        cursor.execute("UPDATE hojas SET fecha_emision = %s, nombre = %s, direccion = %s, telefono = %s, servicio = %s, objeto = %s, notas = %s, total = %s, enganche = %s, tipopago = %s, acuerdo_1 = %s, interes_1 = %s, fecha_1 = %s, acuerdo_2 = %s, interes_2 = %s, fecha_2 = %s, acuerdo_3 = %s, interes_3 = %s, fecha_3 = %s, acuerdo_4 = %s, interes_4 = %s, fecha_4 = %s, notapago = %s, empresa = %s WHERE idhoja = %s and idfecha = %s and cantidad is null", (datos_data[2],datos_data[3].upper().strip(), datos_data[4].upper().strip(), telefono, datos_data[6], datos_data[7].upper().strip(), datos_data[8].upper().strip(), datos_data[9], datos_data[10], datos_data[11], datos_data[12], datos_data[13], datos_data[14], datos_data[15], datos_data[16], datos_data[17], datos_data[18], datos_data[19], datos_data[20], datos_data[21], datos_data[22], datos_data[23], datos_data[24].strip().upper(), datos_data[25].strip().upper(), datos_data[0], datos_data[1]))
+        cursor.execute(f"DELETE from hojas where idhoja = '{datos_data[0]}' and idfecha = '{datos_data[1]}' and cantidad is not null")
+    elif condicional_mapa == 'eliminar':
+        if accion_data == 'actualizar':
+            cursor.execute(f"DELETE from hojas where idhoja = '{datos_data[0]}' and idfecha = '{datos_data[1]}'")
+            movimiento = "actualizó la"
+        cursor.execute("INSERT INTO hojas (idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, empresa) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (datos_data[0], datos_data[1], datos_data[2], datos_data[3].upper().strip(), datos_data[4].upper().strip(), telefono, datos_data[6], datos_data[7].upper().strip(), datos_data[8].upper().strip(), datos_data[9], datos_data[10], datos_data[11], datos_data[12], datos_data[13], datos_data[14], datos_data[15], datos_data[16], datos_data[17], datos_data[18], datos_data[19], datos_data[20], datos_data[21], datos_data[22], datos_data[23], datos_data[24].strip().upper(), datos_data[25].strip().upper()))
+    else:
+        if accion_data == 'actualizar':
+            cursor.execute(f"DELETE from hojas where idhoja = '{datos_data[0]}' and idfecha = '{datos_data[1]}'")
+            movimiento = "actualizó la"
+        archivo = request.files['mapa']
+        contenido = archivo.read()
+        cursor.execute("INSERT INTO hojas (idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, empresa, mapa) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (datos_data[0], datos_data[1], datos_data[2], datos_data[3].upper().strip(), datos_data[4].upper().strip(), telefono, datos_data[6], datos_data[7].upper().strip(), datos_data[8].upper().strip(), datos_data[9], datos_data[10], datos_data[11], datos_data[12], datos_data[13], datos_data[14], datos_data[15], datos_data[16], datos_data[17], datos_data[18], datos_data[19], datos_data[20], datos_data[21], datos_data[22], datos_data[23], datos_data[24].strip().upper(), datos_data[25].strip().upper(), contenido))
+    #cursor.execute(f"INSERT INTO hojas (idhoja, idfecha, fecha_emision, nombre, direccion, telefono, servicio, objeto, notas, total, enganche, tipopago, acuerdo_1, interes_1, fecha_1, acuerdo_2, interes_2, fecha_2, acuerdo_3, interes_3, fecha_3, acuerdo_4, interes_4, fecha_4, notapago, empresa, mapa) VALUES ({datos_data[0]}, '{datos_data[1]}', '{datos_data[2]}', '{datos_data[3].upper().strip()}', '{datos_data[4].upper().strip()}', '{telefono}', '{datos_data[6]}', '{datos_data[7].upper().strip()}', '{datos_data[8].upper().strip()}', {datos_data[9]}, {datos_data[10]}, '{datos_data[11]}', {datos_data[12]}, {datos_data[13]}, '{datos_data[14]}', {datos_data[15]}, {datos_data[16]}, '{datos_data[17]}', {datos_data[18]}, {datos_data[19]}, '{datos_data[20]}', {datos_data[21]}, {datos_data[22]}, '{datos_data[23]}', '{datos_data[24].strip().upper()}', '{datos_data[25].strip().upper()}', {datos_data[26]}, '{contenido}')")
+    cursor.execute("UPDATE hojas SET fecha_1 = null, acuerdo_1 = null, interes_1 = null, fecha_2 = null, acuerdo_2 = null, interes_2 = null, fecha_3 = null, acuerdo_3 = null, interes_3 = null, fecha_4 = null, acuerdo_4 = null, interes_4 = null where tipopago = 'totalidad' or tipopago = '';")
     for f in range (1,5):
         cursor.execute(f"UPDATE hojas SET fecha_{f} = null where fecha_{f} = '0000-00-00';")
     for row in tabla_data:
             if row != [] and row != ['', '']:
                 cursor.execute(f"INSERT INTO hojas (idhoja, idfecha, cantidad, material) VALUES ({datos_data[0]}, '{datos_data[1]}', {row[0]}, '{row[1].upper().strip()}')")
-    if datos_data[11] == 'totalidad':
+    if datos_data[11] == 'totalidad' and accion_data != 'actualizar':
         cursor.execute(f"INSERT INTO pagos (empresa, motivo, idhoja, cliente, telefono, fecha_vencimiento, fecha_pago, forma_pago, pago, agente) VALUES ('{datos_data[25].strip().upper()}', 'ABONÓ TODO', {datos_data[0]}, '{datos_data[3].upper(). strip()}', '{telefono}', '{datos_data[2]}', '{datos_data[2]}', '{datos_data[26].upper().strip()}', {datos_data[9]}, '{current_user.fullname}');")
-    #print(datos_data)
+        cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} {movimiento} hoja de inspección N°´{datos_data[0]}´ del cliente {datos_data[3].upper().strip()} que abonó en su totalidad. Dicho pago fue registrado en la sección ´Pagos´', date_add(now(), interval -5 hour));")
     cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} {movimiento} hoja de inspección N°´{datos_data[0]}´ del cliente {datos_data[3].upper().strip()}', date_add(now(), interval -5 hour));")
     db.connection.commit()
     cursor.close()
@@ -1291,5 +1634,5 @@ if __name__ == '__main__':
     app.config.from_object(config['development'])
     app.register_error_handler(401, pagina_no_autorizada)
     app.register_error_handler(404, pagina_no_encontrada)
-    #app.run(debug=True, port=5001)
-    app.run(debug=False, port=30358, host='admin.losandestx.com')
+    app.run(debug=True, port=5001)
+    #app.run(debug=False, port=30358, host='admin.losandestx.com')

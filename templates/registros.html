@@ -95,10 +95,7 @@ Administración Los Andes | Registros
             </form>
             <td>
                 <span style="display: flex;">
-                {% if habilitar_tareas == 'no' %}
-                <span class="icon-container">
-                {% endif %}
-                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',6,1)" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" {% if habilitar_tareas == 'no' %}disabled{% endif %}>
+                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',6,1)" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
                     <option value="" style="color: gainsboro;">Tarea...</option>
                     {% if tareas_empresa != () %}
                         {% for te in tareas_empresa %}
@@ -110,9 +107,6 @@ Administración Los Andes | Registros
                         {% endfor %}
                     {% endif %}
                 </select>
-                {% if habilitar_tareas == 'no' %}
-                <span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">Debe filtrar por "EMPRESA"</span></span>
-                {% endif %}
                 <span class="icon-container">
                 <input onchange="document.getElementById('fecha_inicial').value = this.value; document.getElementById('filtro').value = 'fecha_unica'; document.getElementById('btn-enviar').click();" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%;" value="{{fechaunica}}">
                 <span class="tooltip" id="tooltip-editar">Filtrar tareas por una fecha específica</span></span>
@@ -168,11 +162,25 @@ Administración Los Andes | Registros
                     {% else %}
                     <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"><img src="{{ url_for('static', filename='img/phone-volume-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
                     {% endif %}
-                    
-                        {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
+                    {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
                             <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.getElementById('empresa').value='{{i[0]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
-                        {% endif %}
-                    
+                    {% if i[16] == 1 %}
+                    {% for hojas in pdfs %}
+                    {% if i[8] == hojas[1] %}
+                        <div class="icon-container">
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="nuevoPDFexistente('{{i[8]}}', 'si')"><img src="{{ url_for('static', filename='img/file-pdf-solid.svg') }}" width="20" height="20"></button>
+                        <a href="{{ url_for('static', filename='hojas/HOJA_'+hojas[0]+'_'+hojas[2]+'_'+hojas[3]+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
+                        <div class="tooltip" id="tooltip-editar">Generar PDF</div></div>
+                    {% endif %}
+                    {% endfor %}
+                    {% else %}
+                        <div class="icon-container">
+                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="triggerFileInput('{{i[8]}}', '{{i[2]}}', '{{i[14]}}', '{{i[3]}}', '{{i[0]}}');"><img src="{{ url_for('static', filename='img/file-pdf-blanco.svg') }}" width="20" height="20"></button>
+                        <a href="{{ url_for('static', filename='hojas/HOJA_'+ultimahoja[0]+'_'+i[2].strip().upper()+'_'+i[8].replace(':','')+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
+                        <input type="file" style="display: none" id="{{i[8]}}inputfile">
+                        <div class="tooltip" id="tooltip-editar">Generar PDF vacío</div></div>
+                    {% endif %}
+                    {% endif %}
                 </td>
                 <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Llamada el {{i[8]}}
                 <br><a type="button" onclick="motivo('{{i[8]}}')"><span class="icon-container"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Editar nota</span></span> {% if i[5] != '' %}{{ i[5] }}{% else %}No tiene notas de llamada cargadas.{% endif %}</a>
@@ -292,6 +300,44 @@ function motivo(id){
             document.formulario.action = '/registros/editarregistro/actualizar';
             document.formulario.submit();
         }
+}
+
+function nuevoPDF(idfecha, existe, nombre, direccion, telefono, empresa){
+    var inputFile = document.getElementById(idfecha+'inputfile');
+    var file = inputFile.files[0];
+    if (file){
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/hoja_de_inspeccion/generarpdf', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload =  function() {
+        if (xhr.status === 200) {
+            document.getElementById('etiqueta'+idfecha).click();
+        }else{
+            alert('Error al generar PDF. La hoja de inspección tiene datos faltantes.');
+        }
+    };
+    xhr.send(JSON.stringify({idfecha: idfecha, existe: existe, datos: [nombre, direccion, telefono, empresa]}));
+    }
+}   
+function nuevoPDFexistente(idfecha, existe){
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/hoja_de_inspeccion/generarpdf', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload =  function() {
+        if (xhr.status === 200) {
+            document.getElementById('etiqueta'+idfecha).click();
+        }else{
+            alert('Error al generar PDF. La hoja de inspección tiene datos faltantes.');
+        }
+    };
+    xhr.send(JSON.stringify({idfecha: idfecha, existe: existe}));
+}
+
+function triggerFileInput(itemId, nombre, direccion, telefono, empresa){
+    document.getElementById(itemId+'inputfile').click();
+    document.getElementById(itemId+'inputfile').onchange = function(){
+        nuevoPDF(itemId, 'no', nombre, direccion, telefono, empresa);
+    };
 }
 </script>
 {% endblock %}

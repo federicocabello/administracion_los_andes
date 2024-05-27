@@ -41,7 +41,6 @@ DB_crear tabla facturas
 
 <modulo de actividades fuera de los registros
 
-<en modulo de cuenta, agregar seccion de cuentas por cobrar
 <agregar imprimir pdf al modulo
 
 <en la adevertencia de registro duplicado, mostrar a nombre de quien está (el ultimo registro)
