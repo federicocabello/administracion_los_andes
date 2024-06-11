@@ -122,3 +122,62 @@ function comprobarEnTabla(idtabla, idinput, idlabel){
     notification.setAttribute('hidden', 'hidden')
   }
   }
+
+  document.addEventListener('DOMContentLoaded', function(){
+   var appointmentInput = document.getElementsByName('appointment');
+  flatpickr(appointmentInput, {
+    enableTime: true,
+    dateFormat: "Y-m-d H:i",
+    time_24hr: true
+  });
+});
+
+function cambiarRegistroPopUp(letra, idfecha, accion, nombre, telefono, datoviejo, redireccion){
+  let datonuevo = prompt("Nuev"+letra+" "+accion, datoviejo);
+  if (datonuevo != null){
+      cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion);
+  }
+}
+
+function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion){
+  guardarFiltros();
+  var formData = {
+      'datonuevo': datonuevo,
+      'idfecha': idfecha,
+      'accion': accion,
+      'nombre': nombre,
+      'telefono': telefono,
+      'redireccion': redireccion
+  };
+  $.ajax({
+      type: 'POST',
+      url: '/registros/editarregistro/actualizar',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+          location.reload();
+      }else{
+          alert('Error al modificar registro.')
+      }
+  })
+
+  .fail(function(xhr, status, error) {
+      console.error('Error: ', error)
+  });
+}
+
+function setearPopUp(idregistro, nombre, nota, tarea, fecha, hora, telefono){
+  document.getElementById('m_id').value = idregistro;
+  document.getElementById('m_cliente').innerHTML = nombre;
+  document.getElementById('m_nombre').value = nombre;
+  document.getElementById('m_notas').value = nota;
+  document.getElementById('m_tareas').value = tarea;
+  document.getElementById('m_telefono').value = telefono;
+  var appointmentInput = document.querySelector("input[name='appointment']");
+  var fp = flatpickr(appointmentInput, {enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true});
+  fp.setDate(fecha+' '+hora, true, 'Y-m-d H:i');
+  document.getElementById('myModal').style.display = 'flex';
+}
