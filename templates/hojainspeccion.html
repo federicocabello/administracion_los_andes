@@ -183,7 +183,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                 <input type="date" style="width: 100%; color: black;" id="acuerdo_fecha4" value="{{hoja[23]}}">
                             </td>
                         </tr>
-                        <tr {% if hoja[11] == 'totalidad' or hoja[11] == ''%}hidden{% endif %}>
+                        <tr {% if hoja[11] == 'totalidad' or hoja[11] == '' or hoja[11] == None %}hidden{% endif %}>
                             <td style="text-align: center;" id="total_a_pagar">
                                 <span style="color: red; display: flex; justify-content: center; vertical-align: middle;"><input style="background: none; border: none; color: red; width: 115px; margin: 0; padding: 0;" type="text" value="Total a pagar: $" disabled><input type="number" style="padding: 0; margin: 0; width: 110px; color:red; background: none; border: none; font-size: 22px;" id="acuerdo_total_a_pagar" value="{{hoja[25]}}" disabled></span>
                             </td>
@@ -196,8 +196,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                     <input type="file" id="mapa" {% if hoja[27] != None %}style="display: none;"{% endif %}>
                     {% if hoja[27] != None %}
                     <div id="div_mapa" style="margin-top: 5px;">
-                    <img src="{{ url_for('mostrar_mapa', idhoja=n_hoja[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 300px; height: 300px; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px;">
-                    <button type="button" style="position: absolute; bottom: 200px; border-radius: 50%; border: 1px solid gray; cursor: pointer; font-size: 20px; color: grey; vertical-align: bottom; text-align: center;" onclick="document.getElementById('mapa').removeAttribute('style'); document.getElementById('div_mapa').setAttribute('hidden', 'hidden');">X</button>
+                    <img src="{{ url_for('mostrar_mapa', idhoja=n_hoja[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 300px; height: 300px; border-radius: 5px; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px;"><span><button type="button" style="border-radius: 50%; border: 1px solid gray; font-size: 20px; color: grey; vertical-align: top; text-align: center;" onclick="document.getElementById('mapa').removeAttribute('style'); document.getElementById('div_mapa').setAttribute('hidden', 'hidden');">X</button></span>
                     </div>
                     {% endif %}
                 </span>

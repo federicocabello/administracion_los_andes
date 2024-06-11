@@ -18,7 +18,7 @@ Administración Los Andes | Registros
         <option value="75" {% if mostrados == '75' %}selected{% endif %}>Mostrar 75</option>
         <option value="100" {% if mostrados == '100' %}selected{% endif %}>Mostrar 100</option>
         <option value="all" {% if mostrados == n_registros[0] %}selected{% endif %}>Mostrar todos ({{n_registros[0]}})</option>
-    </select><button type="button" style="margin-left: 10px; padding: 3px; vertical-align: middle;"><a href="{{ url_for('registros') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></a></button>
+    </select><span class="icon-container"><button type="button" style="margin-left: 10px; padding: 3px; vertical-align: middle;" onclick="localStorage.removeItem('filtros'); document.getElementById('filtro_agentes').value = ''; document.getElementById('filtro_cliente').value = ''; document.getElementById('filtro_tarea').value = '';"><a href="{{ url_for('registros') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></a></button><span class="tooltip" id="tooltip-editar">Recargar "Registros"</span></span>
     {% if repetidos[0] != 0 %}
     <button style="float: right;" class="btn warning" onclick="document.getElementById('filtro').value = 'duplicados'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/warning_icon.svg.png') }}" height="25" style="vertical-align: middle;"> Hay registros duplicados</button>
     {% endif %}
@@ -26,7 +26,28 @@ Administración Los Andes | Registros
     <button style="float: right; margin-right: 8px;" class="btn secondary" onclick="document.getElementById('filtro').value = 'faltantes'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/person-circle-exclamation-solid.svg') }}" height="25" style="vertical-align: middle;"> Hay datos faltantes</button>
     {% endif %}
     </h1>
-    <table style="border: 1px solid black; margin:0 auto;" id="tabla_registros">
+    <table style="border: 1px solid black; margin: 0 auto;" id="tabla_registros">
+        <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+        const tableRows = document.querySelectorAll('#tabla_registros tbody tr');
+
+        tableRows.forEach((row, index) => {
+        if (index > 1){
+            row.addEventListener('mouseenter', () => {
+            row.style.transition = 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out';
+            row.style.transform = 'scale(1.03)';
+            //row.style.boxShadow = '2px 2px 10px rgba(0, 0, 0, 0.2)';
+            row.style.boxShadow = '0 0 10px #008080';
+        });
+
+        row.addEventListener('mouseleave', () => {
+            row.style.transform = 'scale(1)';
+            row.style.boxShadow = 'none';
+        });
+    }
+    });
+});
+        </script>
         <tr>
             <td>
             <select id="filtro_empresa" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="document.getElementById('filtro').value = 'empresa'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click()">
@@ -36,16 +57,16 @@ Administración Los Andes | Registros
                 {% endfor %}
             </select>
             </td>
-            <td colspan="2">            
-            <select id="filtro_agentes" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="filtro('filtro_agentes', 'tabla_registros', 1, 1)">
+            <td>            
+            <select id="filtro_agentes" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="guardarFiltros(); aplicarFiltros();">
                 <option value="" style="color:gainsboro">Filtro por agente...</option>
-                {% for agt in agentes %}
+                {% for agt in agentes_purgados %}
                 <option value="{{agt[0]}}">{{agt[0]}}</option>
                 {% endfor %}
             </select>
             </td>
             <td colspan="2">
-                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="filtro('filtro_cliente','tabla_registros',3,1)">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="guardarFiltros(); aplicarFiltros();">
             <!--
                 <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
                     <option value="" style="color:gainsboro">Filtro por cliente...</option>
@@ -95,7 +116,7 @@ Administración Los Andes | Registros
             </form>
             <td>
                 <span style="display: flex;">
-                <select id="filtro_tarea" onchange="filtro('filtro_tarea', 'tabla_registros',6,1)" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
+                <select id="filtro_tarea" onchange="guardarFiltros(); aplicarFiltros();" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
                     <option value="" style="color: gainsboro;">Tarea...</option>
                     {% if tareas_empresa != () %}
                         {% for te in tareas_empresa %}
@@ -115,107 +136,115 @@ Administración Los Andes | Registros
         </tr>
         <tr>
             <th>Empresa</th>
-            <th colspan="2">Agente</th>
+            <th>Agente</th>
             <th colspan="2">Cliente</th>
             <th>Notas de llamada</th>
             <th colspan="4">Tarea</th>
         </tr>
-        <form method="POST" name="formulario" action="/registros/editarregistro" id="formulario"><input type="hidden" name="redireccion">
+        
         {% for i in tablas %}
-        {% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}
-        <tr style="color: white;">
-        {% else %}
-        <tr>
-        {% endif %}
-            <textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>
-                <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> {{ i[0] }}</td>
-                <td style="border-radius: 5px; background-color: #{{i[15]}}"><span class="icon-container"><img src="{{ url_for('static', filename='img/headset-solid.svg') }}" width="15" height="15" style="vertical-align: middle;" onclick="document.getElementById('{{i[8]}}agnt').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span> {{i[1]}}</td>
-                <td style="background: none; padding-left: 0; padding-right: 0;" id="td_agente">
-                    <select id="{{i[8]}}agnt" onchange="cambiarAgente(document.getElementById('{{ i[8] }}agnt').value, '{{i[8]}}')" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" hidden>
-                        {% for a in agentes %}
-                        {% if i[1] == a[0] %}
-                        <option value="{{a[0]}}" selected>{{a[0]}}</option>
-                        {% else %}
-                        <option value="{{a[0]}}">{{a[0]}}</option>
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                </td>
-                <td style="border-radius: 5px; background-color: #{{i[15]}};">{% if i[3] != '' %}<a type="button" onclick="editarCliente('nombre', '{{i[3]}}', '{{i[2]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}{% if i[3] != '' %}</a>{% endif %}
+        <tr style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}background-color: #{{i[14]}};">
+            <!--<textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>-->
+                <td><span class="icon-container"><i class="fa fa-industry"></i><select onchange="cambiarRegistro(this.value, '{{i[8]}}', 'empresa', '{{i[2]}}', '{{i[3]}}', null);" style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;">{% for e in empresas %}<option value="{{e[0]}}" {% if e[0] == i[0] %}selected{% endif %} style="color: black">{{e[0]}}</option>{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar empresa</span></span></td>
+                
+                <td><span class="icon-container"><i class="fa fa-headphones"></i><select style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;" onchange="cambiarRegistro(this.value, '{{i[8]}}', 'agente', '{{i[2]}}', '{{i[3]}}', null)">{% for a in agentes %}<option value="{{a[0]}}" {% if a[0] == i[1] %}selected{% endif %} style="color: black">{{a[0]}}</option>{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span></td>
+                
+                <td hidden>{{i[1]}}</td>
+                
+                <td><span class="icon-container"><i class="fa fa-user-circle" {% if i[3] != '' %}onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'nombre', '{{i[2]}}', '{{i[3]}}', '{{i[2]}}', null);" style="cursor: pointer;"{% endif %}></i><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}
+
                 {% if i[3] != '' %}
-                    <br><a type="button" {% if editar_telefono == 'SI' %}onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"{% endif %}>{% if editar_telefono == 'SI' %}<span class="icon-container">{% endif %}<img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">{% if editar_telefono == 'SI' %}<span class="tooltip" id="tooltip-editar">Editar teléfono</span></span>{% endif %} {{ i[3] }}</a>
+                    <br><span class="icon-container"><i class="fa fa-phone" {% if editar_telefono == 'SI' %}onclick="cambiarRegistroPopUp('o', '{{i[3]}}', 'telefono', '{{i[2]}}', '{{i[3]}}', '{{i[3]}}', null);" style="cursor: pointer;"{% endif %}></i><span class="tooltip" id="tooltip-editar">Editar teléfono</span></span> {{ i[3] }}
                 {% endif %}
+
                 {% if i[0] == 'TS NETWORK CAMARAS DE SEGURIDAD' or i[0] == 'TS NETWORK INTERNET' %}
-                    <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{i[8]}}', '{{i[14]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[14]}}{% if i[3] != '' %}</a>{% endif %}
+                <br><span class="icon-container"><i class="fa fa-map-marker" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'direccion', '{{i[2]}}', '{{i[3]}}', '{{i[13]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[13]}}
                 {% else %}
-                    {% if i[14] != '' %}
-                    <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('ubicacion', '{{i[8]}}', '{{i[14]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/location-dot-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[14]}}{% if i[3] != '' %}</a>{% endif %}
+                    {% if i[13] != '' %}
+                    <br><span class="icon-container"><i class="fa fa-map-marker" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'direccion', '{{i[2]}}', '{{i[3]}}', '{{i[13]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[13]}}
                     {% endif %}
                 {% endif %}
+
                 {% if i[4] != '' %}
-                <br>{% if i[3] != '' %}<a type="button" onclick="editarCliente('email', '{{i[3]}}', '{{i[4]}}', 'formulario', '{{i[2]}}')">{% endif %}<span class="icon-container"><img src="{{ url_for('static', filename='img/envelope-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Cambiar email</span></span> {{i[4]}}{% if i[3] != '' %}</a>{% endif %}
+                <br><span class="icon-container"><i class="fa fa-envelope" onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'email', '{{i[2]}}', '{{i[3]}}', '{{i[4]}}', null);" style="cursor: pointer"></i><span class="tooltip" id="tooltip-editar">Cambiar email</span></span> {{i[4]}}
                 {% endif %}
+
                 </td>
-                <td style="border-radius: 5px; background: none; padding-left: 0; padding-right: 0; margin: 0;">
+
+                <td style="text-align: center;">
+
                     {% if i[3] != '' %}
-                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/address-card-regular.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
+                    <div class="icon-container"><i class="fa fa-vcard" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
                     {% else %}
-                    <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="editarCliente('telefono', '{{i[3]}}', '{{i[3]}}', 'formulario', '{{i[2]}}')"><img src="{{ url_for('static', filename='img/phone-volume-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
+                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{i[3]}}', 'telefono sin registrar', '{{i[2]}}', null, '', null);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
                     {% endif %}
+
                     {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
-                            <div class="icon-container"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.getElementById('empresa').value='{{i[0]}}'; document.formulario.submit()"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="20" height="20"></button><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
-                    {% if i[16] == 1 %}
-                    {% for hojas in pdfs %}
-                    {% if i[8] == hojas[1] %}
+                        <div class="icon-container"><i class="fa fa-home" onclick="document.formulario.action='/hoja_de_inspeccion'; document.getElementById('eliminar').value = '{{i[8]}}'; document.getElementById('empresa').value='{{i[0]}}'; document.formulario.submit()" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Hoja de inspección</div></div>
+                        {% if i[15] == 1 %}
+                            {% for hojas in pdfs %}
+                                {% if i[8] == hojas[1] %}
+                                <div class="icon-container"><i class="fa fa-file-text" style="cursor:pointer;" onclick="nuevoPDFexistente('{{i[8]}}', 'si')"></i>
+                                <a href="{{ url_for('static', filename='hojas/HOJA_'+hojas[0]+'_'+hojas[2]+'_'+hojas[3]+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
+                                <div class="tooltip" id="tooltip-editar">Generar PDF</div></div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
                         <div class="icon-container">
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="nuevoPDFexistente('{{i[8]}}', 'si')"><img src="{{ url_for('static', filename='img/file-pdf-solid.svg') }}" width="20" height="20"></button>
-                        <a href="{{ url_for('static', filename='hojas/HOJA_'+hojas[0]+'_'+hojas[2]+'_'+hojas[3]+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
-                        <div class="tooltip" id="tooltip-editar">Generar PDF</div></div>
-                    {% endif %}
-                    {% endfor %}
-                    {% else %}
-                        <div class="icon-container">
-                        <button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;" onclick="triggerFileInput('{{i[8]}}', '{{i[2]}}', '{{i[14]}}', '{{i[3]}}', '{{i[0]}}');"><img src="{{ url_for('static', filename='img/file-pdf-blanco.svg') }}" width="20" height="20"></button>
+                        <i class="fa fa-file-text-o" style="cursor:pointer;" onclick="triggerFileInput('{{i[8]}}', '{{i[2]}}', '{{i[13]}}', '{{i[3]}}', '{{i[0]}}');"></i>
                         <a href="{{ url_for('static', filename='hojas/HOJA_'+ultimahoja[0]+'_'+i[2].strip().upper()+'_'+i[8].replace(':','')+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
                         <input type="file" style="display: none" id="{{i[8]}}inputfile">
                         <div class="tooltip" id="tooltip-editar">Generar PDF vacío</div></div>
-                    {% endif %}
-                    {% endif %}
-                </td>
-                <td style="border-radius: 5px; background-color: #{{i[15]}};"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Llamada el {{i[8]}}
-                <br><a type="button" onclick="motivo('{{i[8]}}')"><span class="icon-container"><img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"><span class="tooltip" id="tooltip-editar">Editar nota</span></span> {% if i[5] != '' %}{{ i[5] }}{% else %}No tiene notas de llamada cargadas.{% endif %}</a>
-                    {% if i[9] == 'NO LE INTERESA' %}
-                    {% if i[13] != None %}
-                        {% if i[13] != '' %}
-                            <br><img src="{{ url_for('static', filename='img/xmark-solid.svg') }}" width="15" height="15" style="vertical-align: middle;"> Razón: {{i[13]}}
                         {% endif %}
                     {% endif %}
+
+                </td>
+
+                <td>
+                    
+                <i class="fa fa-calendar-o" style="cursor:pointer;"></i> Registro del {{i[7]}}
+                <br><span class="icon-container"><i class="fa fa-sticky-note" style="cursor:pointer;" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'nota', '{{i[2]}}', '{{i[3]}}', '{{i[5]}}', null);"></i><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if i[5] != '' %} {{ i[5] }}{% else %} <i class="fa fa-window-close"></i> No tiene ninguna nota cargada.{% endif %}
+                {% if i[9] == 'NO LE INTERESA' %}
+                    {% if i[12] != None %}
+                        {% if i[12] != '' %}
+                            <br><i class="fa fa-times"></i> Razón: {{i[12]}}
+                        {% endif %}
                     {% endif %}
+                {% endif %}
+
                 </td>
             <!--
                 <td style="background: none; margin: 0; text-align: center; vertical-align: middle;"><button type="button" style="border-radius: 5px; background: none; border: none; margin: 0;"><img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" onclick="motivo('{{ i[8]}}')"></button></td>
-            -->
+            --> 
+                <td>
+                    <span class="icon-container"><i class="fa fa-briefcase" style="cursor: pointer;" onclick="setearPopUp('{{i[8]}}', '{{i[2]}}', '{{i[5]}}', '{{i[6]}}', '{{i[10]}}', '{{i[11]}}', '{{i[3]}}')"></i><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
                 {% if i[9] != '' %}
-                <td style="border-radius: 5px; background-color: #{{i[15]}};">
-                {% if i[9] != 'NO LE INTERESA' %}
-                <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="vertical-align: middle;">
-                {% endif %}
-                    {{ i[9] }}
                     {% if i[9] != 'NO LE INTERESA' %}
+                        {{ i[9] }}
                         {% if i[10] != None %}
                             el {{ i[10] }}
                                 {% if i[11] != '' %} 
-                                    a las {{ i[11] }}
+                                    a las {{ i[11] }} h
                                 {% endif %}
                         {% endif %}
+                    {% else %}
+                    <i class="fa fa-thumbs-down"></i> No le interesa.
                     {% endif %}
-                </td>
                 {% else %}
-                <td style="border-radius: 5px; background-color: #{{i[15]}};">No se le asignó ninguna tarea</td>
+                <i class="fa fa-window-close"></i> No tiene asignada ninguna tarea.
                 {% endif %}
-                <td style="border-radius: 5px; background: none;">
+                
+                </td>
+
+                <td>
+                    <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; text-shadow: 0 0 5px black; color: red;" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'razon de desinteres', '{{i[2]}}', '{{i[3]}}', '', null);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336; border: 0.5px solid black;">No le interesó</span></span>
+                </td>
+                <!--      
+                    
+                    <span class="icon-container" id="flotante_calendar_{{i[8]}}"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('myModal').style.display = 'flex';"><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
+
                     <span class="icon-container" id="flotante_tarea_{{i[8]}}"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_tarea_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_tarea{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>
-                    <select name="tarea" id="select_tarea{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('tarea', this.value, '{{i[8]}}')" hidden>
+                    <select name="tarea" id="select_tarea{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'tarea', 'null', null, '', '', '');" hidden>
                         {% for t in tareas %}
                         {% if t[1] != 'NO LE INTERESA' %}
                         {% if i[9] == t[1] %}
@@ -226,8 +255,8 @@ Administración Los Andes | Registros
                         {% endif %}
                         {% endfor %}
                     </select>
-                    <span class="icon-container" id="flotante_calendar_{{i[8]}}"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_calendar_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_calendar{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
-                    <select name="calendario" id="select_calendar{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('fecha', this.value, '{{i[8]}}')" hidden>
+                       
+                    <select name="calendario" id="select_calendar{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'fecha', 'null', null, '', '', '');" hidden>
                     {% for c in calendario %}
                     {% if i[10] == c[0] %}
                     <option value="{{ c[0] }}" selected>{{c[1]}}</option>
@@ -236,28 +265,25 @@ Administración Los Andes | Registros
                     {% endif %}
                     {% endfor %}
                     </select>
+
                     <span class="icon-container" id="flotante_hora_{{i[8]}}"><img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_hora_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_hora{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar hora de tarea</span></span>
-                    <select name="hora" id="select_hora{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('hora', this.value, '{{i[8]}}')" hidden>
+                    <select name="hora" id="select_hora{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'hora', 'null', null, '', '', '');" hidden>
                         <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
                         {% for hora in range(9,20) %}
                         <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
                         {% endfor %}
                     </select>
-                    <span class="icon-container"><img src="{{ url_for('static', filename='img/youtube-dislike.png') }}" width="18" height="18" class="icon" id="editar-icono" type="button" onclick="rechazar('{{ i[8] }}');"><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+
                     <span class="icon-container"><img src="{{ url_for('static', filename='img/send-blue.png') }}" width="15" height="15" class="icon" id="editar-icono" type="button"><span class="tooltip" id="tooltip-editar" style="background-color: blue;">Enviar cotización</span></span>
-                </td>
-                <!--
+              
                 <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">No le interesó</button></td>
                 <td style="border: none; text-align: center; border-radius: 5px;"><button style="padding: 6px; font-size: 14px;" class="btn primary">Enviar cotización</button></td>
                 -->
         </tr>
         {% endfor %}
+        <form method="POST" name="formulario" action="/registros/editarregistro" id="formulario">
         <input type="hidden" name="eliminar" id="eliminar">
-        <input type="hidden" id="accion" name="accion">
-        <input type="hidden" id="nota" name="nota" value="null">
-        <input type="hidden" id="agentenuevo" name="agentenuevo" value="null">
-        <input type="hidden" id="telefono_seg" name="telefono_seg" value="">
-        <input type="hidden" id="cliente" name="cliente">
+        <input type="hidden" id="telefono_seg" name="telefono_seg">
         <input type="hidden" id="empresa" name="empresa">
         </form>
     </table>
@@ -266,49 +292,18 @@ Administración Los Andes | Registros
 
 {% block js %}
 <script>
-    function rechazar(id){
-        document.getElementById("eliminar").value = id;
-        document.getElementById("accion").value="eliminar";
-        let respuesta = prompt("Razón del rechazo:");
-        if (respuesta != null){
-            document.getElementById('nota').value = respuesta;
-            //document.getElementById("btn"+id).click();
-            document.formulario.submit();
-        }
-    }
-
-    function cambiarAgente(nuevo, fecha){
-        document.getElementById('agentenuevo').value = nuevo;
-        document.getElementById('eliminar').value = fecha;
-        document.formulario.submit();
-    }
-
-    function cambiarRegistro(columna, valornuevo, idfecha){
-    document.getElementById('accion').value = columna;
-    document.getElementById('agentenuevo').value = valornuevo;
-    document.getElementById('eliminar').value = idfecha;
-    document.formulario.action = '/registros/editarregistro/actualizar';
-    document.formulario.submit();
-}
-
-function motivo(id){
-    document.getElementById('accion').value = 'motivo';
-    document.getElementById('eliminar').value = id;
-    let respuesta = prompt("Nota nueva:");
-        if (respuesta != null){
-            document.getElementById('agentenuevo').value = respuesta;
-            document.formulario.action = '/registros/editarregistro/actualizar';
-            document.formulario.submit();
-        }
-}
-
 function nuevoPDF(idfecha, existe, nombre, direccion, telefono, empresa){
     var inputFile = document.getElementById(idfecha+'inputfile');
     var file = inputFile.files[0];
     if (file){
+    var formData = new FormData();
+    formData.append('existe', existe);
+    formData.append('idfecha', idfecha);
+    formData.append('datos', JSON.stringify([nombre, direccion, telefono, empresa]));
+    formData.append('mapa', file);
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/hoja_de_inspeccion/generarpdf', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
+    //xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload =  function() {
         if (xhr.status === 200) {
             document.getElementById('etiqueta'+idfecha).click();
@@ -316,13 +311,18 @@ function nuevoPDF(idfecha, existe, nombre, direccion, telefono, empresa){
             alert('Error al generar PDF. La hoja de inspección tiene datos faltantes.');
         }
     };
-    xhr.send(JSON.stringify({idfecha: idfecha, existe: existe, datos: [nombre, direccion, telefono, empresa]}));
+    //xhr.send(JSON.stringify({idfecha: idfecha, existe: existe, datos: [nombre, direccion, telefono, empresa]}));
+    xhr.send(formData)
     }
+    restaurarFiltros();
 }   
 function nuevoPDFexistente(idfecha, existe){
+    var formData = new FormData();
+    formData.append('existe', existe);
+    formData.append('idfecha', idfecha);
     var xhr = new XMLHttpRequest();
     xhr.open('POST', '/hoja_de_inspeccion/generarpdf', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
+    //xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload =  function() {
         if (xhr.status === 200) {
             document.getElementById('etiqueta'+idfecha).click();
@@ -330,7 +330,7 @@ function nuevoPDFexistente(idfecha, existe){
             alert('Error al generar PDF. La hoja de inspección tiene datos faltantes.');
         }
     };
-    xhr.send(JSON.stringify({idfecha: idfecha, existe: existe}));
+    xhr.send(formData);
 }
 
 function triggerFileInput(itemId, nombre, direccion, telefono, empresa){
@@ -339,5 +339,71 @@ function triggerFileInput(itemId, nombre, direccion, telefono, empresa){
         nuevoPDF(itemId, 'no', nombre, direccion, telefono, empresa);
     };
 }
+
+function guardarFiltros() {
+    const filtros = {
+        filtro1: document.getElementById('filtro_agentes').value,
+        filtroTexto: document.getElementById('filtro_cliente').value,
+        filtro3: document.getElementById('filtro_tarea').value
+    };
+    localStorage.setItem('filtros', JSON.stringify(filtros));
+}
+
+function restaurarFiltros() {
+    const filtros = JSON.parse(localStorage.getItem('filtros'));
+    if (filtros) {
+        document.getElementById('filtro_agentes').value = filtros.filtro1;
+        document.getElementById('filtro_cliente').value = filtros.filtroTexto;
+        document.getElementById('filtro_tarea').value = filtros.filtro3;
+        aplicarFiltros()
+    }
+}
+
+// Restaurar y aplicar filtros al cargar la página
+window.onload = function() {
+    restaurarFiltros();
+};
+
+document.getElementById('filtro_tarea').addEventListener('change', function() {
+    guardarFiltros();
+    aplicarFiltros();
+});
+
+document.getElementById('filtro_agentes').addEventListener('change', function() {
+    guardarFiltros();
+    aplicarFiltros();
+});
+
+document.getElementById('filtro_cliente').addEventListener('input', function() {
+    guardarFiltros();
+    aplicarFiltros();
+});
+
+function aplicarFiltros() {
+    if (document.getElementById('filtro_cliente').value == '') {
+        document.getElementById('filtro_agentes').removeAttribute('disabled');
+        document.getElementById('filtro_tarea').removeAttribute('disabled');
+        filtro('filtro_cliente', 'tabla_registros', 3, 1);
+
+        if(document.getElementById('filtro_tarea').value != ''){
+            document.getElementById('filtro_agentes').value = '';
+            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+            filtro('filtro_tarea', 'tabla_registros', 6, 1);
+        }
+
+        if(document.getElementById('filtro_agentes').value != ''){
+            document.getElementById('filtro_tarea').value = '';
+            document.getElementById('filtro_tarea').removeAttribute('disabled');
+            filtro('filtro_agentes', 'tabla_registros', 2, 1);
+        }
+    }else{
+        document.getElementById('filtro_tarea').value = '';
+        document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
+        document.getElementById('filtro_agentes').value = '';
+        document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+        filtro('filtro_cliente', 'tabla_registros', 3, 1);
+    };
+}
 </script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% endblock %}

@@ -6,6 +6,9 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/mount_icon.ico')}}">
     <!--CSS-->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     {% block css %}{% endblock %}
     <!--TÍTULO-->
     <title>{% block titulo %}{% endblock %}</title>
@@ -32,6 +35,32 @@
   <!--BODY-->
   {% block body %}
   {% endblock %}
+  <div id="myModal" class="modal">
+    <div class="modal-content" style="border-radius: 15px;">
+        <input type="hidden" id="m_nombre">
+        <input type="hidden" id="m_telefono">
+        <input type="hidden" id="m_id">
+        <span class="close" onclick="document.getElementById('myModal').style.display = 'none';">&times;</span>
+        <h3 style="padding: 0; margin: 0;"><img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="22" height="22" style="vertical-align: top; margin-right: 4px;"><label id="m_cliente"></label></h3>
+        <p style="color: #008080">Notas de llamada:
+        <textarea id="m_notas" rows="10" style="font-family: 'Rubik', sans-serif; font-size: 14px; color: black; margin: 0 auto; text-transform: uppercase;"></textarea>
+        </p>
+        <p style="color: #008080">Tarea
+        <br>
+        <select id="m_tareas" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+            {% for t in tareas %}
+            <option value="{{t[0]}}">{% if t[1] != '' %}{{t[1]}}{% else %}SIN TAREA{% endif %}</option>
+            {% endfor %}
+        </select>
+        </p>
+        <p style="color: #008080">
+        Fecha de tarea
+        <input type="text" name="appointment" id="calendario-emergente" onclick="document.getElementById('confirm-button-calendar').removeAttribute('hidden');" style="width: auto; text-align: center; color: black; margin: 0 auto;">
+        <button type="button" id="confirm-button-calendar" class="confirm-button-calendar" style="transform: translateY(-125%); transform: translateX(700%);" onclick="document.getElementById('confirm-button-calendar').click(); this.setAttribute('hidden', 'hidden');" hidden>✔</button>
+        </p>
+        <button type="button" class="btn primary" onclick="cambiarRegistro(document.getElementById('m_notas').value, document.getElementById('m_id').value, document.getElementById('calendario-emergente').value, document.getElementById('m_nombre').value, document.getElementById('m_telefono').value, document.getElementById('m_tareas').value)">Guardar</button>
+    </div>
+  </div>
 </body>
 <footer>
   <!--FOOTER-->
