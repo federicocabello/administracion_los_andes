@@ -6,6 +6,7 @@ body {
   /*
   background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(166,211,211,1) 100%, rgba(0,128,128,1) 100%);
   */
+  zoom: 90%
 }
 
 #sidebar {
@@ -176,7 +177,6 @@ th {
 td{
   padding-left: 5px;
   padding-right: 5px;
-  font-size: 16px;
 }
 
 .btn {

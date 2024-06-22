@@ -77,7 +77,7 @@ function habilitarBoton(input, boton){
       document.getElementById(boton).setAttribute('hidden', 'hidden')
   }
 }
-
+/*
 function editarCliente(campo, id, viejo, form, nombre){
   document.getElementById("eliminar").value = id;
   document.getElementById("nota").value = viejo
@@ -100,7 +100,7 @@ function editarSelect(accion, id, nuevo, viejo, nombre, form){
   document.getElementById("cliente").value = nombre;
   document.getElementById(form).submit();
 }
-
+*/
 function comprobarEnTabla(idtabla, idinput, idlabel){
   let telefono = document.getElementById(idinput).value;
   let tablaTelefonos = document.getElementById(idtabla).getElementsByTagName('td');
@@ -132,15 +132,21 @@ function comprobarEnTabla(idtabla, idinput, idlabel){
   });
 });
 
-function cambiarRegistroPopUp(letra, idfecha, accion, nombre, telefono, datoviejo, redireccion){
+function cambiarRegistroPopUp(letra, idfecha, accion, nombre, telefono, datoviejo, redireccion, omitir){
   let datonuevo = prompt("Nuev"+letra+" "+accion, datoviejo);
   if (datonuevo != null){
+    if (omitir){
+      cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion, true);
+    }else{
       cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion);
+    }
   }
 }
 
-function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion){
-  guardarFiltros();
+function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion, omitir){
+  if(!omitir){
+    guardarFiltros();
+  }
   var formData = {
       'datonuevo': datonuevo,
       'idfecha': idfecha,
@@ -158,26 +164,37 @@ function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redirecci
   })
   .done(function(data){
       if(data.status === 'success'){
+        if(data.redireccion){
+          window.location.href = data.redireccion;
+        }else{
           location.reload();
+        }
       }else{
           alert('Error al modificar registro.')
       }
   })
 
   .fail(function(xhr, status, error) {
-      console.error('Error: ', error)
+    alert("Error en la solicitud.");
+    console.error('Error: ', error);
   });
 }
 
-function setearPopUp(idregistro, nombre, nota, tarea, fecha, hora, telefono){
+function setearPopUp(idregistro, nombre, nota, tarea, fecha, hora, telefono, omitir){
   document.getElementById('m_id').value = idregistro;
   document.getElementById('m_cliente').innerHTML = nombre;
   document.getElementById('m_nombre').value = nombre;
   document.getElementById('m_notas').value = nota;
   document.getElementById('m_tareas').value = tarea;
   document.getElementById('m_telefono').value = telefono;
-  var appointmentInput = document.querySelector("input[name='appointment']");
+  //var appointmentInput = document.querySelector("input[name='appointment']");
+  var appointmentInput = document.getElementById('calendario-emergente');
   var fp = flatpickr(appointmentInput, {enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true});
   fp.setDate(fecha+' '+hora, true, 'Y-m-d H:i');
+  if(omitir){
+    document.getElementById('boton-guardar-popup').addEventListener('click', function() {
+      cambiarRegistro(document.getElementById('m_notas').value, document.getElementById('m_id').value, document.getElementById('calendario-emergente').value, document.getElementById('m_nombre').value, document.getElementById('m_telefono').value, document.getElementById('m_tareas').value, true)
+    })
+  }
   document.getElementById('myModal').style.display = 'flex';
 }
