@@ -33,45 +33,42 @@ def index():
 @app.route('/logout')
 def logout():
     cursor = db.connection.cursor()
-    cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} cerró sesión', date_add(now(), interval -5 hour))")
+    cursor.execute(f"insert into movimientos (mov, date_mov, agente) VALUES ('Cerró sesión.', date_add(now(), interval -5 hour), '{current_user.fullname}')")
     db.connection.commit()
     cursor.close()
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/seguimiento/<telefono>')
+@app.route('/seguimiento/<telefono>/<nombre>')
 @login_required
-def seguimiento(telefono):
+def seguimiento(telefono, nombre):
     cursor = db.connection.cursor()
-    cursor.execute(f'select empresa, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, estado, nota_rechazo, agente, direccion, tareas.color from registros join tareas on tareas.idtarea = registros.tarea where telefono = "{telefono}" and estado = "registro" order by fecha desc;')
+    cursor.execute(f'select empresa, nombre, telefono, email, motivo, cotizacion, cotizaciontotal, fecha, tareas.tarea, fecha_tarea, hora_tarea, registros.tarea, nota_rechazo, agente, direccion, tareas.color, DATE_FORMAT(fecha_tarea, "%d %M %Y") from registros join tareas on tareas.idtarea = registros.tarea where telefono = "{telefono}" and estado = "registro" and nombre = "{nombre}" order by fecha desc;')
     registros = cursor.fetchall()
-    cursor.execute(f'select mov, date_mov from movimientos where mov like "%{registros[0][1]}%" order by date_mov desc;')
+    cursor.execute(f'SELECT mov, DATE_FORMAT(date_mov, "%d %M %Y • %T"), agente, nombre, telefono, datonuevo FROM movimientos WHERE nombre = "{nombre}" or telefono = "{telefono}" ORDER BY date_mov DESC;')
     movimientos = cursor.fetchall()
     cursor.execute(f"SELECT pregunta, respuesta, fecha from registros where telefono = '{telefono}' and estado = 'pregunta';")
     preguntas = cursor.fetchall()
     cursor.execute("SELECT idtarea, tarea from tareas")
     tareas = cursor.fetchall()
-    cursor.execute("select * from calendario")
-    calendario = cursor.fetchall()
-    return render_template('seguimiento.html', registros=registros, movimientos=movimientos, preguntas=preguntas, tareas=tareas, calendario=calendario)
-    return Response(status=204)
-
-@app.route('/seguimiento', methods=['GET', 'POST'])
-@login_required
-def pre_seguimiento():
-    if request.method == 'POST':
-        telefono = request.form['telefono_seg']
-        return seguimiento(telefono)
+    cursor.execute("SELECT empresa from clientes;")
+    empresas = cursor.fetchall()
+    cursor.execute("SELECT fullname from auth;")
+    agentes = cursor.fetchall()
+    return render_template('seguimiento.html', registros=registros, movimientos=movimientos, preguntas=preguntas, tareas=tareas, empresas=empresas, agentes=agentes)
 
 @app.route('/menu/<empresa>', methods=['GET', 'POST'])
 @login_required
-def refrescarMenu(empresa):
-        empresa.replace(' ','_').upper()
+def abrirMenu(empresa):
+        for char in empresa:
+            if char == '_':
+                empresaformateada = empresa
+            else:
+                empresaformateada = empresa.replace(' ','_')
         cursor = db.connection.cursor()
-        sql = f"SELECT articulo, precio, art_descripcion, imagen FROM {empresa} where articulo is not null"
-        cursor.execute(sql)
+        cursor.execute(f"SELECT articulo, precio, art_descripcion, imagen FROM {empresaformateada} where articulo is not null")
         articulos = cursor.fetchall()
-        cursor.execute(f"SELECT imagen from {empresa} where articulo is not null")
+        cursor.execute(f"SELECT imagen from {empresaformateada} where articulo is not null")
         registros = cursor.fetchall()      
         for registro in registros:
                 archivo_zip = registro[0]
@@ -82,120 +79,21 @@ def refrescarMenu(empresa):
                         for name in zip_file.namelist():
                             with zip_file.open(name) as file:
                                 images.append(base64.b64encode(file.read()).decode('utf-8'))
-        sql = f"SELECT speech,descripcion FROM {empresa} WHERE speech is not null"
-        cursor.execute(sql)
+        cursor.execute(f"SELECT speech,descripcion FROM {empresaformateada} WHERE speech is not null")
         speech = cursor.fetchall()
-        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea, direccion, email, tareas.color from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE tareas.tarea != '' AND tareas.tarea != 'NO ATENDIÓ' AND tareas.tarea != 'NO LE INTERESA' AND tareas.tarea != 'SI ASISTIÓ' AND tareas.tarea != 'RENTÓ' AND tareas.tarea != 'ESPERAR LLAMADA' AND tareas.tarea != 'INFORMACIÓN ENVIADA' AND tareas.tarea != 'INSPECCIÓN REALIZADA' AND tareas.tarea != 'YA INSTALÓ' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' and estado = 'registro' order by fecha asc limit 7;"
-        cursor.execute(sql)
+        cursor.execute(f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, DATE_FORMAT(fecha_tarea, '%d %M %Y'), hora_tarea, direccion, email, tareas.color, registros.tarea from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE tareas.tarea != '' AND tareas.tarea != 'NO ATENDIÓ' AND tareas.tarea != 'NO LE INTERESA' AND tareas.tarea != 'SI ASISTIÓ' AND tareas.tarea != 'RENTÓ' AND tareas.tarea != 'ESPERAR LLAMADA' AND tareas.tarea != 'INFORMACIÓN ENVIADA' AND tareas.tarea != 'INSPECCIÓN REALIZADA' AND tareas.tarea != 'YA INSTALÓ' AND tareas.tarea != 'SE VENDE SERVICIO' and fecha_tarea is not null AND empresa = '{empresa}' and agente = '{current_user.fullname}' and estado = 'registro' order by fecha asc limit 7;")
         pendientes = cursor.fetchall()
         cursor.execute("select * from tareas")
         tareas = cursor.fetchall()
-        cursor.execute("select * from calendario order by date asc")
-        calendario = cursor.fetchall()
-        #print(calendario[0][0])
-        #print(dt.date.today())
-        if dt.date.today() != calendario[0][0]:
-            cursor.execute("delete from calendario;")
-            cursor.execute("insert into calendario values (current_date(), DATE_FORMAT(current_date(), '%W %e'))")
-            for i in range (1,18):
-                cursor.execute(f"insert into calendario values (date_add(current_date(), interval {i} day), DATE_FORMAT(date_add(current_date(), interval {i} day), '%W %e'))")
-                cursor.execute("delete from calendario where date_format like 'Sunday%'")
-        db.connection.commit()
-        cursor.execute("select * from calendario order by date asc")
-        calendario = cursor.fetchall()
         cursor.execute("SELECT fullname from auth order by fullname asc")
         agentes = cursor.fetchall()
-        cursor.execute(f"select pregunta, (@row := @row + 1) as contador from {empresa}, (SELECT @row := 0) r where pregunta is not null;")
+        cursor.execute(f"select pregunta, (@row := @row + 1) as contador from {empresaformateada}, (SELECT @row := 0) r where pregunta is not null;")
         preguntas = cursor.fetchall()
-        cursor.execute(f"select count(*) from {empresa} where pregunta is not null")
+        cursor.execute(f"select count(*) from {empresaformateada} where pregunta is not null")
         num_preguntas = cursor.fetchall()
         cursor.execute("SELECT telefono from registros where estado = 'registro' group by telefono")
         telefonos = cursor.fetchall()
-        return render_template('menu.html', empresa=empresa.replace('_', ' ').upper(), articulos=articulos, speech=speech, pendientes=pendientes, tareas=tareas, calendario=calendario, registros=registros, agentes=agentes, preguntas=preguntas, num_preguntas=num_preguntas, telefonos=telefonos)
-
-@app.route('/menu', methods=['GET', 'POST'])
-@login_required
-def abrirMenu():
-    if request.method == 'POST':
-        empresa = request.form['menuempresa'].replace(' ','_')
-        cursor = db.connection.cursor()
-        sql = f"SELECT articulo, precio, art_descripcion, imagen FROM {empresa} where articulo is not null"
-        cursor.execute(sql)
-        articulos = cursor.fetchall()
-        cursor.execute(f"SELECT imagen from {empresa} where articulo is not null")
-        registros = cursor.fetchall()      
-        for registro in registros:
-                archivo_zip = registro[0]
-                images = []
-                if archivo_zip != None:
-                    zip_buffer = io.BytesIO(archivo_zip)
-                    with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
-                        for name in zip_file.namelist():
-                            with zip_file.open(name) as file:
-                                images.append(base64.b64encode(file.read()).decode('utf-8'))
-        sql = f"SELECT speech,descripcion FROM {empresa} WHERE speech is not null"
-        cursor.execute(sql)
-        speech = cursor.fetchall()
-        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente, hora_tarea, direccion, email, tareas.color from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE tareas.tarea != '' AND tareas.tarea != 'NO ATENDIÓ' AND tareas.tarea != 'NO LE INTERESA' AND tareas.tarea != 'SI ASISTIÓ' AND tareas.tarea != 'RENTÓ' AND tareas.tarea != 'ESPERAR LLAMADA' AND tareas.tarea != 'INFORMACIÓN ENVIADA' AND tareas.tarea != 'INSPECCIÓN REALIZADA' AND tareas.tarea != 'YA INSTALÓ' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' and estado = 'registro' order by fecha asc limit 7;"
-        cursor.execute(sql)
-        pendientes = cursor.fetchall()
-        cursor.execute("select * from tareas")
-        tareas = cursor.fetchall()
-        cursor.execute("select * from calendario order by date asc")
-        calendario = cursor.fetchall()
-        #print(calendario[0][0])
-        #print(dt.date.today())
-        if dt.date.today() != calendario[0][0]:
-            cursor.execute("delete from calendario;")
-            cursor.execute("insert into calendario values (current_date(), DATE_FORMAT(current_date(), '%W %e'))")
-            for i in range (1,18):
-                cursor.execute(f"insert into calendario values (date_add(current_date(), interval {i} day), DATE_FORMAT(date_add(current_date(), interval {i} day), '%W %e'))")
-                cursor.execute("delete from calendario where date_format like 'Sunday%'")
-        db.connection.commit()
-        cursor.execute("select * from calendario order by date asc")
-        calendario = cursor.fetchall()
-        cursor.execute("SELECT fullname from auth order by fullname asc")
-        agentes = cursor.fetchall()
-        cursor.execute(f"select pregunta, (@row := @row + 1) as contador from {empresa}, (SELECT @row := 0) r where pregunta is not null;")
-        preguntas = cursor.fetchall()
-        cursor.execute(f"select count(*) from {empresa} where pregunta is not null")
-        num_preguntas = cursor.fetchall()
-        cursor.execute("SELECT telefono from registros where estado = 'registro' group by telefono")
-        telefonos = cursor.fetchall()
-        return render_template('menu.html', empresa=empresa.replace('_', ' '), articulos=articulos, speech=speech, pendientes=pendientes, tareas=tareas, calendario=calendario, registros=registros, agentes=agentes, preguntas=preguntas, num_preguntas=num_preguntas, telefonos=telefonos)
-    return Response(status=204)
-
-@app.route('/menu/preguntasfrecuentes', methods=['GET', 'POST'])
-@login_required
-def abrirPreguntasFrecuentes():
-    if request.method == 'POST':
-        empresa = request.form['menuempresa'].replace(' ','_')
-        cursor = db.connection.cursor()
-        sql = f"SELECT speech,descripcion FROM {empresa} WHERE speech is not null"
-        cursor.execute(sql)
-        speech = cursor.fetchall()
-        sql = f"select nombre, telefono, motivo, tareas.tarea, fecha_tarea, fecha, agente from registros JOIN tareas ON tareas.idtarea=registros.tarea WHERE estado = 'pendiente' AND empresa = '{empresa.replace('_',' ')}' and agente = '{current_user.fullname}' order by fecha asc limit 10;"
-        cursor.execute(sql)
-        pendientes = cursor.fetchall()
-        cursor.execute("select * from tareas where idtarea != 0")
-        tareas = cursor.fetchall()
-        cursor.execute("select * from calendario order by date asc")
-        calendario = cursor.fetchall()
-        #print(calendario[0][0])
-        #print(dt.date.today())
-        if dt.date.today() != calendario[0][0]:
-            cursor.execute("delete from calendario;")
-            cursor.execute("insert into calendario values (current_date(), DATE_FORMAT(current_date(), '%W %e'))")
-            for i in range (1,18):
-                cursor.execute(f"insert into calendario values (date_add(current_date(), interval {i} day), DATE_FORMAT(date_add(current_date(), interval {i} day), '%W %e'))")
-                cursor.execute("delete from calendario where date_format like 'Sunday%'")
-        db.connection.commit()
-        cursor.execute(f"select pregunta, (@row := @row + 1) as contador from {empresa}, (SELECT @row := 0) r where pregunta is not null")
-        preguntas = cursor.fetchall()
-        cursor.execute("SELECT fullname from auth order by fullname")
-        agentes = cursor.fetchall()
-        return render_template('preguntasfrecuentes.html', empresa=empresa.replace('_', ' '), speech=speech, pendientes=pendientes, tareas=tareas, calendario=calendario, preguntas=preguntas, agentes=agentes)
-    return Response(status=204)
+        return render_template('menu.html', empresa=empresa.upper(), articulos=articulos, speech=speech, pendientes=pendientes, tareas=tareas, registros=registros, agentes=agentes, preguntas=preguntas, num_preguntas=num_preguntas, telefonos=telefonos)
 
 @app.route('/imagenes/<string:cliente>')
 @login_required
@@ -241,7 +139,7 @@ def editarUsuario():
         db.connection.commit()
         sql = f"INSERT INTO auth VALUES ('{usuario}', '{password}', '{fullname}', '{rol}')"
         cursor.execute(sql)
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} modificó al usuario {usuario.upper()}', date_add(now(), interval -5 hour))")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Modificó un usuario.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{usuario.upper()}')")
         db.connection.commit()
         cursor.close()
     return redirect(url_for('dashboard'))
@@ -305,7 +203,7 @@ def eliminarUsuario():
         cursor = db.connection.cursor()
         sql = f"DELETE FROM auth where user = '{eliminar}'"
         cursor.execute(sql)
-        cursor.execute(f"INSERT INTO movimientos (mov, date_mov) VALUES ('{current_user.fullname} eliminó al usuario {eliminar.upper()}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"INSERT INTO movimientos (mov, date_mov, agente, datonuevo) VALUES ('Eliminó un usuario.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{eliminar.upper()}');")
         db.connection.commit()
         cursor.close()
     return redirect(url_for('usuarios'))
@@ -389,13 +287,13 @@ def editarCliente():
         cursor.executemany(sql, valores)
         db.connection.commit()
         if empresa != nombreviejo:
-            cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} modificó al cliente {nombreviejo.replace('_', ' ')}. Ahora es {empresa.replace('_',' ')}', date_add(now(), interval -5 hour))")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) VALUES ('Modificó una empresa.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{empresa.replace('_',' ')}')")
         num_art = int(request.form['n_articulos'])
         num_esp = int(request.form['n_espacios'])
         num_preg = int(request.form['n_preguntas'])
         
         if num_art != 0:
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_art} artículos al cliente {empresa.replace('_', ' ')}', date_add(now(), interval -5 hour))")
+            #cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_art} artículos al cliente {empresa.replace('_', ' ')}', date_add(now(), interval -5 hour))")
             for i in range(1, num_art+1):
                 articulo = request.form[f'art{i}'].upper()
                 precio = request.form[f'precio{i}']
@@ -412,7 +310,7 @@ def editarCliente():
                     cursor.execute(f"INSERT INTO {empresa.replace(' ','_')} VALUES ('{articulo}', {precio}, '{art_descripcion}', %s, null, null, null)", (zip_buffer.getvalue(),))
                 
         if num_esp != 0:
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_esp} espacios de trabajo al cliente {empresa}', date_add(now(), interval -5 hour))")
+            #cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_esp} espacios de trabajo al cliente {empresa}', date_add(now(), interval -5 hour))")
             for i in range(1, num_esp+1):
                 speech = request.form[f'speech{i}'].upper()
                 desc = request.form[f'desc{i}']
@@ -420,7 +318,7 @@ def editarCliente():
                 cursor.execute(sql)
                 
         if num_preg != 0:
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_preg} preguntas a {empresa}', date_add(now(), interval -5 hour))")
+            #cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó {num_preg} preguntas a {empresa}', date_add(now(), interval -5 hour))")
             for i in range(1, num_preg+1):
                 pregunta = request.form[f"pregunta{i}"].upper().strip().replace('?', '').replace('¿','')
                 cursor.execute(f"INSERT INTO {empresa.replace(' ','_')} VALUES (null, null, null, null, null, null, '¿{pregunta}?')")
@@ -441,7 +339,7 @@ def eliminarCliente():
         db.connection.commit()
         sql = f"DROP TABLE {eliminar.replace(' ','_')};"
         cursor.execute(sql)
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} eliminó al cliente {eliminar.replace('_',' ')}',date_add(now(), interval -5 hour))")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Eliminó al cliente.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{eliminar.replace('_',' ')}')")
         db.connection.commit()
         cursor.close()
     return redirect(url_for('clientes'))
@@ -514,7 +412,7 @@ def altaCliente():
                 pregunta = request.form[f"pregunta{i}"].upper().strip().replace('?', '').replace('¿','')
                 cursor.execute(f"INSERT INTO {empresa} VALUES (null, null, null, null, null, null, '¿{pregunta}?')")
         
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó al cliente {empresa.replace('_', ' ')} con {num_art} artículos, {num_esp} espacios de trabajo y {num_preg} preguntas frecuentes', date_add(now(), interval -5 hour))")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Agregó una nueva empresa. Con {num_art} artículos, {num_esp} espacios de trabajo y {num_preg} preguntas frecuentes', date_add(now(), interval -5 hour), '{current_user.fullname}', '{empresa.replace('_', ' ')}')")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('dashboard'))
@@ -583,7 +481,7 @@ def login():
         if user_data and user_data[1] == contra:
             user = User(user_data[0], user_data[1], user_data[2], user_data[3])
             login_user(user)
-            cur.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} inció sesión', date_add(now(), interval -5 hour))")
+            cur.execute(f"insert into movimientos (mov, date_mov, agente) VALUES ('Inció sesión.', date_add(now(), interval -5 hour), '{current_user.fullname}')")
             db.connection.commit()
             cur.close()
             return redirect(url_for('dashboard'))
@@ -594,29 +492,28 @@ def login():
 def dashboard():
     cursor = db.connection.cursor()
     #sql = "show TABLES where tables_in_administracion_los_andes <> 'auth' and tables_in_administracion_los_andes <> 'clientes' and tables_in_administracion_los_andes <> 'registros' and tables_in_administracion_los_andes <> 'movimientos' and tables_in_administracion_los_andes <> 'planes';"
-    sql = "SELECT empresa,logo from clientes order by empresa;"
-    cursor.execute(sql)
+    cursor.execute("SELECT empresa,logo from clientes order by empresa;")
     tablas =  cursor.fetchall()
     #tablas = [elemento[0].upper().replace('_',' ') for elemento in tablas]
-    cursor.execute(f"SELECT DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion from registros join tareas on tareas.idtarea = registros.tarea WHERE agente = '{current_user.fullname}' and fecha_tarea = current_date() and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' and pregunta is null and estado = 'registro' order by hora;")
+    cursor.execute(f"SELECT DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, direccion, registros.tarea, fecha, hora_tarea, cast(hora_tarea as unsigned) AS hora FROM registros JOIN tareas ON tareas.idtarea = registros.tarea WHERE agente = '{current_user.fullname}' AND fecha_tarea = current_date() AND tareas.tarea != 'NO LE INTERESA' AND tareas.tarea != '' AND pregunta is null AND estado = 'registro' ORDER BY hora;")
     pendiente = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname")
     agentes = cursor.fetchall()
     cursor.execute("SELECT * from tareas")
     tareas = cursor.fetchall()
-    cursor.execute("select * from calendario")
-    calendario = cursor.fetchall()
+    cursor.execute("SELECT empresa from clientes order by empresa asc;")
+    empresas = cursor.fetchall()
     cursor.execute("select CASE WHEN fecha_1 = current_date() THEN 'CUOTA 1' WHEN fecha_2 = current_date() THEN 'CUOTA 2' WHEN fecha_3 = current_date() THEN 'CUOTA 3' WHEN fecha_4 = current_date() THEN 'CUOTA 4' END AS cuota, CASE WHEN fecha_1 = current_date() THEN acuerdo_1 WHEN fecha_2 = current_date() THEN acuerdo_2 WHEN fecha_3 = current_date() THEN acuerdo_3 WHEN fecha_4 = current_date() THEN acuerdo_4 END AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, idfecha, empresa FROM hojas WHERE fecha_1 = CURRENT_DATE() OR fecha_2 = current_date() or fecha_3 = current_date or fecha_4 = current_date();")
     vencehoy = cursor.fetchall()
     cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_1) as diferencia, idfecha, empresa FROM hojas where fecha_1 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_2) as diferencia, idfecha, empresa FROM hojas where fecha_2 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_3) as diferencia, idfecha, empresa FROM hojas where fecha_3 < CURRENT_DATE() UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(current_date(), fecha_4) as diferencia, idfecha, empresa FROM hojas where fecha_4 < CURRENT_DATE() order by diferencia;")
     vencidos = cursor.fetchall()
     cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_1, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_1, current_date()) > 0 and datediff(fecha_1, current_date()) < 6 UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_2, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_2, current_date()) > 0 and datediff(fecha_2, current_date()) < 6 UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_3, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_3, current_date()) > 0 and datediff(fecha_3, current_date()) < 6 UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_4, current_date()) as diferencia, idfecha, empresa FROM hojas where datediff(fecha_4, current_date()) > 0 and  datediff(fecha_4, current_date()) < 6 order by diferencia;")
     porvencer = cursor.fetchall()
-    cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, cotizacion, cotizaciontotal, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, direccion, DATE_FORMAT(fecha_tarea, '%d %M'), datediff(current_date(), fecha_tarea) as dias from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 18) order by dias, hora, fecha asc;")
+    cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, direccion, registros.tarea, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, DATE_FORMAT(fecha_tarea, '%d %M %Y'), datediff(current_date(), fecha_tarea) as dias, fecha_tarea from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 18) order by dias, hora, fecha asc;")
     atrasados = cursor.fetchall()
     dias = ("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
     nombre_dia_hoy = f'{dias[int(dt.date.today().strftime("%w"))]} {dt.date.today().strftime("%d")}'
-    return render_template('dashboard.html', tablas=tablas, tareas=tareas, agentes=agentes, pendiente=pendiente, calendario=calendario, vencehoy=vencehoy, vencidos=vencidos, porvencer=porvencer, dia_hoy = dt.date.today(), nombre_dia_hoy=nombre_dia_hoy, atrasados=atrasados)
+    return render_template('dashboard.html', tablas=tablas, tareas=tareas, agentes=agentes, pendiente=pendiente, empresas=empresas, vencehoy=vencehoy, vencidos=vencidos, porvencer=porvencer, dia_hoy = dt.date.today(), nombre_dia_hoy=nombre_dia_hoy, atrasados=atrasados)
 
 @app.route('/pagos/registrar_pago', methods=['GET', 'POST'])
 @login_required
@@ -637,7 +534,7 @@ def registrarPago():
     if pago[1] == 'CUOTA 1' or pago[1] == 'CUOTA 2' or pago[1] == 'CUOTA 3' or pago[1] == 'CUOTA 4':
         if pago[2] != None: 
             cursor.execute(f"UPDATE hojas SET acuerdo_{pago[1][6]} = null, fecha_{pago[1][6]} = null, interes_{pago[1][6]} = null WHERE idhoja = {pago[2]};")
-    cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró un pago de $ {pago[8]} de {pago[0]} del cliente {pago[3].upper().strip()}', date_add(now(), interval -5 hour))")
+    cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Registró un pago.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{pago[3].upper().strip()}', '$ {pago[8]}')")
     db.connection.commit()
     cursor.close()
     return redirect(url_for('dashboard'))
@@ -675,7 +572,7 @@ def pagos():
         suma = suma+float(pagos[i][9])
     for p in range(0,len(impagos)):
         sumaimpagos = sumaimpagos+float(impagos[p][10])
-    cursor.execute("SELECT empresa from clientes order by empresa;")
+    cursor.execute("SELECT empresa from clientes order by empresa asc;")
     empresas = cursor.fetchall()
     return render_template('pagos.html', pagos=pagos, empresas=empresas, hoy=dt.date.today(), mes=mes, suma=suma,fecha_inicial=fecha_inicial, fecha_final   =fecha_final, impagos=impagos, sumaimpagos = sumaimpagos)
 
@@ -686,7 +583,7 @@ def eliminarPago():
     pago = data['pagosid']
     cursor = db.connection.cursor()
     cursor.execute(f"DELETE from pagos where idpagos = {pago[0]}")
-    cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} eliminó el pago N°{pago[0]} del cliente {pago[1]}', date_add(now(), interval -5 hour))")
+    cursor.execute(f"insert into movimientos (mov, date_mov, agente, cliente) values ('Eliminó un pago.', date_add(now(), interval -5 hour),'{current_user.fullname}','{pago[1]}')")
     db.connection.commit()
     cursor.close()
     return redirect(url_for('pagos'))
@@ -706,21 +603,21 @@ def movimientos():
     cursor = db.connection.cursor()
     cursor.execute("SELECT count(*) from movimientos")
     n_mov = cursor.fetchone()
-    fecha = ''
+    fecha = None
     if request.method == 'POST':
         accion = request.form['accion']
         if accion == 'cantidad':
             cant_mov = request.form['cantidad_mov']
-            cursor.execute(f"SELECT * FROM movimientos order by date_mov desc limit {cant_mov};")
+            cursor.execute(f"SELECT n_mov, mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo FROM movimientos order by date_mov desc limit {cant_mov};")
             mostrados = cant_mov
         if accion == 'filtro_fecha':
             fecha = request.form['fecha_unica']
             cursor.execute(f"SELECT count(*) from movimientos where date(date_mov) = '{fecha}'")
             contados_filtrados = cursor.fetchone()
-            cursor.execute(f"SELECT *, date(date_mov) from movimientos where date(date_mov) = '{fecha}' order by date_mov desc")
+            cursor.execute(f"SELECT n_mov, mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo, date(date_mov) from movimientos where date(date_mov) = '{fecha}' order by date_mov desc")
             mostrados = contados_filtrados[0]
     else:
-        cursor.execute("SELECT * FROM movimientos order by date_mov desc limit 25;")
+        cursor.execute("SELECT n_mov, mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo FROM movimientos ORDER BY date_mov DESC LIMIT 25;")
         mostrados = 25
     tablas = cursor.fetchall()
     return render_template('movimientos.html', tablas=tablas, n_mov=n_mov, mostrados=mostrados, fecha=fecha)
@@ -753,7 +650,7 @@ def registros():
             mostrados = one[0]
             cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' group by registros.tarea order by registros.tarea")
             tareas_empresa = cursor.fetchall()
-            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros join tareas on tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc")
+            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros join tareas on tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc")
         if filtro == 'fechas':
             fecha_inicial = request.form['fecha_inicial']
             fecha_final = request.form['fecha_final']
@@ -764,28 +661,28 @@ def registros():
                 mostrados = one[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' order by registros.fecha desc;")
             else:
                 cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and tarea != 1 and tarea != 0 and tarea != 2 and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}';")
                 one = cursor.fetchone()
                 mostrados = one[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 and estado = 'registro' and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
         if filtro == 'limite':
             limite = request.form['limite']
             if limite != 'all':
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' order by registros.fecha desc LIMIT {limite};")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' order by registros.fecha desc LIMIT {limite};")
                 mostrados = limite
             else:
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' order by registros.fecha desc LIMIT {n_registros[0]};")
+                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' order by registros.fecha desc LIMIT {n_registros[0]};")
                 mostrados = n_registros[0]
         if filtro == 'duplicados':
-            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado ='registro' and registros.telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1);")
+            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado ='registro' and registros.telefono in (select telefono from registros group by telefono having count(DISTINCT nombre) >1);")
             mostrados = repetidos[0]
             editar_telefono = 'NO'
         if filtro == 'faltantes':
-            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (registros.nombre NOT LIKE '% %' or registros.direccion = '');")
+            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (registros.nombre NOT LIKE '% %' or registros.direccion = '');")
             mostrados = faltantes[0]
         if filtro == 'empresa':
             empresa = request.form['limite']
@@ -794,10 +691,10 @@ def registros():
             mostrados = one[0]
             cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' group by registros.tarea order by registros.tarea")
             tareas_empresa = cursor.fetchall()
-            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.empresa = '{empresa}' order by registros.fecha desc;")
+            cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.empresa = '{empresa}' order by registros.fecha desc;")
     else:
         #cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.cotizacion, registros.cotizaciontotal, registros.fecha, tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, agente FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC LIMIT 25;")
-        cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC LIMIT 25;")
+        cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y') FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC LIMIT 25;")
         mostrados = 25
     tablas = cursor.fetchall()
     #agentes_purgados = []
@@ -817,10 +714,6 @@ def registros():
     db.connection.commit()
     cursor.execute("select LPAD( idhoja+1, 8, '0') from hojas where cantidad is null order by idhoja desc limit 1;")
     ultimahoja = cursor.fetchone()
-    #tablas = [
-    #    tupla[:8] + (tupla[8].strftime('%Y-%m-%d %H:%M:%S'),) + tupla[9:]
-    #    for tupla in tablas
-    #    ]
     return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, tareas_empresa=tareas_empresa, empresa=empresa, pdfs=pdfs, ultimahoja=ultimahoja, agentes_purgados=agentes_purgados)
 
 @app.route('/hoja_de_inspeccion/generarpdf', methods=['GET', 'POST'])
@@ -1103,45 +996,47 @@ def clientes():
 @login_required
 def registrarLlamada():
     if request.method == 'POST':
-        empresa = request.form['empresa'].upper()
-        nombre = request.form['nombre'].upper().strip()
-        telefono_sn = request.form['telefono']
+        empresa = request.form.get('empresa')
+        nombre = request.form.get('nombre').strip().upper()
+        telefono_sn = request.form.get('telefono')
+        direccion = request.form.get('direccion').strip().upper()
+        email = request.form.get('email').replace(' ','').lower()
+        nota = request.form.get('nota')
+        if nota:
+            nota = nota.replace('\n',' ').strip().upper()
+        else:
+            nota = ''
+        tarea = request.form.get('tarea')
+        fechatarea = request.form.get('fechatarea')
+        fecha_tarea = fechatarea[:10]
+        hora_tarea = fechatarea[11:]
         telefono = ''
         for n in telefono_sn:
             if n.isdigit():
                 telefono = telefono+n
-        motivo = request.form['motivo'].upper().strip()
-        email = request.form['email'].lower()
-        cotizacion = request.form['cotizacion'].upper()#.replace(' | $','')
-        cotizaciontotal = request.form['cotizaciontotal']
-        tarea = request.form['tarea']
-        calendario = request.form['calendario']
-        hora = request.form['hora']
-        direccion = request.form['direccion'].upper()
+        
         cursor = db.connection.cursor()
-        cursor.execute(f"SELECT tarea from tareas where idtarea = {tarea}")
-        tarea_desc = cursor.fetchone()
-        num_preguntas = request.form['comprobarSiHayPreguntas']
-        if tarea != 0:
-            if calendario != '':
-                cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, fecha_tarea, hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -5 hour), {tarea}, '{calendario}', '{hora}', 'registro');")
-            else:
-                cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, cotizacion, cotizaciontotal, fecha, tarea, hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -5 hour), {tarea}, '', 'registro');")
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. Se le asignó la tarea {tarea_desc[0]}', date_add(now(), interval -5 hour))")
+        cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, fecha, tarea, fecha_tarea, hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}', '{nombre}', '{telefono}', '{direccion}', '{email}', '{nota}', date_add(now(), interval -5 hour), {tarea}, '{fecha_tarea}', '{hora_tarea}', 'registro');")
+        #cursor.execute("INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, fecha, tarea, fecha_tarea, hora_tarea, estado) VALUES (%s, %s, %s, %s, %s, %s, %s, 'date_add(now(), interval -5 hour)', %s, %s, %s, 'registro')", (empresa, current_user.fullname, nombre, telefono, direccion, email, nota, tarea, fecha_tarea, hora_tarea))
+        
+        if tarea == 0:
+            cursor.execute(f"INSERT INTO movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) VALUES ('Registró una llamada sin ninguna tarea asignada.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{nota}')")
+            #cursor.execute("INSERT INTO movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) VALUES ('Registró una llamada sin ninguna tarea asignada.', 'date_add(now(), interval -5 hour)', %s, %s, %s, %s)", (current_user.fullname, nombre, telefono, nota))
         else:
-            cursor.execute(f"INSERT INTO registros (empresa, agente, nombre, telefono, direccion, email, motivo, cotizacion, cotizaciontotal, fecha, tarea,hora_tarea, estado) VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{direccion}', '{email}', '{motivo}', '{cotizacion}', {cotizaciontotal}, date_add(now(), interval -5 hour), 0, '{hora}', 'registro');")
-            cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró una llamada de {nombre} con notas: {motivo} de la empresa {empresa.replace('_', ' ')}. No se le asignó ninguna tarea', date_add(now(), interval -5 hour))")
+            cursor.execute(f"INSERT INTO movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) VALUES ('Registró una llamada.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{nota}')")
+            #cursor.execute("INSERT INTO movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) VALUES ('Registró una llamada.', 'date_add(now(), interval -5 hour)', %s, %s, %s, %s)", (current_user.fullname, nombre, telefono, nota))
             
-        if num_preguntas != 0:
-            for i in range(1, int(num_preguntas)+1):
-                respuesta = request.form[f'respuesta{i}.0'].strip().upper()
-                if respuesta != '':
-                    pregunta = request.form[f'pregunta{i}.0']
-                    cursor.execute(f"insert into registros (fecha, estado, pregunta, respuesta, telefono, cotizaciontotal) VALUES (date_add(now(), interval -5 hour), 'pregunta', '{pregunta}', '{respuesta}', '{telefono}', null)")
+        #if num_preguntas != 0:
+        #    for i in range(1, int(num_preguntas)+1):
+        #        respuesta = request.form[f'respuesta{i}.0'].strip().upper()
+        #        if respuesta != '':
+        #            pregunta = request.form[f'pregunta{i}.0']
+        #            cursor.execute(f"insert into registros (fecha, estado, pregunta, respuesta, telefono, cotizaciontotal) VALUES (date_add(now(), interval -5 hour), 'pregunta', '{pregunta}', '{respuesta}', '{telefono}', null)")
+        if not fechatarea:
+            cursor.execute(f"UPDATE registros SET fecha_tarea = null, hora_tarea = null WHERE fecha_tarea = '0000-00-00' AND hora_tarea = '';")
         db.connection.commit()
         cursor.close()
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('dashboard'))
+        return jsonify({'status': 'success', 'redireccion': None})
 
 @app.route('/menu/registrarpreguntas', methods=['GET', 'POST'])
 @login_required
@@ -1163,7 +1058,7 @@ def registrarPreguntas():
                 cursor.execute(f"INSERT INTO registros VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{email}', null, null, null, date_add(now(), interval -5 hour), {tarea}, '{fecha_tarea}', 'cotizar', null, '{pregunta}', '{respuesta}');")
             else:
                 cursor.execute(f"INSERT INTO registros VALUES ('{empresa}', '{current_user.fullname}','{nombre}', '{telefono}', '{email}', null, null, null, date_add(now(), interval -5 hour), {tarea}, null, 'cotizar', null, '{pregunta}', '{respuesta}');")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró preguntas a {nombre} de {empresa.replace('_', ' ')}', date_add(now(), interval -5 hour))")
+        #cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} registró preguntas a {nombre} de {empresa.replace('_', ' ')}', date_add(now(), interval -5 hour))")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('dashboard'))
@@ -1183,112 +1078,52 @@ def actualizarRegistro():
         #datoanterior = request.form.get('datoanterior')
         if accion == 'empresa':
             cursor.execute(f"UPDATE registros SET empresa = '{datonuevo}' WHERE fecha = '{idfecha}' and estado = 'registro';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió la empresa.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió la empresa.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'agente':
             cursor.execute(f"UPDATE registros SET agente ='{datonuevo}' WHERE fecha = '{idfecha}' AND estado = 'registro';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió de agente.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió de agente.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'nombre':
             cursor.execute(f"UPDATE registros SET nombre = '{datonuevo}' WHERE estado = 'registro' AND fecha = '{idfecha}';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió el nombre.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió el nombre.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'telefono':
-            cursor.execute(f"UPDATE registros SET telefono = '{datonuevo}' WHERE telefono = '{idfecha}';")
-            cursor.execute(f"UPDATE movimientos SET telefono = '{datonuevo}' WHERE telefono = '{idfecha}';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió el  teléfono.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{datonuevo}')")
+            telefono = ''
+            for n in datonuevo:
+                if n.isdigit():
+                    telefono = telefono+n
+            cursor.execute(f"UPDATE registros SET telefono = '{telefono}' WHERE telefono = '{idfecha}';")
+            cursor.execute(f"UPDATE movimientos SET telefono = '{telefono}' WHERE telefono = '{idfecha}';")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió el  teléfono.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{telefono}')")
+            redireccion = f'/seguimiento/{telefono}/{nombre}'
         elif accion == 'direccion':
             cursor.execute(f"UPDATE registros SET direccion = '{datonuevo}' WHERE estado = 'registro' and FECHA = '{idfecha}';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió la dirección.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió la dirección.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'email':
             cursor.execute(f"UPDATE registros SET email = '{datonuevo.lower().strip()}' WHERE estado = 'registro' AND fecha = '{idfecha}';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió el email.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió el email.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'nota':
             cursor.execute(f"UPDATE registros SET motivo = '{datonuevo}' WHERE fecha = '{idfecha}' AND estado = 'registro';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió la nota de la llamada.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió la nota de la llamada.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'razon de desinteres':
             cursor.execute(f"UPDATE registros SET tarea = 2, nota_rechazo = '{datonuevo}' WHERE fecha = '{idfecha}' AND estado = 'registro';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Cambió la tarea del registro. NO LE INTERESÓ.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Cambió la tarea del registro. NO LE INTERESÓ.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
         elif accion == 'telefono sin registrar':
-            cursor.execute(f"UPDATE registros SET telefono = '{datonuevo}' WHERE fecha = '{idfecha}';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Agregó el número de teléfono.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{datonuevo}')")
+            telefono = ''
+            for n in datonuevo:
+                if n.isdigit():
+                    telefono = telefono+n
+            cursor.execute(f"UPDATE registros SET telefono = '{telefono}' WHERE fecha = '{idfecha}';")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Agregó el número de teléfono.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{telefono}')")
         else:
-            cursor.execute(f"UPDATE registros SET motivo = '{datonuevo.upper().strip().replace('\n', '. ')}', tarea = {redireccion}, fecha_tarea = '{accion[:10]}', hora_tarea = '{accion[11:]}' WHERE fecha = '{idfecha}' AND estado = 'registro';")
-            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono) values ('Realizó cambios en la tarea y su fecha.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}')")
-        if redireccion == 'seguimiento':
-            if accion == 'tarea_seg':
-                cursor.execute(f"select tarea from tareas where idtarea = {datonuevo}")
-                nuevo = cursor.fetchone()
-                nuevo = nuevo[0]
-                if nuevo == '':
-                    nuevo = 'NO SE LE ASIGNÓ NINGUNA TAREA'
-                cursor.execute(f"update registros set tarea = {datonuevo} where fecha = '{idfecha}' and estado = 'registro';")
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} cambió la tarea del registro N° ´{idfecha}´ de {nombre}, pasó de {viejo} a {nuevo}', date_add(now(), interval -5 hour))")
-            if accion == 'fecha_seg':
-                cursor.execute(f"UPDATE registros SET fecha_tarea = '{datonuevo}' where fecha = '{idfecha}' and estado = 'registro';")
-                if viejo == 'None':
-                    viejo = 'NO TIENE ASIGNADA NINGUNA FECHA'
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} actualizó la fecha de la tarea del registro N° ´{idfecha}´ de {nombre}, pasó del {viejo} para el {datonuevo}', date_add(now(), interval -5 hour))")
-            if accion == 'hora_seg':
-                cursor.execute(f"UPDATE registros set hora_tarea = '{datonuevo.lower()}' where fecha = '{idfecha}' and estado = 'registro';")
-                if datonuevo == '':
-                    datonuevo = 'SIN HORA'
-                if viejo == '':
-                    viejo = 'SIN HORA'
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} actualizó la hora de la tarea del registro N° ´{idfecha}´ de {nombre}, pasó de las {viejo} para las {datonuevo.lower()}', date_add(now(), interval -5 hour))")
-            if accion == 'razon':
-                cursor.execute(f"UPDATE registros SET nota_rechazo = '{datonuevo}' where fecha = '{idfecha}' and estado = 'registro';")
-                if viejo == '':
-                    viejo = 'NO TIENE UNA RAZÓN CARGADA'
-                if datonuevo == '':
-                    datonuevo = 'NO TIENE UNA RAZÓN CARGADA'
-                cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} actualizó la razón de NO LE INTERESA, pasó de {viejo} a {datonuevo}, del registro N° ´{idfecha}´ de {nombre}',date_add(now(), interval -5 hour));")
-            if accion == 'notas':
-                cursor.execute(f"UPDATE registros SET motivo = '{datonuevo}' where fecha = '{idfecha}' and estado = 'registro';")
-                if datonuevo == '':
-                    datonuevo = 'NO TIENE NOTAS DE LLAMADA CARGADAS'
-                if viejo == '':
-                    viejo = 'NO TIENE NOTAS DE LLAMADA CARGADAS'
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} cambió la nota del registro N° ´{idfecha}´ de {nombre}, pasó de {viejo} a {datonuevo}',date_add(now(), interval -5 hour));")
-            if accion == 'numero':
-                telefono_seg = ''
-                for n in datonuevo:
-                    if n.isdigit():
-                        telefono_seg = telefono_seg+n
-                cursor.execute(f"UPDATE registros SET telefono = '{telefono_seg}' where telefono = '{viejo}';")
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} modificó el telefono del cliente {nombre}, de {viejo} a {telefono_seg}', date_add(now(), interval -5 hour));")
-                db.connection.commit()
-                cursor.close()
-                return seguimiento(telefono_seg)
-            if accion == 'direccion':
-                cursor.execute(f"UPDATE registros SET direccion = '{datonuevo}' where fecha = '{idfecha}' and estado = 'registro';")
-                if datonuevo == '':
-                    datonuevo = 'NO TIENE NINGUNA DIRECCIÓN CARGADA'
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} modificó la dirección del cliente {nombre} a {datonuevo}', date_add(now(), interval -5 hour));")
-            if accion == 'correo electronico':
-                cursor.execute(f"UPDATE registros SET email = '{datonuevo.lower()}' where fecha = '{idfecha}' and estado = 'registro';")
-                if datonuevo == '':
-                    datonuevo = 'NO TIENE NINGÚN EMAIL CARGADO'
-                cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} modificó el email del cliente {nombre} a {datonuevo}', date_add(now(), interval -5 hour));")
-            if accion == 'cotizacion':
-                cotizacion = request.form.get('cotizacion').upper().strip()
-                if cotizacion == '':
-                    datonuevo = 0
-                if datonuevo == '':
-                    datonuevo = 0
-                if viejo == '':
-                    viejo = 0
-                cursor.execute(f"UPDATE registros SET cotizacion = '{cotizacion}', cotizaciontotal = {datonuevo} where fecha = '{idfecha}' and estado = 'registro';")
-                cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} modificó la cotización del registro N° ´{idfecha}´ del cliente {nombre}, el total pasó de ${viejo} a ${datonuevo}', date_add(now(), interval -5 hour))")
-            db.connection.commit()
-            cursor.close()
-            t_seguimiento = request.form.get('tel_seg')
-            return seguimiento(t_seguimiento)
+            if datonuevo:
+                datonuevo = datonuevo.upper().strip().replace('\n', ' ')
+            else:
+                datonuevo = ''
+            cursor.execute(f"UPDATE registros SET motivo = '{datonuevo}', tarea = {redireccion}, fecha_tarea = '{accion[:10]}', hora_tarea = '{accion[11:]}' WHERE fecha = '{idfecha}' AND estado = 'registro';")
+            cursor.execute(f"insert into movimientos (mov, date_mov, agente, nombre, telefono, datonuevo) values ('Realizó cambios en la tarea y su fecha.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{nombre}', '{telefono}', '{datonuevo}')")
+            redireccion = None
         db.connection.commit()
         cursor.close()
-        if redireccion == 'menu':
-            menu_empresa = request.form.get('menu_empresa').upper().replace(' ','_')
-            return refrescarMenu(menu_empresa)
-        if redireccion == 'dashboard':
-            return redirect(url_for('dashboard'))
-    return jsonify({'status': 'success'})
+    return jsonify({'status': 'success', 'redireccion': redireccion})
 
 @app.route('/cotizacion', methods=['GET', 'POST'])
 @login_required
@@ -1333,7 +1168,7 @@ def enviarCotizacion():
         cursor.execute('select cast(substring(date_add(current_time(), interval -5 hour), 1, 2) as unsigned);')
         hora_actual = cursor.fetchone()
         cursor.execute(f"UPDATE registros SET nombre = '{nombre}', email = '{email}', cotizacion = '{cotizacion}', cotizaciontotal = {totalcotizacion}, fecha_tarea = current_date(), tarea = {cotizacion_enviada[0]}, hora_tarea =  '{hora_actual[0]}:00 h' where fecha = '{fecha}' and estado = 'registro';")
-        cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} envío una cotización de ${totalcotizacion} a {email} del cliente {nombre}', date_add(now(), interval -5 hour))")
+        #cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} envío una cotización de ${totalcotizacion} a {email} del cliente {nombre}', date_add(now(), interval -5 hour))")
         db.connection.commit()
         cursor.close()
     return Response(status=204)
@@ -1373,7 +1208,7 @@ def altaTarea():
         tarea  = request.form['tarea'].upper().replace('\n','').strip()
         cursor = db.connection.cursor()
         cursor.execute(f"insert into tareas (tarea) values ('{tarea}');")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó una nueva tarea al sistema: {tarea}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Agregó una nueva tarea al sistema.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{tarea}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('tareas'))
@@ -1388,7 +1223,7 @@ def bajaTarea():
         cursor = db.connection.cursor()
         cursor.execute(f"update registros set tarea = 0 where tarea = {idtarea} and estado = 'registro';")
         cursor.execute(f"delete from tareas where idtarea = {idtarea};")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} eliminó del sistema la tarea {tarea}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Eliminó una tarea del sistema.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{tarea}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('tareas'))
@@ -1399,11 +1234,10 @@ def bajaTarea():
 def modTarea():
     if request.method == 'POST':
         idtarea = request.form['idtarea']
-        tareavieja = request.form['tareavieja'].strip()
         tareanueva = request.form['tareanueva'].replace('\n','').strip().upper()
         cursor = db.connection.cursor()
         cursor.execute(f"update tareas set tarea = '{tareanueva}' where idtarea = {idtarea};")
-        cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} editó la tarea {tareavieja}. Ahora es {tareanueva}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) VALUES ('Cambió una tarea del sistema.', date_add(now(), interval -5 hour), '{current_user.fullname}','{tareanueva}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('tareas'))
@@ -1426,7 +1260,7 @@ def altaPlan():
         precioplan = request.form['precioplan']
         cursor = db.connection.cursor()
         cursor.execute(f"insert into planes (plan, descripcion, precio) VALUES ('{plan}', '{descripcion}', {precioplan})")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó un nuevo plan al sistema: {plan}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Agregó un nuevo plan al sistema', date_add(now(), interval -5 hour), '{current_user.fullname}', '{plan}. Precio: ${precioplan}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('planes'))
@@ -1441,7 +1275,7 @@ def bajaPlan():
         cursor = db.connection.cursor()
         cursor.execute(f"UPDATE clientes set plan = 0 where plan = {id}")
         cursor.execute(f"delete from planes where idplan = {id};")
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} eliminó del sistema el plan {plan}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Eliminó un plan del sistema.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{plan}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('planes'))
@@ -1457,7 +1291,7 @@ def modPlan():
         precio = request.form['precioplan']
         cursor = db.connection.cursor()
         cursor.execute(f"update planes set plan = '{plan}', descripcion = '{desc_plan}', precio = {precio} where idplan = {id}")
-        cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} editó un plan, se actualizó a {plan}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) VALUES ('Cambió un plan del sistema.', date_add(now(), interval -5 hour), '{current_user.fullname}', '{plan}. Precio: ${precio}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('planes'))
@@ -1556,8 +1390,8 @@ def guardar_en_mysql():
                 cursor.execute(f"INSERT INTO hojas (idhoja, idfecha, cantidad, material) VALUES ({datos_data[0]}, '{datos_data[1]}', {row[0]}, '{row[1].upper().strip()}')")
     if datos_data[11] == 'totalidad' and accion_data != 'actualizar':
         cursor.execute(f"INSERT INTO pagos (empresa, motivo, idhoja, cliente, telefono, fecha_vencimiento, fecha_pago, forma_pago, pago, agente) VALUES ('{datos_data[25].strip().upper()}', 'ABONÓ TODO', {datos_data[0]}, '{datos_data[3].upper(). strip()}', '{telefono}', '{datos_data[2]}', '{datos_data[2]}', '{datos_data[26].upper().strip()}', {datos_data[9]}, '{current_user.fullname}');")
-        cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} {movimiento} hoja de inspección N°´{datos_data[0]}´ del cliente {datos_data[3].upper().strip()} que abonó en su totalidad. Dicho pago fue registrado en la sección ´Pagos´', date_add(now(), interval -5 hour));")
-    cursor.execute(f"insert into movimientos (mov, date_mov) VALUES ('{current_user.fullname} {movimiento} hoja de inspección N°´{datos_data[0]}´ del cliente {datos_data[3].upper().strip()}', date_add(now(), interval -5 hour));")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) VALUES ('{movimiento.capitalize()} hoja de inspección que abonó en su totalidad. Dicho pago fue registrado en la sección ´Pagos´.', date_add(now(), interval -5 hour), '{current_user.fullname}', 'N°{datos_data[0]}');")
+    cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) VALUES ('{movimiento.capitalize()} hoja de inspección.', date_add(now(), interval -5 hour), '{current_user.fullname}', 'N°{datos_data[0]}');")
     db.connection.commit()
     cursor.close()
     return redirect(url_for('registros'))

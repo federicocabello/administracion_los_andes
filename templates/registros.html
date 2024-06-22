@@ -1,7 +1,6 @@
 {% extends 'index.html' %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
 <!-- <meta http-equiv="refresh" content="15"> -->
 {% endblock %}
 
@@ -26,7 +25,7 @@ Administración Los Andes | Registros
     <button style="float: right; margin-right: 8px;" class="btn secondary" onclick="document.getElementById('filtro').value = 'faltantes'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/person-circle-exclamation-solid.svg') }}" height="25" style="vertical-align: middle;"> Hay datos faltantes</button>
     {% endif %}
     </h1>
-    <table style="border: 1px solid black; margin: 0 auto;" id="tabla_registros">
+    <table style="border: 1px solid black; margin: 0 auto; width: 98%;" id="tabla_registros">
         <script>
         document.addEventListener('DOMContentLoaded', (event) => {
         const tableRows = document.querySelectorAll('#tabla_registros tbody tr');
@@ -143,29 +142,29 @@ Administración Los Andes | Registros
         </tr>
         
         {% for i in tablas %}
-        <tr style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}background-color: #{{i[14]}};">
+        <tr style="{% if i[9] == 'NO LE INTERESA' %}color: white;{% endif %}background-color: #{{i[14]}};">
             <!--<textarea id="{{ i[8] }}" style="display: None;">{{ i[6] }}</textarea>-->
-                <td><span class="icon-container"><i class="fa fa-industry"></i><select onchange="cambiarRegistro(this.value, '{{i[8]}}', 'empresa', '{{i[2]}}', '{{i[3]}}', null);" style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;">{% for e in empresas %}<option value="{{e[0]}}" {% if e[0] == i[0] %}selected{% endif %} style="color: black">{{e[0]}}</option>{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar empresa</span></span></td>
+                <td><span class="icon-container"><i class="fa fa-industry"></i><select onchange="cambiarRegistro(this.value, '{{i[8]}}', 'empresa', '{{i[2]}}', '{{i[3]}}', null);" style="{% if i[9] == 'NO LE INTERESA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer; width: 85%;"><option value="{{i[0]}}" selected>{{i[0]}}</option>{% for e in empresas %}{% if e[0] != i[0] %}<option value="{{e[0]}}" style="color: black">{{e[0]}}</option>{% endif %}{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar empresa</span></span></td>
                 
-                <td><span class="icon-container"><i class="fa fa-headphones"></i><select style="{% if i[9] == 'NO LE INTERESA' or i[9] == 'COTIZACIÓN ENVIADA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;" onchange="cambiarRegistro(this.value, '{{i[8]}}', 'agente', '{{i[2]}}', '{{i[3]}}', null)">{% for a in agentes %}<option value="{{a[0]}}" {% if a[0] == i[1] %}selected{% endif %} style="color: black">{{a[0]}}</option>{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span></td>
+                <td><span class="icon-container"><i class="fa fa-headphones"></i><select style="{% if i[9] == 'NO LE INTERESA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;" onchange="cambiarRegistro(this.value, '{{i[8]}}', 'agente', '{{i[2]}}', '{{i[3]}}', null)"><option value="{{i[1]}}" selected>{{i[1]}}</option>{% for a in agentes %}{% if a[0] != i[1]%}<option value="{{a[0]}}" style="color: black">{{a[0]}}</option>{% endif %}{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span></td>
                 
                 <td hidden>{{i[1]}}</td>
                 
-                <td><span class="icon-container"><i class="fa fa-user-circle" {% if i[3] != '' %}onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'nombre', '{{i[2]}}', '{{i[3]}}', '{{i[2]}}', null);" style="cursor: pointer;"{% endif %}></i><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}
+                <td><span class="icon-container"><i class="fa fa-user-circle" onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'nombre', '{{i[2]}}', '{{i[3]}}', '{{i[2]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}
 
-                {% if i[3] != '' %}
+                {% if i[3] %}
                     <br><span class="icon-container"><i class="fa fa-phone" {% if editar_telefono == 'SI' %}onclick="cambiarRegistroPopUp('o', '{{i[3]}}', 'telefono', '{{i[2]}}', '{{i[3]}}', '{{i[3]}}', null);" style="cursor: pointer;"{% endif %}></i><span class="tooltip" id="tooltip-editar">Editar teléfono</span></span> {{ i[3] }}
                 {% endif %}
 
                 {% if i[0] == 'TS NETWORK CAMARAS DE SEGURIDAD' or i[0] == 'TS NETWORK INTERNET' %}
                 <br><span class="icon-container"><i class="fa fa-map-marker" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'direccion', '{{i[2]}}', '{{i[3]}}', '{{i[13]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[13]}}
                 {% else %}
-                    {% if i[13] != '' %}
+                    {% if i[13] %}
                     <br><span class="icon-container"><i class="fa fa-map-marker" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'direccion', '{{i[2]}}', '{{i[3]}}', '{{i[13]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar dirección</span></span> {{i[13]}}
                     {% endif %}
                 {% endif %}
 
-                {% if i[4] != '' %}
+                {% if i[4] %}
                 <br><span class="icon-container"><i class="fa fa-envelope" onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'email', '{{i[2]}}', '{{i[3]}}', '{{i[4]}}', null);" style="cursor: pointer"></i><span class="tooltip" id="tooltip-editar">Cambiar email</span></span> {{i[4]}}
                 {% endif %}
 
@@ -173,8 +172,8 @@ Administración Los Andes | Registros
 
                 <td style="text-align: center;">
 
-                    {% if i[3] != '' %}
-                    <div class="icon-container"><i class="fa fa-vcard" onclick="document.formulario.action='/seguimiento'; document.getElementById('telefono_seg').value = '{{i[3]}}'; document.formulario.submit()" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
+                    {% if i[3] %}
+                    <div class="icon-container"><a href="{{ url_for('seguimiento', telefono=i[3], nombre=i[2]) }}" style="color: inherit"><i class="fa fa-vcard"></i></a><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
                     {% else %}
                     <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{i[3]}}', 'telefono sin registrar', '{{i[2]}}', null, '', null);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
                     {% endif %}
@@ -192,7 +191,7 @@ Administración Los Andes | Registros
                         {% else %}
                         <div class="icon-container">
                         <i class="fa fa-file-text-o" style="cursor:pointer;" onclick="triggerFileInput('{{i[8]}}', '{{i[2]}}', '{{i[13]}}', '{{i[3]}}', '{{i[0]}}');"></i>
-                        <a href="{{ url_for('static', filename='hojas/HOJA_'+ultimahoja[0]+'_'+i[2].strip().upper()+'_'+i[8].replace(':','')+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
+                        <a href="{{ url_for('static', filename='hojas/HOJA_'+ultimahoja[0]+'_'+i[2].strip().upper().replace(' ','_')+'_'+i[8].replace(':','')+'.pdf') }}" id="etiqueta{{i[8]}}" hidden></a>
                         <input type="file" style="display: none" id="{{i[8]}}inputfile">
                         <div class="tooltip" id="tooltip-editar">Generar PDF vacío</div></div>
                         {% endif %}
@@ -202,14 +201,12 @@ Administración Los Andes | Registros
 
                 <td>
                     
-                <i class="fa fa-calendar-o" style="cursor:pointer;"></i> Registro del {{i[7]}}
+                <i class="fa fa-calendar-o"></i> Registro del {{i[7]}}
                 <br><span class="icon-container"><i class="fa fa-sticky-note" style="cursor:pointer;" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'nota', '{{i[2]}}', '{{i[3]}}', '{{i[5]}}', null);"></i><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if i[5] != '' %} {{ i[5] }}{% else %} <i class="fa fa-window-close"></i> No tiene ninguna nota cargada.{% endif %}
                 {% if i[9] == 'NO LE INTERESA' %}
-                    {% if i[12] != None %}
-                        {% if i[12] != '' %}
+                        {% if i[12] %}
                             <br><i class="fa fa-times"></i> Razón: {{i[12]}}
                         {% endif %}
-                    {% endif %}
                 {% endif %}
 
                 </td>
@@ -218,12 +215,12 @@ Administración Los Andes | Registros
             --> 
                 <td>
                     <span class="icon-container"><i class="fa fa-briefcase" style="cursor: pointer;" onclick="setearPopUp('{{i[8]}}', '{{i[2]}}', '{{i[5]}}', '{{i[6]}}', '{{i[10]}}', '{{i[11]}}', '{{i[3]}}')"></i><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
-                {% if i[9] != '' %}
+                {% if i[9] %}
                     {% if i[9] != 'NO LE INTERESA' %}
                         {{ i[9] }}
-                        {% if i[10] != None %}
-                            el {{ i[10] }}
-                                {% if i[11] != '' %} 
+                        {% if i[10] %}
+                            el {{ i[16] }}
+                                {% if i[11] %} 
                                     a las {{ i[11] }} h
                                 {% endif %}
                         {% endif %}
@@ -405,5 +402,4 @@ function aplicarFiltros() {
     };
 }
 </script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% endblock %}

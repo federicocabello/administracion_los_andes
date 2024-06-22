@@ -1,46 +1,59 @@
->longitud de campo de desscrpicion speech
->confirmacion en boton de rechazado
->salto de linea en descripcion de articulo
->clientes que no tienen ningun articulo ni ningun speech
->imagenes no procesadas en menu
->registro no se guarda si el checkbox no se selecciona (verificar texts areas restantes)
->!!INTENTAR AGREGAR UN CLIENTE
->se insertan imagenes vacias en articlos-clientes
->indice fuera de rango de la tupla al altacliente
->.gitignore en github
->limpiar ventana a la hora de registrar una llamada
->poner if si tiene preguntas registradas
->revisar TAREAS null, agregar TAREA = id == 0
->en PLANES, el PLAN == 0
->a la hora de editar cliente, traer plan 
->agregar a la tabla movimientos cuando un registro se pasa de agente
->boton de editar speech
->en MENU quitar barra azul inferior, cambiar en las tareas idtareas !=  0
->ordenar tareas pendientes en dashboard por hora
->actualizar calendario al entrar al dashboard y a registros
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Lista de pendientes Programación:
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-cambio base de datos:
-_campo rol a AUTH
-_revisar longitud de speech_descripcion %CLIENTE%
-_"vende" y "plan_fichainterna" pasar a TEXT en CLIENTES
-_"motivo" y "nota_rechazo" pasar a TEXT en REGISTROS
+MÓDULO DE REPORTES DE PAGOS:
+<Generar reporte separado por empresas y medios de pago. Siempre respetando las fechas.
+<Autorellenar cliente a la hora de registrar un nuevo pago, también mostrar las cuotas que le quedan por pagar en un select.
+<Revisar a la hora de cargar/eliminar un pago a donde se redirige en caso de hacerlo.
 
-//HOST
-app.run(debug=False, port=30358, host='admin.losandestx.com')
+MÓDULO DE REPORTES DE REGISTROS:
+<Generar reporte separando por empresa y por fechas.
+<Agregar para cambiar de empresa.
 
-//NUEVOS CAMBIOS:
-DB_agregar columna en REGISTROS --> pregunta; respuesta tipo TEXT
-DB_crear tabla facturas
-<<<evaluar si es necesario generar tabla y apartado de "formas de pago", recordar editar campo "formapago" en "facturas" --> INT (relacion de otra tabla)
+MÓDULO DE ACTIVIDADES:
+<Consultar si se debe realizar para cada agente. Si se va a solicitar o no una fecha de recordatorio.
 
-<seccion de imagenes en altacliente
+MÓDULO DE REGISTROS:
+<Cambiar la el elemento para modificar la fecha, poner un INPUT DATE. Consultar si hacer un pop-up para modificar fecha, hora y tarea.
+<Modificar automaticamente el servicio del PDF cuando se cambie una tarea.
+<Cuando cambiamos el nombre en REGISTROS, también cambiarlo en HOJA DE INSPECCIÓN.
 
-<apartado de REPORTES donde tenga campos FECHA, PAGO, EMPRESA, y X DIAS
+VISTA DE EMPRESA:
+<En la adevertencia de registro duplicado, mostrar a nombre de quien está (el ultimo registro).
+<Galería de imágenes de cada artículo.
 
-<roles para vistas
+MÓDULO DE CRECIÓN DE UNA NUEVA EMPRESA:
+<Revisar logo
+<Cambiar para agregar distintas imágenes a cada artículo.
 
-<modulo de actividades fuera de los registros
+MÓDULO DE IMPULSOS:
+<Planificar diseño y lógica. Se puede agregar como INVERSIONES/GASTOS. Consultar si deben agregarse en REPORTE DE PAGOS.
 
-<agregar imprimir pdf al modulo
+VISTA PRINCIPAL:
+<Agregar acceso al SEGUIMIENTO de cada cliente.
+<Clasificación y división de empresas. Agregar opción cuando cree una nueva.
+<Agregar RECORDATORIO (PAGO) fuera de ser una cuota.
 
-<en la adevertencia de registro duplicado, mostrar a nombre de quien está (el ultimo registro)
+MÓDULO DE PAGOS:
+<Separar tablas por columnas, una para NOMBRE y otra para TELEFONO.
+<En COBRANZA agregar que numero de cuota pagó de cuantas por pagar.
+<Agregar el total por cliente de vencido y lo que le resta por pagar en distintos colores.
+<Redireccionar a SEGUIMIENTO y a HOJA DE INSPECCIÓN de cada cliente.
+<Revisar totales, solamente 2 decimales.
+
+MÓDULO DE MOVIMIENTOS:
+<Corregir para buscar movimiento por numero de telefono.
+<Que el filtro de búsqueda quede almacenado en memoria.
+
+MÓDULO DE SEGUIMIENTO DEL CLIENTE:
+<Separar tabla de datos con columnas.
+
+MÓDULO DE CAMBIOS MASIVOS:
+<Enviar registros a otro usuarios
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Actualmente desarrollando: <que vista retornar cuando se edita una nota, un telefono, nombre, etc.
+Proximo: revisar si agrega el movimiento cuando una hoja de inspeccion se cree o se actualice.
+
+Seguir con: vista de seguimiento, preguntar como armar la estructura con el dato nuevo y el viejo.

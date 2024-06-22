@@ -21,43 +21,43 @@ Administración Los Andes | Movimientos
         <option value="200" {% if mostrados == '200' %}selected{% endif %}>Mostrar 200</option>
         <option value="{{n_mov[0]}}" {% if mostrados == n_mov[0] %}selected{% endif %}>Mostrar todos ({{n_mov[0]}})</option>
     </select><button type="button" style="margin-left: 10px;"><a href="{{ url_for('movimientos') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20"></a></button></h1>
+
     <table style="border: 1px solid black; margin: 0 auto;" id="tabla_movimientos">
         <tr>
             <td></td>
+            <td></td>
             <td>
-                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',1,1)">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',2,1)">
             </td>
             <td>
-            <!--
-                <select id="filtro_calendario" onchange="filtro('filtro_calendario', 'tabla_movimientos',2,1)" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
-                    <option value="" style="color:gainsboro">Filtro por fecha...</option>
-                    <option value="-01-">Enero</option>
-                    <option value="-02-">Febrero</option>
-                    <option value="-03-">Marzo</option>
-                    <option value="-04-">Abril</option>
-                    <option value="-05-">Mayo</option>
-                    <option value="-06-">Junio</option>
-                    <option value="-07-">Julio</option>
-                    <option value="-08-">Agosto</option>
-                    <option value="-09-">Septiembre</option>
-                    <option value="-10-">Octubre</option>
-                    <option value="-11-">Noviembre</option>
-                    <option value="-12-">Diciembre</option>
-                </select>
-            -->
-            <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" onmouseenter="this.type='date'; this.removeAttribute('disabled')" onmouseleave="this.type='text'; this.setAttribute('disabled', 'disabled');" type="text" {% if fecha == '' %}placeholder="Filtrar por fecha..."{% else %}placeholder="{{fecha}}"{% endif %} disabled>
+            <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" type="date" {% if fecha %}value="{{fecha}}"{% endif %}>
             </td>
         </tr>
         <tr>
             <th>N°</th>
+            <th>Agente</th>
             <th>Movimiento</th>
             <th>Fecha</th>
         </tr>
         {% for i in tablas %}
         <tr>
-                <td style="text-align: center;">{{ i[0] }}</td>
-                <td style="color: #008080;">{{ i[1] }}</td>
+                <td style="text-align: center;">{{i[0]}}</td>
+                <td><i class="fa fa-headphones"></i> {{i[3]}}</td>
+                <td>
+                    <span style="color: #008080">{{ i[1] }}</span>
+                    {% if i[4] %}
+                    <br>
+                    <i class="fa fa-user-circle"></i> {{i[4]}}
+                    {% endif %}
+                    {% if i[5] %}
+                    <br>
+                    <span style="text-decoration: underline;">Dato nuevo:</span> {{i[5]}}
+                    {% endif %}
+                </td>
                 <td>{{ i[2] }}</td>
+        </tr>
+        <tr>
+            <td colspan="4" style="border-top: 1px solid #BDBDBD;"></td>
         </tr>
         {% endfor %}
     </table>
