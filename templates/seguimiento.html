@@ -105,8 +105,8 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
         <div id="cotizacion_real">
         {% if registros[0][6] %}
         <img src="{{ url_for('static', filename='img/pen-to-square-solid.svg') }}" width="20" height="20" style="vertical-align: middle;" type="button" onclick="document.getElementById('pre_cotizacion').value = '{{registros[0][5]}}'; document.getElementById('cotizaciontotal').value = '{{registros[0][6]}}'; document.getElementById('menu_cotizacion').removeAttribute('hidden'); document.getElementById('cotizacion_real').setAttribute('hidden', 'hidden'); document.getElementById('pre_cotizacion').focus();"><img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Tiene una cotización cargada:
-        <br><div style="color: #008080">{{registros[0][5]}}</div>
-        <br><img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20"> Total: <div style="color: #008080">${{registros[0][6]}}</div>
+        <br><div style="color: #000080">{{registros[0][5]}}</div>
+        <br><img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20"> Total: <div style="color: #000080">${{registros[0][6]}}</div>
         {% else %}
         <p><button type="button" style="font-family: 'Rubik', sans-serif; font-size: 16px; cursor: pointer;" onclick="document.getElementById('menu_cotizacion').removeAttribute('hidden'); document.getElementById('pre_cotizacion').focus(); document.getElementById('cotizacion_real').setAttribute('hidden', 'hidden');">+<img src="{{ url_for('static', filename='img/hand-holding-dollar-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Agregar cotización</button></p>
         {% endif %}
@@ -133,7 +133,7 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
         <img src="{{ url_for('static', filename='img/clipboard-question-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"> Tiene preguntas cargadas:
         {% for q in preguntas %}
         <p>
-            <div style="margin: 0; padding: 0; color:#008080"><img src="{{ url_for('static', filename='img/circle-question-regular.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{q[0]}}
+            <div style="margin: 0; padding: 0; color:#000080"><img src="{{ url_for('static', filename='img/circle-question-regular.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{q[0]}}
             </div>
             <img src="{{ url_for('static', filename='img/comment-dots-regular.svg') }}" width="20" height="20" style="vertical-align: middle;"> {{q[1]}}
         </p>
@@ -145,7 +145,7 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
 </table>
     <table style="margin: 0 auto;">
         <tr>
-            <th style="color: white; background-color: #3498DB; vertical-align: middle; font-size: 18px; padding: 3px;" colspan="3"><i class="fa fa-eye"></i> Seguimiento del cliente {{registros[0][1]}}</th>
+            <th style="color: white; background-color: #6495ED; vertical-align: middle; font-size: 18px; padding: 3px;" colspan="3"><i class="fa fa-eye"></i> Seguimiento del cliente {{registros[0][1]}}</th>
         </tr>
         <tr>
             <th>Agente</th>
@@ -161,7 +161,7 @@ Administración Los Andes | Seguimiento {{registros[0][1]}}
                 <i class="fa fa-level-up"></i> {{i[0]}}
                 {% if i[5] %}
                 <br>
-                <span style="text-decoration: underline;">Dato nuevo:</span><span style="color: #008080"> {{i[5]}}</span>
+                <span style="text-decoration: underline;">Dato nuevo:</span><span style="color: #000080"> {{i[5]}}</span>
                 {% endif %}
             </td>
             <td>

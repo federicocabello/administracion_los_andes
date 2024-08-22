@@ -4,10 +4,197 @@
 Administración Los Andes | Inicio
 {% endblock %}
 
+{% block css %}
+<style>
+        /* Estilos para la ventana emergente */
+        .popup-modal {
+            display: none; /* Ocultar por defecto */
+            position: absolute;
+            z-index: 1; /* Sobre otros elementos */
+            background-color: #fefefe;
+            border: 1px solid #888;
+            width: 500px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1); /* Sombra ligera */
+            padding: 20px;
+            opacity: 0; /* Inicialmente invisible */
+            transform: scale(0.8); /* Inicialmente reducido */
+            transition: opacity 0.3s ease, transform 0.3s ease; /* Transiciones suaves */
+        }
+        /* Estilos para el botón de cerrar */
+        .popup-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .popup-close:hover,
+        .popup-close:focus {
+            color: black;
+        }
+        /* Clase para mostrar el modal con animación */
+        .popup-modal.show {
+            display: block;
+            opacity: 1; /* Totalmente visible */
+            transform: scale(1); /* Tamaño normal */
+        }
+
+        .td_empresa{
+          width: 14%;
+          text-align: center;
+          color: #6495ED;
+        }
+
+        .btn-empresa {
+            font-family: 'Rubik', sans-serif;
+            background-color: #6495ED;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            margin-right: 5px;
+            width: 85%;
+            /*text-shadow: 1px 1px 5px black;*/
+        }
+
+        .btn-empresa:hover {
+            background-color: white;
+            color: #6495ED;
+            border: 2px solid #6495ED;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
+            /*text-shadow: none;*/
+        }
+
+        .btn-empresa:active {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: scale(0.95);
+        }
+
+        .td_empresa_nombre {
+          text-align: center;
+          vertical-align: top;
+        }
+</style>
+{% endblock %}
+
 {% block body %}
 <div id="main-content">
   <h1>Bienvenido {{ current_user.fullname }} al sistema.</h1>
-  <p><-- Recuerda nuestro dashboard para selecionar una opción en el menú lateral.</p>
+    <span class="icon-container">
+    <button style="position: absolute; padding: 9px; vertical-align: middle; background: none; color: #04AA6D; font-size: 24px;" class="btn success" id="openPopupBtn"><i class="fa fa-plus"></i></button>
+    <span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D; border: 1px white solid; transform: translateX(75%);">Nueva empresa</span></span>
+  <span style="position: absolute; z-index: 1; padding: 0; margin: 0; left: 97.5%">
+    <span class="icon-container">
+    <button style="position: absolute; z-index: 1; padding: 9px; vertical-align: middle; background: none; color: orange; font-size: 24px;" class="btn warning" onclick="mostrarEditarEmpresas()"><i class="fa fa-pencil"></i></button>
+    <span class="tooltip" id="tooltip-editar" style="background-color: orange; border: 1px white solid; transform: translatex(75%);">Editar empresas</span></span>
+  </span>
+    <!--TABLA DE EMPRESAS-->
+    <table style="width: 100%; background: none; box-shadow: none; margin: 0 auto;">
+      <tr>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-alojamientos.png') }}" style="max-width: 30%;">
+          <h3>ALOJAMIENTOS</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-inmuebles.png') }}" style="max-width: 30%;">
+          <h3>VENTA DE INMUEBLES</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-apartamentos.png') }}" style="max-width: 30%;">
+          <h3>RENTA DE APARTAMENTOS</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-camaras.png') }}" style="max-width: 30%; margin-right: -5px;">
+          <img src="{{ url_for('static', filename='img/empresas-internet.png') }}" style="max-width: 30%; margin-left: -5px;">
+          <h3>TS NETWORK</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-carros.png') }}" style="max-width: 30%;">
+          <h3>VENTA DE CARROS</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-articulos.png') }}" style="max-width: 30%;">
+          <h3>VENTA DE ARTÍCULOS</h3>
+        </td>
+        <td class="td_empresa">
+          <img src="{{ url_for('static', filename='img/empresas-vacantes.png') }}" style="max-width: 30%;">
+          <h3>CONTACTOS PARA VACANTES</h3>
+        </td>
+      </tr>
+      <tr>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'ALOJAMIENTOS' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'VENTA DE INMUEBLES' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'RENTA DE APARTAMENTOS' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'TS NETWORK' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'VENTA DE CARROS' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'VENTA DE ARTÍCULOS' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+        <td class="td_empresa_nombre">
+          {% for e in empresas %}
+          {% if e[1] == 'CONTACTOS PARA VACANTES' %}
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          {% endif %}
+          {% endfor %}
+        </td>
+          {% for e in empresas %}
+          {% if not e[1] %}
+          <td class="td_empresa_nombre">
+          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          </td>
+          {% endif %}
+          {% endfor %}
+      </tr>
+    </table>
   {% if porvencer == () and vencidos == () and vencehoy == () %}
   <div style="margin-bottom: 25px;">
   {% else %}
@@ -21,7 +208,7 @@ Administración Los Andes | Inicio
     {% endif %}
     {% if pendiente != () %}
     <tr>
-      <th style="color: #008080; font-size: 20px; background: none; text-align: center;" colspan="5">Tareas para HOY • {{ nombre_dia_hoy }}</th>
+      <th style="color: #000080; font-size: 20px; background: none; text-align: center;" colspan="5">Tareas para HOY • {{ nombre_dia_hoy }}</th>
     </tr>
       <tr>
         <td></td>
@@ -39,16 +226,16 @@ Administración Los Andes | Inicio
       <tr>
         <td style="margin: 0; padding: 0;">
           <span class="icon-container"><i class="fa fa-headphones"></i>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{t[9]}}','agente', '{{t[2]}}', '{t[3]}', null, true)">
+          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{t[9]}}','agente', '{{t[2]}}', '{{t[3]}}', null, true)">
             {% for agente in agentes %}
             <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
             {% endfor %}
           </select>
           <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
         </td>
-        <td style="color: #008080; text-align: center;">
+        <td style="color: #000080; text-align: center;">
           <span class="icon-container">
-          <select style=" font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer; color: #008080;" onchange="cambiarRegistro(this.value, '{{t[9]}}', 'empresa', '{{t[2]}}', '{{t[3]}}', null, true)">
+          <select style=" font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer; color: #000080;" onchange="cambiarRegistro(this.value, '{{t[9]}}', 'empresa', '{{t[2]}}', '{{t[3]}}', null, true)">
                 <option value="{{t[1]}}" selected>{{t[1]}}</option>
             {% for empresa in empresas %}
             {% if empresa[0] != t[1] %}
@@ -82,14 +269,14 @@ Administración Los Andes | Inicio
           <i class="fa fa-calendar-o"></i> Registro del {{t[0]}}
           <br><span class="icon-container"><i class="fa fa-sticky-note" style="cursor:pointer;" onclick="cambiarRegistroPopUp('a', '{{t[9]}}', 'nota', '{{t[2]}}', '{{t[3]}}', '{{t[4]}}', null, true);"></i><span class="tooltip" id="tooltip-editar">Editar nota</span></span>{% if t[4] %} {{ t[4] }}{% else %} <i class="fa fa-window-close"></i> No tiene ninguna nota cargada.{% endif %}
         </td>
-        <td style="color: #008080">
+        <td style="color: #000080">
           <span class="icon-container"><i class="fa fa-briefcase" style="cursor: pointer;" onclick="setearPopUp('{{t[9]}}', '{{t[2]}}', '{{t[4]}}', '{{t[8]}}', '{{dia_hoy}}', '{{t[10]}}', '{{t[3]}}', true)"></i><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span> {{t[5]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
         </td>
         <td>
           {% if t[3] %}
                     <span class="icon-container"><a href="{{ url_for('seguimiento', telefono=t[3], nombre=t[2]) }}" style="color: inherit"><i class="fa fa-vcard"></i></a><span class="tooltip" id="tooltip-editar">Seguimiento</span></span>
           {% else %}
-                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{t[3]}}', 'telefono sin registrar', '{{t[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
+                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{t[9]}}', 'telefono sin registrar', '{{t[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
           {% endif %}
           <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="cambiarRegistroPopUp('a', '{{t[9]}}', 'razon de desinteres', '{{t[2]}}', '{{t[3]}}', '', null, true);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
@@ -120,7 +307,7 @@ Administración Los Andes | Inicio
         }
       </style>
       <tr>
-        <th colspan="6" style="background: none; color: #2cbfb1;"><img src="{{ url_for('static', filename='img/reloj-pendiente.png') }}" width="20" height="20" style="vertical-align: middle;"> Tareas pendientes</th>
+        <th colspan="6" style="background: none; color: #2cbfb1;"><img src="{{ url_for('static', filename='img/reloj-pendiente.png') }}" width="20" height="20"> Tareas pendientes</th>
       </tr>
       <tr>
         <td></td>
@@ -133,16 +320,16 @@ Administración Los Andes | Inicio
       <tr>
         <td style="margin: 0; padding: 0;">
           <span class="icon-container"><i class="fa fa-headphones"></i>
-            <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{a[9]}}','agente', '{{a[2]}}', '{a[3]}', null, true)">
+            <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{a[9]}}','agente', '{{a[2]}}', '{{a[3]}}', null, true)">
               {% for agente in agentes %}
               <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
               {% endfor %}
             </select>
             <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
         </td>
-        <td style="color: #008080; text-align: center;">
+        <td style="color: #000080; text-align: center;">
           <span class="icon-container">
-          <select style=" font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer; color: #008080;" onchange="cambiarRegistro(this.value, '{{a[9]}}', 'empresa', '{{a[2]}}', '{{a[3]}}', null, true)">
+          <select style=" font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer; color: #000080;" onchange="cambiarRegistro(this.value, '{{a[9]}}', 'empresa', '{{a[2]}}', '{{a[3]}}', null, true)">
                 <option value="{{a[1]}}" selected>{{a[1]}}</option>
             {% for empresa in empresas %}
             {% if empresa[0] != a[1] %}
@@ -184,9 +371,9 @@ Administración Los Andes | Inicio
         <br>
         {% endif %}
         
-        <span class="icon-container"><i class="fa fa-briefcase" style="cursor: pointer; color: #008080" onclick="setearPopUp('{{a[9]}}', '{{a[2]}}', '{{a[4]}}', '{{a[8]}}', '{{a[14]}}', '{{a[10]}}', '{{a[3]}}', true)"></i><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
+        <span class="icon-container"><i class="fa fa-briefcase" style="cursor: pointer; color: #000080" onclick="setearPopUp('{{a[9]}}', '{{a[2]}}', '{{a[4]}}', '{{a[8]}}', '{{a[14]}}', '{{a[10]}}', '{{a[3]}}', true)"></i><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
         {% if a[5] %}
-        <span style="color: #008080">
+        <span style="color: #000080">
             {{a[5]}}
               {% if a[10] %}
                 a las {{a[10]}} h
@@ -204,7 +391,7 @@ Administración Los Andes | Inicio
           {% if a[3] %}
                     <span class="icon-container"><a href="{{ url_for('seguimiento', telefono=a[3], nombre=a[2]) }}" style="color: inherit"><i class="fa fa-vcard"></i></a><span class="tooltip" id="tooltip-editar">Seguimiento</span></span>
           {% else %}
-                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{a[3]}}', 'telefono sin registrar', '{{a[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
+                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{a[9]}}', 'telefono sin registrar', '{{a[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
           {% endif %}
           <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="cambiarRegistroPopUp('a', '{{a[9]}}', 'razon de desinteres', '{{a[2]}}', '{{a[3]}}', '', null, true);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
@@ -215,12 +402,13 @@ Administración Los Andes | Inicio
     {% endfor %}
     </table>
     {% endif %}
+    
   </span>
   <span style="width: 30%; margin-bottom: 25px;">
-    {% if vencehoy != () %}
+    {% if vencehoy %}
     <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
       <tr>
-          <th colspan="3" style="background-color: orange;">
+          <th colspan="3" style="background-color: #FF5733;">
               Vencimientos de HOY
           </th>
       </tr>
@@ -232,20 +420,22 @@ Administración Los Andes | Inicio
       {% for hoy in vencehoy %}
       <tr>
         <td>
-            <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{hoy[0]}}</span>
+            {% if hoy[0] %}
+            <span style="color: red"><i class="fa fa-thumb-tack"></i> {{hoy[0]}}</span>
+            {% endif %}
+            {% if hoy[2] %}
             <br>
-            <span class="icon-container">
-            <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;" onclick="document.getElementById('eliminar').value = '{{hoy[8]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span><span> {{hoy[2]}}</span>
+            <span><span class="icon-container"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;" onclick="document.getElementById('eliminar').value = '{{hoy[8]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{hoy[2]}}</span>
+            {% endif %}
             <br>
-            <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[3]}}</span>
+            <span><i class="fa fa-user-circle"></i> {{hoy[3]}}</span>
             {% if hoy[4] %}
             <br>
-            <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[4]}}</span>
+            <span><i class="fa fa-phone"></i> {{hoy[4]}}</span>
             {% endif %}
         </td>
-        <td style="font-size: 22px; text-align: center; color: #008080">
-          <span class="icon-container">
-          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{hoy[0]}}{{hoy[8]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{hoy[1]}}</span>
+        <td style="font-size: 22px; text-align: center; color: #000080">
+          <span><span class="icon-container"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle; cursor: pointer;" onclick="document.getElementById('{{hoy[0]}}{{hoy[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span> {{hoy[1]}}</span>
           <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{hoy[0]}}{{hoy[8]}}" hidden>
             <select id="registrar_pago_forma{{hoy[0]}}{{hoy[8]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
               <option value="EFECTIVO">Efectivo</option>
@@ -256,22 +446,24 @@ Administración Los Andes | Inicio
               <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
             </select>
             <br>
-            <input type="date" id="registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
+            <input type="date" id="registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}" style="font-family: 'Rubik', sans-serif; font-size: 14px; width: 100%; height: auto;" value="{{dia_hoy}}">
             <br>
-            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{hoy[9]}}','{{hoy[0]}}','{{hoy[2]}}','{{hoy[3]}}','{{hoy[4]}}', '{{dia_hoy}}', document.getElementById('registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}').value, document.getElementById('registrar_pago_forma{{hoy[0]}}{{hoy[8]}}').value,'{{hoy[1]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
+            <button class="btn secondary" style="vertical-align: middle; padding: 7px; font-size: 14px;" type="button" onclick="registrarPago('hoja', '{{hoy[9]}}', '{{hoy[0]}}', '{{hoy[2]}}', '{{hoy[3]}}', '{{hoy[4]}}', '{{dia_hoy}}', document.getElementById('registrar_pago_fecha{{hoy[0]}}{{hoy[8]}}').value, document.getElementById('registrar_pago_forma{{hoy[0]}}{{hoy[8]}}').value, '{{hoy[1]}}', null)"><i class="fa fa-check"></i> Registrar pago</button>
           </div>
         </td>
         <td>
-          <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[9]}}</span>
+          <span><i class="fa fa-industry"></i> {{hoy[9]}}</span>
+          {% if hoy[5] %}
           <br>
-          <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[5]}}</span>
+          <span><i class="fa fa-briefcase"></i> {{hoy[5]}}</span>
+          {% endif %}
           {% if hoy[6] %}
           <br>
-          <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[6]}}</span>
+          <span><i class="fa fa-plug"></i> {{hoy[6]}}</span>
           {% endif %}
           {% if hoy[7] %}
           <br>
-          <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{hoy[7]}}</span>
+          <span><i class="fa fa-sticky-note"></i> {{hoy[7]}}</span>
           {% endif %}
         </td>
       </tr>
@@ -281,10 +473,11 @@ Administración Los Andes | Inicio
       {% endfor %}
     </table>
     {% endif %}
-    {% if vencidos != () %}
+
+    {% if vencidos %}
     <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
       <tr>
-        <th style="background-color: red;" colspan="4">
+        <th style="background-color: #C70039;" colspan="4">
           Pagos vencidos
         </th>
       </tr>
@@ -297,51 +490,55 @@ Administración Los Andes | Inicio
       {% for venc in vencidos %}
       <tr>
         <td>
-          <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{venc[0]}}</span>
+          {% if venc[0] %}
+          <span style="color: red"><i class="fa fa-thumb-tack"></i> {{venc[0]}}</span>
+          {% endif %}
+          {% if venc[3] %}
           <br>
-          <span class="icon-container">
-          <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;"  onclick="document.getElementById('eliminar').value = '{{venc[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{venc[3]}}</span>
+          <span><span class="icon-container"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;" onclick="document.getElementById('eliminar').value = '{{venc[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{venc[3]}}</span>
+          {% endif %}
           <br>
-          <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[4]}}</span>
+          <span><i class="fa fa-user-circle"></i> {{venc[4]}}</span>
           {% if venc[5] %}
           <br>
-          <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[5]}}</span>
+          <span><i class="fa fa-phone"></i> {{venc[5]}}</span>
           {% endif %}
       </td>
-      <td style="color: red;">
-        <img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[1]}}</span>
+      <td>
+        <span style="color: red"><i class="fa fa-calendar-times-o"></i> {{venc[12]}}</span>
         <br>
-        <span style="color: black">{% if venc[9] == 1 %}Ayer{% else %}Hace {{venc[9]}} días{% endif %}</span>
+        <span>{% if venc[9] == 1 %}Ayer{% else %}Hace {{venc[9]}} días{% endif %}</span>
       </td>
-      <td style="font-size: 22px; text-align: center; color: #008080">
-        <span class="icon-container">
-          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{venc[10]}}{{venc[0]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{venc[2]}}</span>
-          <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{venc[10]}}{{venc[0]}}" hidden>
-            <select id="registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
-              <option value="EFECTIVO">Efectivo</option>
-              <option value="PAYPAL">PayPal</option>
-              <option value="CASH APP">Cash App</option>
-              <option value="CHEQUE">Cheque</option>
-              <option value="ZELLE">Zelle</option>
-              <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
-            </select>
-            <br>
-            <input type="date" id="registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
-            <br>
-            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{venc[11]}}','{{venc[0]}}','{{venc[3]}}','{{venc[4]}}','{{venc[5]}}', '{{venc[1]}}', document.getElementById('registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}').value, document.getElementById('registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}').value, '{{venc[2]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
-          </div>
+      <td style="font-size: 22px; text-align: center; color: #000080">
+        <span><span class="icon-container"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle; cursor: pointer;" onclick="document.getElementById('{{venc[10]}}{{venc[0]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span> {{venc[2]}}</span>
+        <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{venc[10]}}{{venc[0]}}" hidden>
+          <select id="registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="PAYPAL">PayPal</option>
+            <option value="CASH APP">Cash App</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="ZELLE">Zelle</option>
+            <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
+          </select>
+          <br>
+          <input type="date" id="registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 14px; width: 100%; height: auto;" value="{{dia_hoy}}">
+          <br>
+          <button class="btn secondary" style="vertical-align: middle; padding: 7px; font-size: 14px;" type="button" onclick="registrarPago('hoja', '{{venc[11]}}', '{{venc[0]}}', '{{venc[3]}}', '{{venc[4]}}', '{{venc[5]}}', '{{venc[1]}}', document.getElementById('registrar_pago_fecha_vencido{{venc[0]}}{{venc[10]}}').value, document.getElementById('registrar_pago_forma_vencido{{venc[0]}}{{venc[10]}}').value, '{{venc[2]}}', null)"><i class="fa fa-check"></i> Registrar pago</button>
+        </div>
       </td>
       <td>
-        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[11]}}</span>
+        <span><i class="fa fa-industry"></i> {{venc[11]}}</span>
+        {% if venc[6] %}
         <br>
-        <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[6]}}</span>
+        <span><i class="fa fa-briefcase"></i> {{venc[6]}}</span>
+        {% endif %}
         {% if venc[7] %}
         <br>
-        <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[7]}}</span>
+        <span><i class="fa fa-plug"></i> {{venc[7]}}</span>
         {% endif %}
         {% if venc[8] %}
         <br>
-        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{venc[8]}}</span>
+        <span><i class="fa fa-sticky-note"></i> {{venc[8]}}</span>
         {% endif %}
       </td>
       </tr>
@@ -351,10 +548,11 @@ Administración Los Andes | Inicio
       {% endfor %}
     </table>
     {% endif %}
-    {% if porvencer != () %}
+
+    {% if porvencer %}
     <table style="width: 95%; margin: 0 auto; margin-bottom: 20px;">
       <tr>
-        <th style="background-color: #5DADE2;" colspan="4">
+        <th style="background-color: #FFC300" colspan="4">
           Próximos vencimientos
         </th>
       </tr>
@@ -367,25 +565,27 @@ Administración Los Andes | Inicio
       {% for prox in porvencer %}
       <tr>
         <td>
-          <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span style="color: red"> {{prox[0]}}</span>
+          {% if prox[0] %}
+          <span style="color: red"><i class="fa fa-thumb-tack"></i> {{prox[0]}}</span>
+          {% endif %}
+          {% if prox[3] %}
           <br>
-          <span class="icon-container">
-          <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;" onclick="document.getElementById('eliminar').value = '{{prox[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{prox[3]}}</span>
+          <span><span class="icon-container"><img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; cursor: pointer;" onclick="document.getElementById('eliminar').value = '{{prox[10]}}'; document.formulario_actualizacion.action='/hoja_de_inspeccion'; document.formulario_actualizacion.submit();"><span class="tooltip" id="tooltip-editar">Ir a la hoja</span></span> {{prox[3]}}</span>
+          {% endif %}
           <br>
-          <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[4]}}</span>
+          <span><i class="fa fa-user-circle"></i> {{prox[4]}}</span>
           {% if prox[5] %}
           <br>
-          <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[5]}}</span>
+          <span><i class="fa fa-phone"></i> {{prox[5]}}</span>
           {% endif %}
-      </td>
-      <td style="color: red;">
-        <img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[1]}}</span>
-        <br>
-        <span style="color: black">{% if prox[9] == 1 %}Mañana{% else %}En {{prox[9]}} días{% endif %}</span>
-      </td>
-      <td style="font-size: 22px; text-align: center; color: #008080">
-        <span class="icon-container">
-          <button type="button" class="btn success" style="padding: 0; margin: 0; vertical-align: middle; background: none;" onclick="document.getElementById('{{prox[0]}}{{prox[10]}}').removeAttribute('hidden');"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span><span> {{prox[2]}}</span>
+        </td>
+        <td>
+          <span style="color: red"><i class="fa fa-calendar-times-o"></i> {{prox[12]}}</span>
+          <br>
+          <span>{% if prox[9] == 1 %}Mañana{% else %}En {{prox[9]}} días{% endif %}</span>
+        </td>
+        <td style="font-size: 22px; text-align: center; color: #000080">
+          <span><span class="icon-container"><img src="{{ url_for('static', filename='img/money-management.png') }}" width="30" height="30" style="margin: 0; padding: 0; vertical-align: middle; cursor: pointer;" onclick="document.getElementById('{{prox[0]}}{{prox[10]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar" style="background-color: #04AA6D;">Registrar pago</span></span><span> {{prox[2]}}</span>
           <div style="padding: 0; margin-top: 7px; margin-bottom: 7px;" id="{{prox[0]}}{{prox[10]}}" hidden>
             <select id="registrar_pago_forma_prox{{prox[0]}}{{prox[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
               <option value="EFECTIVO">Efectivo</option>
@@ -396,24 +596,26 @@ Administración Los Andes | Inicio
               <option value="DEPÓSITO BANCARIO">Depósito Bancario</option>
             </select>
             <br>
-            <input type="date" id="registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 16px;" value="{{dia_hoy}}">
+            <input type="date" id="registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}" style="font-family: 'Rubik', sans-serif; font-size: 14px; width: 100%; height: auto;" value="{{dia_hoy}}">
             <br>
-            <button class="btn secondary" style="vertical-align: middle; padding: 7px; margin-top: 10px; font-size: 14px;" type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: ['{{prox[11]}}','{{prox[0]}}','{{prox[3]}}','{{prox[4]}}','{{prox[5]}}', '{{prox[1]}}', document.getElementById('registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}').value, document.getElementById('registrar_pago_forma_prox{{prox[0]}}{{prox[10]}}').value, '{{prox[2]}}']})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/dashboard');"><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0; vertical-align: middle;"> Registrar pago</button>
+            <button class="btn secondary" style="vertical-align: middle; padding: 7px; font-size: 14px;" type="button" onclick="registrarPago('hoja', '{{prox[11]}}', '{{prox[0]}}', '{{prox[3]}}', '{{prox[4]}}', '{{prox[5]}}', '{{prox[1]}}', document.getElementById('registrar_pago_fecha_prox{{prox[0]}}{{prox[10]}}').value, document.getElementById('registrar_pago_forma_prox{{prox[0]}}{{prox[10]}}').value, '{{prox[2]}}', null)"><i class="fa fa-check"></i> Registrar pago</button>
           </div>
-      </td>
-      <td>
-        <img src="{{ url_for('static', filename='img/industry-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[11]}}</span>
-        <br>
-        <img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[6]}}</span>
-        {% if prox[7] %}
-        <br>
-        <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[7]}}</span>
-        {% endif %}
-        {% if prox[8] %}
-        <br>
-        <img src="{{ url_for('static', filename='img/note-sticky-solid.svg') }}" width="15" height="15" style="margin: 0; padding: 0;"><span> {{prox[8]}}</span>
-        {% endif %}
-      </td>
+        </td>
+        <td>
+          <span><i class="fa fa-industry"></i> {{prox[11]}}</span>
+          {% if prox[6] %}
+          <br>
+          <span><i class="fa fa-briefcase"></i> {{prox[6]}}</span>
+          {% endif %}
+          {% if prox[7] %}
+          <br>
+          <span><i class="fa fa-plug"></i> {{prox[7]}}</span>
+          {% endif %}
+          {% if prox[8] %}
+          <br>
+          <span><i class="fa fa-sticky-note"></i> {{prox[8]}}</span>
+          {% endif %}
+        </td>
       </tr>
       <tr>
         <td colspan="4" style="border-top: 1px solid #BDBDBD;"></td>
@@ -423,24 +625,117 @@ Administración Los Andes | Inicio
     {% endif %}
   </span>
   </div>
-  {% for i in tablas %} 
-  <a href="{{ url_for('abrirMenu', empresa=i[0]) }}" style="background: none; border: none; font-size: 26px; font-family: 'Rubik', sans-serif;;"><div style="font-size: 26px; text-align: center; max-width: 200px;" class="btn_imagen">{{ i[0] }}
-    {% if i[1] != None %}
-    <br>
-    <img src="{{ url_for('mostrar_logo', cliente=i[0]) }}" alt="El formato de imagen no pudo ser procesado" style="width: 50px; height: 50px; border-radius: 50%; box-shadow: rgba(0, 0, 0, 0.45) 0px 20px 20px -20px;">
-    {% endif %}
-    <!--
-    <br>
-    <button type="button" onclick="document.formulario.action='/menu/preguntasfrecuentes'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="font-size: 14px; background-color: #C39BD3; color: white; font-family: 'Rubik', sans-serif; border-radius: 5px;">Preguntas frecuentes</button>
-    <button type="button" onclick="document.formulario.action='/menu'; document.getElementById('menuempresa').value = '{{ i[0] }}'; document.formulario.submit();" style="font-size: 14px; background-color: #85C1E9; color: white; font-family: 'Rubik', sans-serif; border-radius: 5px;">Registrar cotización</button>
-    -->
-  </div></a>
-  {% endfor %}
-  <a href="{{ url_for('altaCliente') }}"><div style="font-size: 26px;" class="button_slide_right slide_right">+ Nuevo</div></a>
   <form method="POST" name="formulario_actualizacion" id="formulario_actualizacion">
     <input type="hidden" name="menuempresa" id="menuempresa">
     <input type="hidden" id="eliminar" name="eliminar">
     <input type="hidden" name="redireccion" value="dashboard">
   </form>
+
+  <div id="popupModal" class="popup-modal">
+    <span class="popup-close">&times;</span>
+    <p>Nombre de la empresa:</p>
+    <div style="display: flex">
+    <input type="text" id="inputData" style="text-transform: uppercase; color:#04AA6D; margin-right: 10px; width: 100%;">
+    <button id="submitBtn" class="btn success">Enviar</button>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block js %}
+<script>
+  function confirmarEliminarEmpresa(empresa){
+    const confirmacion = confirm('¿Estás seguro de eliminar esta empresa? Los registros, los pagos y las hojas de "'+empresa+'" no se eliminarán.')
+    if (confirmacion){
+      modificarEmpresa('eliminar', empresa)
+    }
+  }
+  function modificarEmpresa(accion, empresa){
+    let datonuevo;
+    if (accion == 'editar'){
+      datonuevo = prompt('Nuevo nombre:', empresa);
+    }
+  var formData = {
+    'accion': accion,
+    'empresa': empresa,
+    'datonuevo': datonuevo
+  };
+
+  $.ajax({
+      type: 'POST',
+      url: '/empresas/modificar',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+          location.reload();
+      }else{
+          alert('Error al modificar registro.')
+      }
+  })
+
+  .fail(function(error) {
+    alert("Error en la solicitud.");
+    console.error('Error: ', error);
+  });
+}
+
+  function mostrarEditarEmpresas(){
+    const spans = document.querySelectorAll('.span-empresa')
+    spans.forEach(span => {
+      span.removeAttribute('hidden');
+    });
+  }
+        // Obtener los elementos
+        var popupModal = document.getElementById("popupModal");
+        var openPopupBtn = document.getElementById("openPopupBtn");
+        var closeBtn = document.getElementsByClassName("popup-close")[0];
+        var submitBtn = document.getElementById("submitBtn");
+        var inputData = document.getElementById("inputData");
+
+        // Cuando el usuario haga clic en el botón, abrir la ventana emergente
+        openPopupBtn.onclick = function(event) {
+            // Obtener la posición del botón
+            var rect = openPopupBtn.getBoundingClientRect();
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+            // Ajustar la posición del popup
+            popupModal.style.left = rect.left + scrollLeft + "px";
+            popupModal.style.top = rect.top + scrollTop + openPopupBtn.offsetHeight + "px";
+            // Mostrar el popup con animación
+            popupModal.classList.add("show");
+            popupModal.style.display = "block";
+            inputData.focus()
+        }
+
+        // Cuando el usuario haga clic en el botón de cerrar (x), cerrar la ventana emergente
+        closeBtn.onclick = function() {
+            popupModal.classList.remove("show");
+            setTimeout(function() {
+                popupModal.style.display = "none";
+            }, 300); // Coincide con la duración de la transición
+        }
+
+        // Manejar el evento de enviar el dato
+        submitBtn.onclick = function() {
+          /*
+            var dato = inputData.value;
+            alert("Dato ingresado: " + dato);
+            popupModal.classList.remove("show");
+            setTimeout(function() {
+                popupModal.style.display = "none";
+            }, 300); // Coincide con la duración de la transición
+          */
+            nuevoRegistro('/empresas/nueva', document.getElementById('inputData').value)
+        }
+
+        // Manejar la entrada para evitar el carácter "_"
+        //inputData.addEventListener('input', function() {
+        //    this.value = this.value.replace(/_/g, '');
+        //});
+</script>
 {% endblock %}

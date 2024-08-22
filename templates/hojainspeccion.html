@@ -1,9 +1,5 @@
 {% extends 'index.html' %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
-{% endblock %}
-
 {% block titulo %}
 Administración Los Andes | Hoja de inspección de {{hoja[1]}}
 {% endblock %}
@@ -56,7 +52,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                 {% for m in materiales %}
                 <tr>
                     <td style="display: flex; justify-content: center;">
-                        <input type="number" value="{{m[0]}}" style="color: #008080; text-align: center; background: none; border: none; width: 100%;">
+                        <input type="number" value="{{m[0]}}" style="color: #000080; text-align: center; background: none; border: none; width: 100%;">
                     </td>
                     <td>
                         <input type="text" value="{{m[1]}}" style="width: 100%; background: none; border: none; color: black; text-transform: uppercase;">
@@ -72,7 +68,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                 {% endif %}
                 <tr>
                     <td style="display: flex; justify-content: center; margin-top: 5px; margin-bottom: 5px;">
-                        <input type="number" style="text-align: center; color: #008080; width: 100%;">
+                        <input type="number" style="text-align: center; color: #000080; width: 100%;">
                     </td>
                     <td>
                         <input type="text" style="width: 100%; color: black; text-transform: uppercase;">
@@ -98,14 +94,15 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
             <div style="display: flex; justify-content: center;">
                 <span>Precio total<input type="number" style="text-align: center;" value="{{hoja[7]}}" id="precio_total" onkeypress="foco2('enganche')" onchange="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeydown="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeyup="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);"></span>
                 <span>Enganche<input type="number" style="text-align: center; color: green;" value="{{hoja[8]}}" id="enganche" onkeypress="foco2('nota_pago')" onchange="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeydown="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" onkeyup="saldoRestante(); acuerdosPago(document.getElementById('acuerdo_cantidad').value);" {% if hoja[11] == 'totalidad' %}disabled{% endif %}></span>
-                <span style="width: 10%;">Saldo restante<div style="display: flex; margin-top: 5px;"><input type="text" value="$" style="padding: 0; background: none; color: red; border: none; margin: 0; width: 15px;" disabled><input type="number" style="padding: 0; background: none; color: red; border: none; width: 100%; font-size: 22px;" value="{{hoja[9]}}" id="saldo_restante" disabled></div></span>
+                <span style="width: 10%;">Saldo restante<div style="display: flex; margin-top: 5px;"><input type="text" value="$" style="padding: 0; background: none; color: red; border: none; margin: 0; width: 15px;" disabled><input type="number" style="padding: 0; background: none; color: red; border: none; width: 100%; font-size: 22px;" value="{{hoja[7]}}" id="saldo_restante" disabled></div></span>
+                <!--VALOR SALDO RESTANTE ANTERIOR "{{hoja[9]}}"-->
                 <span>
                     <table style="background: none; box-shadow: none; border: none; margin: 0 30px 0 0; padding: 0;" id="tabla_acuerdos">
                         <tr>
                             <th style="background: none; margin: 0; padding: 0; text-align: center;">
-                                <select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; background-color: #008080; color:white; margin-bottom: 5px;" onchange="formasPago(this.value)" {% if hoja[11] == 'totalidad'%}disabled{% endif %}>
+                                <select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; background-color: #000080; color:white; margin-bottom: 5px;" onchange="formasPago(this.value)" {% if hoja[11] == 'totalidad'%}disabled{% endif %}>
                                     <option value="" style="background-color: white; color: gainsboro;" {% if hoja[11] == '' %}selected{% endif %}>Forma de pago</option>
-                                    {% if hoja[11] == None %}
+                                    {% if hoja[11] == 'totalidad' or hoja[11] == ''%}
                                     <option value="totalidad" style="background-color: green;" {% if hoja[11] == 'totalidad' %}selected{% endif %}>Abona todo</option>
                                     {% endif %}
                                     <option value="semanal" {% if hoja[11] == 'semanal' %}selected{% endif %}>Semanal</option>
@@ -132,14 +129,14 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                     <option value="4" {% if n_cuotas == 4 %}selected{% endif %}>4</option>
                                 </select>
                             </th>
-                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_interes" {% if n_cuotas == 0 %}hidden{% endif %}>
+                            <td style="background: none; color:#000080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_interes" {% if n_cuotas == 0 %}hidden{% endif %}>
                                 Porcentaje de interés (%)
                             </td>
-                            <td style="background: none; color:#008080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_vencimiento" {% if n_cuotas == 0 %}hidden{% endif %}>
+                            <td style="background: none; color:#000080; font-size: 18px; text-decoration: none; margin: 0; padding: 0; text-align: center;" id="acuerdo_vencimiento" {% if n_cuotas == 0 %}hidden{% endif %}>
                                 Vencimiento
                             </td>
                         </tr>
-                        <tr id="acuerdo_1" {% if hoja[12] == '' or hoja[12] == None %}hidden{% endif %}>
+                        <tr id="acuerdo_1" {% if not hoja[12] %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
                                 <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #1" id="acuerdo_campo1" value="{{hoja[12]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
@@ -150,7 +147,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                 <input type="date" style="width: 100%; color: black" id="acuerdo_fecha1" value="{{hoja[14]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_2" {% if hoja[15] == '' or hoja[15] == None %}hidden{% endif %}>
+                        <tr id="acuerdo_2" {% if not hoja[15] %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
                                 <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #2" id="acuerdo_campo2" value="{{hoja[15]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
@@ -161,7 +158,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                 <input type="date" style="width: 100%; color: black ;" id="acuerdo_fecha2" value="{{hoja[17]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_3" {% if hoja[18] == '' or hoja[18] == None %}hidden{% endif %}>
+                        <tr id="acuerdo_3" {% if not hoja[18] %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
                                 <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #3" id="acuerdo_campo3" value="{{hoja[18]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
@@ -172,7 +169,7 @@ Administración Los Andes | Hoja de inspección de {{hoja[1]}}
                                 <input type="date" style="width: 100%; color: black" id="acuerdo_fecha3" value="{{hoja[20]}}">
                             </td>
                         </tr>
-                        <tr id="acuerdo_4" {% if hoja[21] == '' or hoja[21] == None %}hidden{% endif %}>
+                        <tr id="acuerdo_4" {% if not hoja[21] %}hidden{% endif %}>
                             <td style="margin: 0; padding: 0;">
                                 <input type="number" style="color: black; margin-top: 5px; width: 100%;" placeholder="Acuerdo #4" id="acuerdo_campo4" value="{{hoja[21]}}" onkeypress="totalAPagar()" onkeyup="totalAPagar()" onkeydown="totalAPagar()">
                             </td>
@@ -376,21 +373,21 @@ var interes4 = document.getElementById('acuerdo_porcentaje4').value;
 var fecha4 = document.getElementById('acuerdo_fecha4').value;
 
 if (tipopago == '' || tipopago == 'totalidad'){
-    acuerdo1 = '';
-    interes1 = '';
-    fecha1 = '';
+    acuerdo1 = null;
+    interes1 = null;
+    fecha1 = null;
 
-    acuerdo2 = '';
-    interes2 = '';
-    fecha2 = '';
+    acuerdo2 = null;
+    interes2 = null;
+    fecha2 = null;
 
-    acuerdo3 = '';
-    interes3 = '';
-    fecha3 = '';
+    acuerdo3 = null;
+    interes3 = null;
+    fecha3 = null;
 
-    acuerdo4 = '';
-    interes4 = '';
-    fecha4 = '';
+    acuerdo4 = null;
+    interes4 = null;
+    fecha4 = null;
 }
 
 var notapago = document.getElementById('nota_pago').value;

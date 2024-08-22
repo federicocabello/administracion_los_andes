@@ -1,9 +1,5 @@
 {% extends 'index.html' %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
-{% endblock %}
-
 {% block titulo %}
 Administración Los Andes | Movimientos
 {% endblock %}
@@ -12,49 +8,54 @@ Administración Los Andes | Movimientos
 <div id="main-content">
     <form action="/movimientos" name="formulario" method="POST">
     <h1>Panel de registros de todos los movimientos del sistema. <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" name="cantidad_mov" onchange="document.getElementById('accion').value = 'cantidad'; document.formulario.submit()">
-        {% if mostrados != '25' and mostrados != '50' and mostrados != '75' and mostrados != '100' and mostrados != '150' and mostrados != '200' and mostrados != n_mov[0] %}<option selected>Mostrar {{mostrados}}</option>{% endif %}
+        {% if mostrados != '25' and mostrados != '50' and mostrados != '75' and mostrados != '100' and mostrados != '150' and mostrados != '200' and mostrados != '250' and mostrados != '300' %}<option selected>Mostrar {{mostrados}}</option>{% endif %}
         <option value="25" {% if mostrados == '25' %}selected{% endif %}>Mostrar 25</option>
         <option value="50" {% if mostrados == '50' %}selected{% endif %}>Mostrar 50</option>
         <option value="75" {% if mostrados == '75' %}selected{% endif %}>Mostrar 75</option>
         <option value="100" {% if mostrados == '100' %}selected{% endif %}>Mostrar 100</option>
         <option value="150" {% if mostrados == '150' %}selected{% endif %}>Mostrar 150</option>
         <option value="200" {% if mostrados == '200' %}selected{% endif %}>Mostrar 200</option>
-        <option value="{{n_mov[0]}}" {% if mostrados == n_mov[0] %}selected{% endif %}>Mostrar todos ({{n_mov[0]}})</option>
+        <option value="250" {% if mostrados == '250' %}selected{% endif %}>Mostrar 250</option>
+        <option value="300" {% if mostrados == '300' %}selected{% endif %}>Mostrar 300</option>
     </select><button type="button" style="margin-left: 10px;"><a href="{{ url_for('movimientos') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20"></a></button></h1>
 
     <table style="border: 1px solid black; margin: 0 auto;" id="tabla_movimientos">
         <tr>
-            <td></td>
-            <td></td>
+            <td>
+                <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_agente', 'tabla_movimientos', 0, 1)" id="filtro_agente">
+                    <option value="">Filtrar por agente...</option>
+                    {% for agente in agentes %}
+                    <option value="{{agente[0]}}">{{agente[0]}}</option>
+                    {% endfor %}
+                </select>
+            </td>
             <td>
                 <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',2,1)">
             </td>
             <td>
-            <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" type="date" {% if fecha %}value="{{fecha}}"{% endif %}>
+            <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0; color: #000080;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" type="date" {% if fecha %}value="{{fecha}}"{% endif %}>
             </td>
         </tr>
         <tr>
-            <th>N°</th>
             <th>Agente</th>
             <th>Movimiento</th>
             <th>Fecha</th>
         </tr>
         {% for i in tablas %}
         <tr>
-                <td style="text-align: center;">{{i[0]}}</td>
-                <td><i class="fa fa-headphones"></i> {{i[3]}}</td>
+                <td><i class="fa fa-headphones"></i> {{i[2]}}</td>
                 <td>
-                    <span style="color: #008080">{{ i[1] }}</span>
+                    <span style="color: #000080">{{ i[0] }}</span>
                     {% if i[4] %}
                     <br>
-                    <i class="fa fa-user-circle"></i> {{i[4]}}
+                    <i class="fa fa-user-circle"></i> {{i[3]}}
                     {% endif %}
-                    {% if i[5] %}
+                    {% if i[4] %}
                     <br>
-                    <span style="text-decoration: underline;">Dato nuevo:</span> {{i[5]}}
+                    <span style="text-decoration: underline;">Dato nuevo:</span> {{i[4]}}
                     {% endif %}
                 </td>
-                <td>{{ i[2] }}</td>
+                <td>{{ i[1] }}</td>
         </tr>
         <tr>
             <td colspan="4" style="border-top: 1px solid #BDBDBD;"></td>

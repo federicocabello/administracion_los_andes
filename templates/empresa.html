@@ -1,0 +1,815 @@
+{% extends 'index.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+{% endblock %}
+
+{% block titulo %}
+Administración Los Andes | {{new[1]}}
+{% endblock %}
+
+{% block body %}
+<style>
+    /* Estilo básico del textarea */
+.divEditable {
+    box-sizing: border-box;
+    background-color: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    text-align: justify;
+    padding: 10px;
+    outline: none;
+    white-space: pre-line;
+}
+
+/* Efecto hover */
+.divEditable:hover {
+    transform: scale(1.05); /* Escala el textarea al 105% de su tamaño original */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Añade una sombra */
+}
+
+/* Estilo cuando el textarea está enfocado */
+.divEditable:focus {
+    border-color: #007BFF; /* Cambia el color del borde al enfocarse */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Añade una sombra */
+}
+
+.divLectura {
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    text-align: justify;
+    padding: 10px;
+    white-space: pre-line;
+}
+
+.container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /*justify content center*/
+            margin-top: 20px;
+        }
+#image {
+            max-width: 15%;
+        }
+#canvas {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+        }
+
+.encabezado {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 95%;
+            margin: 0 auto;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+.encabezado img {
+            margin-right: 10px; /* Espacio entre la imagen y el texto */
+        }
+.encabezado h2 {
+            margin: 0;
+            padding: 0;
+            color: #000080;
+            font-size: 36px;
+            text-transform: uppercase;
+        }
+.fila_articulos {
+    transition: all 0.3s ease-in;
+}
+.fila_articulos:hover {
+    background-color: whitesmoke;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: scale(1.02);
+}
+
+.item-container{
+    display: flex;
+    align-items: flex-start;
+}
+
+.item-image {
+    max-width: 50%;
+    margin-right: 10px;
+    border-radius: 5px;
+    float: left;
+}
+
+
+.item-title {
+    font-weight: bold;
+    font-size: 26px;
+    color: #000080
+}
+
+.item-price {
+    color: #6495ED;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.item-row {
+    width: 50%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    vertical-align: top;
+}
+
+.fila_oculta{
+    display: none;
+}
+</style>
+        <button hidden class="btn danger" type="button" style="float: right;  padding: 8px;" id="btn-cancelar" onclick="location.reload()"><i class="fa fa-times"></i> Cancelar</button>
+        <button hidden type="button" style="float: right; padding: 8px; margin-right: 8px" class="btn success" id="btn-guardar" onclick="actualizarEmpresaNew('{{new[1]}}')"><i class="fa fa-check"></i> Guardar</button>
+
+        <button class="btn secondary" style="float: right; padding: 8px;" type="button" onclick="modoEditor()" id="btn-edicion" {% if current_user.rol == 'user' %}hidden{% endif %}><i class="fa fa-pencil-square-o"></i> Editor</button>
+        <!--OCULTOS-->
+        <input type="hidden" id="condicional_imagen">
+
+<div id="main-content">
+<!--
+    <div style="display: flex; align-items: center; justify-content: center; width: 95%; margin: 0 auto; margin-bottom: 15px; text-align: center;">
+    <img src="{{ url_for('static', filename='img/send-blue.png') }}" alt="Logo" width="50" height="50"><h2 style="margin: 0; padding: 0; color: #000080; width: 95%; font-size: 36px; text-transform: uppercase;">{cliente}</h2>
+    </div>
+-->
+    <div class="encabezado">
+        <h2>{{new[1]}}</h2>
+    </div>
+
+<span id="s_clasificacion" hidden>
+    <div style="display: flex; align-items: center; justify-content: center; width: 95%; margin: 0 auto; margin-bottom: 15px;">
+        <h4 style="margin: 0; padding: 0;">Clasificación:</h4>
+        <select id="clasificacion" style="font-family: 'Rubik', sans-serif; font-size: 16px; margin-left: 10px;">
+            <option value="" {% if new[5] == '' %}selected{% endif %}></option>
+            <option value="ALOJAMIENTOS" {% if new[5] == 'ALOJAMIENTOS' %}selected{% endif %}>ALOJAMIENTOS</option>
+            <option value="VENTA DE INMUEBLES" {% if new[5] == 'VENTA DE INMUEBLES' %}selected{% endif %}>VENTA DE INMUEBLES</option>
+            <option value="RENTA DE APARTAMENTOS" {% if new[5] == 'RENTA DE APARTAMENTOS' %}selected{% endif %}>RENTA DE APARTAMENTOS</option>
+            <option value="TS NETWORK" {% if new[5] == 'TS NETWORK' %}selected{% endif %}>TS NETWORK</option>
+            <option value="VENTA DE CARROS" {% if new[5] == 'VENTA DE CARROS' %}selected{% endif %}>VENTA DE CARROS</option>
+            <option value="VENTA DE ARTÍCULOS" {% if new[5] == 'VENTA DE ARTÍCULOS' %}selected{% endif %}>VENTA DE ARTÍCULOS</option>
+            <option value="CONTACTOS PARA VACANTES" {% if new[5] == 'CONTACTOS PARA VACANTES' %}selected{% endif %}>CONTACTOS PARA VACANTES</option>
+        </select>
+    </div>
+</span>
+
+<span id="s_logo" hidden>
+    <div style="display: flex; align-items: center; justify-content: center; width: 95%; margin: 0 auto; margin-bottom: 15px;">
+        <h4 style="margin: 0; padding: 0;">Logo de la empesa:</h4><input type="file" id="inputImage" style="margin-left: 10px; width: auto; padding: 0;">
+    </div>
+    <div style="width: 95%; margin: 0 auto;" class="container">
+    <img id="image" style="display: none;">
+    <button id="cropButton" style="display: none; margin-top: 15px" class="btn warning">Recortar</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+    </div>
+</span>
+    <table style="margin: 0 auto; padding: 0; box-shadow: none; text-align: center; width: 95%; margin-bottom: 15px;">
+        <tr>
+            <td style="text-align: center; max-width: 15%;">
+                {% if new[2] %}
+                <img src="{{ url_for('get_image', empresa=new[1]) }}" alt="Logo">
+                {% endif %}
+            </td>
+            <td style="vertical-align: top; width: 50%;">
+                <div>
+                    <h4 style="margin: 0; padding: 0;">¿QUE VENDE?</h4>
+                    <textarea id="que_vende" style="display: none;"></textarea>
+                    <div id="e_que_vende" class="divLectura">{{new[6]}}</div>
+                </div>
+            </td>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">DATOS DEL CLIENTE CORPORATIVO</h4>
+                    <textarea id="datos" style="display: none;"></textarea>
+                    <div id="e_datos" class="divLectura">{{new[4]}}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <main style="display: flex; width: 95%; margin: 0 auto;">
+    <section style="width: 89%; overflow-y: scroll; max-height: 70vh;">
+    <table style="padding: 0; box-shadow: none; text-align: center; width: 99%; margin-bottom: 15px;">
+        <tr>
+            <th style="background-color: #000080;" colspan="3">
+                INICIO
+            </th>
+        </tr>
+        <tr style="height: 12px;"></tr>
+        <tr>
+            <td style="vertical-align: top; width: 33%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">INTRODUCCIÓN</h4>
+                    <textarea id="introduccion" style="display: none;"></textarea>
+                    <div id="e_introduccion" class="divLectura">{{new[7]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 34%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">TENER EN CUENTA</h4>
+                    <textarea id="tener_en_cuenta" style="display: none;"></textarea>
+                    <div id="e_tener_en_cuenta" class="divLectura">{{new[8]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 33%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">ESTRUCTURA DE LA LLAMADA</h4>
+                    <textarea id="estructura" style="display: none;"></textarea>
+                    <div id="e_estructura" class="divLectura">{{new[9]}}</div>
+                </div> 
+            </td>
+        </tr>
+        <tr style="height: 15px;"></tr>
+        <tr>
+            <th colspan="3" style="background-color: #000080;">
+            SEGUIMIENTO
+            </th>
+        </tr>
+        <tr style="height: 12px;"></tr>
+        <tr>
+            <td style="vertical-align: top; width: 33%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">CLIENTE NO INTERESADO</h4>
+                    <textarea id="c_no_interesado" style="display: none;"></textarea>
+                    <div id="e_c_no_interesado" class="divLectura">{{new[10]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 34%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">CLIENTE POTENCIAL</h4>
+                    <textarea id="c_potencial" style="display: none;"></textarea>
+                    <div id="e_c_potencial" class="divLectura">{{new[11]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 33%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">CLIENTE INTERESADO</h4>
+                    <textarea id="c_interesado" style="display: none;"></textarea>
+                    <div id="e_c_interesado" class="divLectura">{{new[12]}}</div>
+                </div> 
+            </td>
+        </tr>
+    </table>
+    <table style="padding: 0; box-shadow: none; text-align: center; width: 99%; margin-bottom: 15px;">
+        <tr>
+            <th colspan="2" style="background-color: #000080;">SPEECH GENERAL</th>
+        </tr>
+        <tr style="height: 12px;"></tr>
+        <tr>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">SPEECH DE LLAMADA ENTRANTE</h4>
+                    <textarea id="speech_entrada" style="display: none;"></textarea>
+                    <div id="e_speech_entrada" class="divLectura">{{new[13]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">SPEECH DE LLAMADA SALIENTE</h4>
+                    <textarea id="speech_salida" style="display: none;"></textarea>
+                    <div id="e_speech_salida" class="divLectura">{{new[14]}}</div>
+                </div> 
+            </td>
+        </tr>
+        <tr style="height: 15px;"></tr>
+        <tr>
+            <th colspan="2" style="background-color: #000080;">DATOS DE INTERÉS</th>
+        </tr>
+        <tr style="height: 12px;"></tr>
+        <tr>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">REGLAS DEL CLIENTE CORPORATIVO</h4>
+                    <textarea id="reglas" style="display: none;"></textarea>
+                    <div id="e_reglas" class="divLectura">{{new[15]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0;">FORMAS DE PAGOS - COMISIÓN</h4>
+                    <textarea id="formas_pago" style="display: none;"></textarea>
+                    <div id="e_formas_pago" class="divLectura">{{new[16]}}</div>
+                </div> 
+            </td>
+        </tr>
+        <tr>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0; color: #000080;">PREGUNTAS FRECUENTES</h4>
+                    <textarea id="preguntas_frecuentes" style="display: none;"></textarea>
+                    <div id="e_preguntas_frecuentes" class="divLectura">{{new[17]}}</div>
+                </div> 
+            </td>
+            <td style="vertical-align: top; width: 50%;">
+                <div style="margin-bottom: 5px; text-align: center;">
+                    <h4 style="margin: 0; padding: 0; color: #000080;">TERMINOLOGÍAS</h4>
+                    <textarea id="terminologias" style="display: none;"></textarea>
+                    <div id="e_terminologias" class="divLectura">{{new[18]}}</div>
+                </div> 
+            </td>
+        </tr>
+    </table>
+    <table style="padding: 0; box-shadow: none; text-align: left; width: 99%;">
+        <tr>
+            <th colspan="2" style="background-color: #000080; text-align: center;">ARTÍCULOS</th>
+        </tr>
+        <tr style="height: 12px;"></tr>
+        <tbody>
+            {% for i in range(0, articulos|length, 2) %}
+            <tr>
+                <td class="item-row">
+                    <div>
+                        {% if articulos[i][3] %}
+                            <img src="{{ url_for('get_image_art', empresa=new[1], articulo=articulos[i][0], precio=articulos[i][1]) }}" alt="img" class="item-image">
+                        {% endif %}
+                        <div class="item-title">{{ articulos [i][0] }}</div>
+                        <div class="item-price">Precio: ${{articulos[i][1]}}</div>
+                        <div class="divLectura" style="padding: 0; border: none; margin-top: 1%;">{{articulos[i][2]}}</div>
+                    </div>
+                </td>
+                {% if i+1 < articulos|length %}
+                <td class="item-row">
+                    <div>
+                        {% if articulos[i+1][3] %}
+                            <img src="{{ url_for('get_image_art', empresa=new[1], articulo=articulos[i+1][0], precio=articulos[i+1][1]) }}" alt="img" class="item-image">
+                        {% endif %}
+                        <div class="item-title">{{ articulos [i+1][0] }}</div>
+                        <div class="item-price">Precio: ${{articulos[i+1][1]}}</div>
+                        <div class="divLectura" style="padding: 0; border: none; margin-top: 1%;">{{articulos[i+1][2]}}</div>
+                    </div>
+                </td>
+                {% else %}
+                <td></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+<div style="width: 1%;"></div>
+<aside style="position: sticky; top: 0;">
+    <table style="width: 100%; border: none; padding: 0; box-shadow: none;">
+        <tr style="padding: 0; border: none">
+            <th style="background-color: #6495ED;">
+                REGISTRO
+            </th>
+        </tr>
+    </table>
+    Nombre:
+    <input type="text" id="nombre" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('telefono')">
+    Teléfono:
+    <input type="text" id="telefono" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('direccion')">
+    Dirección:
+    <input type="text" id="direccion" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('email')">
+    Email:
+    <input type="email" id="email" style="width: 100%; color: black; text-transform: lowercase; margin-bottom: 15px;" onkeypress="foco2('motivo')">
+    Notas de llamada:
+    <textarea id="motivo" class="autoExpand" style="width: 100%; overflow-y: hidden; resize: none; min-height: 50px; color: black; text-transform: uppercase; margin-bottom: 15px;"></textarea>
+    <select id="tarea" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; margin-bottom: 15px;">
+        <option value="0" style="color: gainsboro;">Seleccionar tarea...</option>
+        {% for tarea in tareas %}
+        {% if tarea[0] == 0 %}
+        <option value="{{tarea[0]}}">SIN TAREA</option>
+        {% else %}
+        <option value="{{tarea[0]}}">{{tarea[1]}}</option>
+        {% endif %}
+        {% endfor %}
+    </select>
+    <input type="text" name="appointment" id="calendario-emergente-registro" onclick="document.getElementById('confirm-button-calendar-registro').removeAttribute('hidden');" style="width: 100%; color: black; padding: 3px; margin-bottom: 15px;" placeholder="Fecha y hora de tarea...">
+    <button type="button" id="confirm-button-calendar-registro" class="confirm-button-calendar" style="transform: translate(-410%, -260%); border: 1px solid white" onclick="this.setAttribute('hidden', 'hidden');" hidden>✔</button>
+<div style="display: flex; margin-bottom: 15px;">
+    <span>Perfil:</span>
+    <select id="perfil" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; margin-left: 5px;">
+        <option value="LOS ANDES">Los Andes</option>
+        <option value="TS NETWORK">TS Network</option>
+        <option value="LUCAS M REHDER">Lucas M Rehder</option>
+        <option value="JESÚS PALMA">Jesús Palma</option>
+    </select>
+</div>
+    <button type="button" class="btn success" style="width: 100%;" onclick="registrarLlamada('{{new[1]}}', document.getElementById('nombre').value, document.getElementById('telefono').value, document.getElementById('direccion').value, document.getElementById('email').value, document.getElementById('motivo').value, document.getElementById('tarea').value, document.getElementById('calendario-emergente-registro').value, document.getElementById('perfil').value)"><i class="fa fa-floppy-o"></i> Guardar registro</button>
+</aside>
+    </main>
+    <table style="width: 95%; box-shadow: none; margin: 0 auto; margin-top: 20px;" id="tabla_gestion_articulos" hidden>
+        <tr>
+            <th style="background-color: #FFA07A;">Artículo</th>
+            <th style="background-color: #FFA07A;">Precio</th>
+            <th colspan="2" style="background-color: #FFA07A;">Descripción</th>
+            <td style="color: green; width: 1%; font-size: 24px; text-align: center;"><i class="fa fa-plus" style="cursor: pointer" onclick="agregarFilaArticulo()"></i></td>
+        </tr>
+        <tbody id="cuerpo_tabla">
+            {% if articulos %}
+            {% for art in articulos %}
+            <tr class="fila_articulos">
+                <td>
+                    <input type="text" style="width: 100%; color: #000080; background: none; border: none; text-transform: uppercase; font-weight: bold;" value="{{art[0]}}">
+                </td>
+                <td style="width: 7%;">
+                    <input type="number" style="width: 100%; color: #6495ED; background: none; border: none; text-align: center; font-weight: bold;" value="{{art[1]}}">
+                </td>
+                <td style="width: 65%">
+                    <div style="width: 98.5%; border: none" class="divLectura" contenteditable="true">{{ art[2] }}</div>
+                </td>
+                <td style="width: 50px; text-align: center;">
+                    {% if art[3] %}
+                    <img src="{{ url_for('get_image_art', empresa=new[1], articulo=art[0], precio=art[1]) }}" alt="img" width="50">
+                    {% else %}
+                    <button type="button" style="max-width: 100%; cursor: pointer; font-size: 24px;" onclick="abrirInputFile(this)">
+                        <i class="fa fa-image"></i>
+                    </button>
+                    {% endif %}
+                    <input type="file" class="inputFile" style="display: none;">
+                    <input type="hidden" name="imagen_existente" value="updateæ{{art[0]}}æ{{art[1]}}">
+                </td>
+                <td style="color: red; width: 1%; font-size: 24px; text-align: center;">
+                    <i class="fa fa-trash" style="cursor: pointer;" onclick="eliminarFilaArticulo(this, '{{art[0]}}', '{{art[1]}}')"></i>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5" style="border-top: 1px solid #bdbdbd;"></td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    function modoEditor(){
+        let areas = ['e_que_vende', 'e_datos', 'e_introduccion', 'e_tener_en_cuenta', 'e_estructura', 'e_c_no_interesado', 'e_c_potencial', 'e_c_interesado', 'e_speech_entrada', 'e_speech_salida', 'e_reglas', 'e_formas_pago', 'e_preguntas_frecuentes', 'e_terminologias'];
+        for (let area in areas) {
+            document.getElementById(areas[area]).className = 'divEditable';
+            document.getElementById(areas[area]).setAttribute('contenteditable', 'true');
+        }
+        let botones = ['btn-guardar', 'btn-cancelar', 's_clasificacion', 's_logo']
+        for (let boton in botones) {
+            document.getElementById(botones[boton]).removeAttribute('hidden');
+        }
+        document.getElementById('btn-edicion').setAttribute('hidden', 'hidden');
+        document.getElementById('tabla_gestion_articulos').removeAttribute('hidden');
+
+        const divEditables = document.querySelectorAll('.divEditable');
+        divEditables.forEach(function(divEditable) {
+            divEditable.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+                document.execCommand('insertText', false, text);
+            });
+        });
+    };
+
+    function formatearAreas(){
+        let areas = ['que_vende', 'datos', 'introduccion', 'tener_en_cuenta', 'estructura', 'c_no_interesado', 'c_potencial', 'c_interesado', 'speech_entrada', 'speech_salida', 'reglas', 'formas_pago', 'preguntas_frecuentes', 'terminologias'];
+        for (let area in areas) {
+            let textoFormateado = document.getElementById('e_'+areas[area]).innerHTML;
+            textoFormateado = textoFormateado.replace(/<b>(.*?)<\/b>/g, '*$1*').replace(/<div>/g, '\n').replace(/<\/div>/g, '').replace(/<br>/g, '');
+            document.getElementById(areas[area]).value = textoFormateado;
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+            const editableDivsLectura = document.querySelectorAll('.divLectura');
+            const editableDivs = document.querySelectorAll('.divEditable');
+
+            editableDivsLectura.forEach(div => {
+                formatText(div);
+            });
+
+            document.getElementById('btn-edicion').addEventListener('click', function() {
+                editableDivs.forEach(div => {
+                    div.addEventListener('input', function() {
+                        formatText(div);
+                    });
+                    // Inicializar el formateo en caso de que haya texto con asteriscos ya presentes
+                    formatText(div);
+                });
+            });
+
+            function formatText(element) {
+                // Guardar la posición del cursor
+                const selection = window.getSelection();
+                const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                const preCaretRange = range ? range.cloneRange() : null;
+                const cursorPosition = preCaretRange ? getCaretCharacterOffsetWithin(element) : 0;
+
+                // Obtener el contenido del div editable
+                let content = element.innerHTML;
+
+                // Reemplazar texto por <b>texto</b>
+                content = content.replace(/\*(.*?)\*/g, '<b>$1</b>');
+
+                // Actualizar el contenido del div editable
+                element.innerHTML = content;
+
+                // Restaurar la posición del cursor
+                if (range) {
+                    setCaretPosition(element, cursorPosition);
+                }
+            }
+
+            function getCaretCharacterOffsetWithin(element) {
+                const selection = window.getSelection();
+                let caretOffset = 0;
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    const preCaretRange = range.cloneRange();
+                    preCaretRange.selectNodeContents(element);
+                    preCaretRange.setEnd(range.startContainer, range.startOffset);
+                    caretOffset = preCaretRange.toString().length;
+                }
+                return caretOffset;
+            }
+
+            function setCaretPosition(element, position) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                let node = element;
+                let nodes = [];
+
+                // Crear una lista de nodos de texto
+                function getTextNodes(node) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        nodes.push(node);
+                    } else {
+                        for (let child of node.childNodes) {
+                            getTextNodes(child);
+                        }
+                    }
+                }
+                getTextNodes(node);
+
+                // Calcular la nueva posición del cursor
+                let length = 0;
+                for (let textNode of nodes) {
+                    const textLength = textNode.textContent.length;
+                    if (length + textLength >= position) {
+                        range.setStart(textNode, position - length);
+                        break;
+                    } else {
+                        length += textLength;
+                    }
+                }
+
+                range.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                element.focus();
+            }
+
+            const textareas = document.querySelectorAll('.autoExpand');
+
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    adjustHeight(this);
+                });
+                
+                // Ajustar la altura inicialmente en caso de que haya texto precargado
+                adjustHeight(textarea);
+            });
+
+            function adjustHeight(element) {
+                element.style.height = 'auto'; // Resetear la altura para calcular correctamente
+                element.style.height = (element.scrollHeight) + 'px'; // Ajustar la altura al contenido
+            }
+
+            const inputImage = document.getElementById('inputImage');
+            const image = document.getElementById('image');
+            const cropButton = document.getElementById('cropButton');
+            const canvas = document.getElementById('canvas');
+            let cropper;
+
+            inputImage.addEventListener('change', function(event) {
+                const files = event.target.files;
+                const done = (url) => {
+                    inputImage.value = '';
+                    image.src = url;
+                    image.style.display = 'block';
+                    cropButton.style.display = 'block';
+                };
+                let reader;
+                let file;
+
+                if (files && files.length > 0) {
+                    file = files[0];
+
+                    if (URL) {
+                        done(URL.createObjectURL(file));
+                    } else if (FileReader) {
+                        reader = new FileReader();
+                        reader.onload = function(event) {
+                            done(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+
+            cropButton.addEventListener('click', function() {
+                if (cropper) {
+                    const canvasData = cropper.getCroppedCanvas({
+                        width: 200,
+                        height: 200,
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high',
+                    });
+
+                    canvas.width = canvasData.width;
+                    canvas.height = canvasData.height;
+                    const context = canvas.getContext('2d');
+
+                    context.clearRect(0, 0, canvas.widht, canvas.height);
+
+                    context.drawImage(canvasData, 0, 0);
+
+                    canvas.style.display = 'block';
+                    document.getElementById('condicional_imagen').value = 1;
+                }
+            });
+
+            image.addEventListener('load', function() {
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(image, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    background: false,
+                });
+            });
+        });
+
+    function actualizarEmpresaNew(empresa) {
+    formatearAreas();
+
+    const formData = new FormData();
+    formData.append('empresa', empresa);
+    formData.append('datos', document.getElementById('datos').value);
+    formData.append('que_vende', document.getElementById('que_vende').value);
+    formData.append('clasificacion', document.getElementById('clasificacion').value);
+    formData.append('introduccion', document.getElementById('introduccion').value);
+    formData.append('tener_en_cuenta', document.getElementById('tener_en_cuenta').value);
+    formData.append('estructura', document.getElementById('estructura').value);
+    formData.append('c_no_interesado', document.getElementById('c_no_interesado').value);
+    formData.append('c_potencial', document.getElementById('c_potencial').value);
+    formData.append('c_interesado', document.getElementById('c_interesado').value);
+    formData.append('speech_entrada', document.getElementById('speech_entrada').value);
+    formData.append('speech_salida', document.getElementById('speech_salida').value);
+    formData.append('reglas', document.getElementById('reglas').value);
+    formData.append('formas_pago', document.getElementById('formas_pago').value);
+    formData.append('preguntas_frecuentes', document.getElementById('preguntas_frecuentes').value);
+    formData.append('terminologias', document.getElementById('terminologias').value);
+
+    // Recorrer la tabla y extraer los datos
+    const filas = document.querySelectorAll('.fila_articulos');
+    const articulosArray = [];
+    
+    filas.forEach((fila) => {
+        const articulo = fila.querySelector('input[type="text"]').value.trim().toUpperCase();
+        const precio = fila.querySelector('input[type="number"]').value.trim();
+        let descripcion = fila.querySelector('.divLectura').innerHTML.trim();
+        const imagenExistente = fila.querySelector('input[name="imagen_existente"]').value;
+        //descripcion = descripcion.replace(/<br\s*\/?>/gi, '\n');
+        //*descripcion = descripcion.replace(/<br>/g, '\n')
+        // Convertir texto en negrita a formato con asteriscos
+        //*descripcion = descripcion.replace(/<b>(.*?)<\/b>/g, '*$1*');
+        // Eliminar etiquetas HTML
+        //*descripcion = descripcion.replace(/<\/?[^>]+(>|$)/g, "");
+        descripcion = descripcion.replace(/<b>(.*?)<\/b>/g, '*$1*').replace(/<div>/g, '\n').replace(/<\/div>/g, '').replace(/<br>/g, '');
+        articulosArray.push([articulo, precio, descripcion, imagenExistente]);
+    });
+
+    formData.append('articulos', JSON.stringify(articulosArray));
+
+    const archivosArray = obtenerArchivos();
+    archivosArray.forEach((archivo, index) => {
+        if (archivo) {
+            formData.append(`archivo_${index}`, archivo);
+        } else {
+            formData.append(`archivo_${index}`, null);
+        }
+    });
+
+    const canvas = document.getElementById('canvas');
+    canvas.toBlob(function(blob) {
+        if (document.getElementById('condicional_imagen').value) {
+            formData.append('logo', blob, 'recortada.png');
+        } else {
+            formData.append('logo', false);
+        }
+        $.ajax({
+            type: 'POST',
+            url: '/empresas/actualizar',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            encode: true
+        })
+        .done(function(data){
+            if(data.status === 'success'){
+                location.reload();
+            } else {
+                alert('Error al guardar registro.');
+            }
+        })
+        .fail(function(error) {
+            alert("Error en la solicitud.");
+            console.error('Error: ', error);
+        });
+    }, 'image/png');
+}
+
+function obtenerArchivos() {
+    const archivosArray = [];
+    const inputFiles = document.querySelectorAll('.fila_articulos input[type="file"]');
+    inputFiles.forEach((inputFile) => {
+        if (inputFile.files && inputFile.files.length > 0) {
+            archivosArray.push(inputFile.files[0]);
+        } else {
+            archivosArray.push(null);
+        }
+    });
+    return archivosArray;
+}
+
+function agregarFilaArticulo() {
+    const tabla = document.getElementById('cuerpo_tabla');
+    const nuevaFila = document.createElement('tr');
+    nuevaFila.classList.add('fila_articulos');
+    nuevaFila.innerHTML = `
+        <td><input type="text" style="width: 100%; color: #000080; background: none; text-transform: uppercase; border: 1px solid #ccc; font-weight: bold;" autofocus></td>
+        <td style="width: 7%;"><input type="number" style="width: 100%; color: #6495ED; background: none;  border: 1px solid #6495ED; text-align: center; font-weight: bold;"></td>
+        <td style="width: 65%"><div style="width: 98.5%;  border: 1px solid #ccc" class="divLectura" contenteditable="true"></div></td>
+        <td style="width: 50px; text-align: center;">
+            <button type="button" style="max-width: 100%; cursor: pointer; font-size: 24px;" onclick="abrirInputFile(this)"><i class="fa fa-image"></i></button>
+            <input type="file" class="inputFile" style="display: none;">
+            <input type="hidden" name="imagen_existente" value="insertææ">
+        </td>
+        <td style="color: red; width: 1%; font-size: 24px; text-align: center;"><i class="fa fa-trash" style="cursor: pointer;" onclick="eliminarRowArticulo(this)"></i></td>
+    `;
+    tabla.appendChild(nuevaFila);
+}
+
+function eliminarRowArticulo(elemento){
+    const fila = elemento.parentNode.parentNode;
+    fila.parentNode.removeChild(fila);
+}
+
+function eliminarFilaArticulo(elemento, articulo, precio) {
+    const fila = elemento.closest('.fila_articulos');
+    fila.classList.add('fila_oculta');
+    const inputImagenExistente = fila.querySelector('input[name="imagen_existente"]');
+    if (inputImagenExistente){
+        inputImagenExistente.value = "deleteæ"+articulo+"æ"+precio;
+    }
+}
+
+function abrirInputFile(boton) {
+    const inputFile = boton.nextElementSibling;
+    inputFile.click();
+}
+
+function registrarLlamada(empresa, nombre, telefono, direccion, email, nota, tarea, fechatarea, perfil){
+    var formData = {
+      'empresa': empresa,
+      'nombre': nombre,
+      'telefono': telefono,
+      'direccion': direccion,
+      'email': email,
+      'nota': nota,
+      'tarea': tarea,
+      'fechatarea': fechatarea,
+      'perfil': perfil
+  };
+  $.ajax({
+      type: 'POST',
+      url: '/empresas/registrarllamada',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+        registroListo('Registro guardado con éxito!')
+        if(data.redireccion){
+          window.location.href = data.redireccion;
+        }else{
+          location.reload();
+        }
+      }else{
+          alert('Error al registrar llamada.')
+      }
+  })
+
+  .fail(function(xhr, status, error) {
+    alert("Error en la solicitud.");
+    console.error('Error: ', error);
+  });
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+{% endblock %}

@@ -1,9 +1,5 @@
 {% extends 'index.html' %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
-{% endblock %}
-
 {% block titulo %}
 Administración Los Andes | Pagos
 {% endblock %}
@@ -13,7 +9,7 @@ Administración Los Andes | Pagos
     <h1>Panel de pagos. <button style="vertical-align: bottom;" class="btn success" onclick="document.getElementById('nuevo_pago').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden'); document.getElementById('nombre').focus();">Registrar nuevo pago</button><button class="btn secondary" onclick="document.getElementById('id_fechas').removeAttribute('hidden'); this.setAttribute('hidden', 'hidden')" style="float: right;"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Filtrar entre fechas</button></h1>
     <div id="id_fechas" hidden>
         <div style="margin: 10px auto; width: 95%; display: flex; justify-content: center;">
-            Desde<input type="date" style="width: auto; padding: 0; background: none; margin: 0 15px 0 15px; border: none;" id="fecha1">hasta<input type="date" style="width: auto; padding: 0; background: none; margin-left: 15px; border: none;" id="fecha2"><button type="button" style="margin-left: 10px; background-color: lightgoldenrodyellow;" onclick="document.getElementById('fecha_inicial').value = document.getElementById('fecha1').value; document.getElementById('fecha_final').value = document.getElementById('fecha2').value; document.getElementById('cambiar_mes').value = 'entrefechas'; document.cambio_mes.submit();"><img src="{{ url_for('static', filename='img/magnifying-glass-solid.svg') }}" width="15" height="15" style="vertical-align: bottom;"> Buscar</button>
+            Desde<input type="date" style="width: auto; padding: 0; background: none; margin: 0 15px 0 15px; border: none; cursor: pointer;" id="fecha1">hasta<input type="date" style="width: auto; padding: 0; background: none; margin-left: 15px; border: none; cursor: pointer;" id="fecha2"><button type="button" style="margin-left: 10px; background-color: lightgoldenrodyellow; cursor: pointer;" onclick="document.getElementById('fecha_inicial').value = document.getElementById('fecha1').value; document.getElementById('fecha_final').value = document.getElementById('fecha2').value; document.getElementById('cambiar_mes').value = 'entrefechas'; document.cambio_mes.submit();"><img src="{{ url_for('static', filename='img/magnifying-glass-solid.svg') }}" width="15" height="15" style="vertical-align: bottom;"> Buscar</button>
         </div>
     </div>
     <h3 id="nuevo_pago" hidden>    
@@ -26,16 +22,16 @@ Administración Los Andes | Pagos
         </select>
         </span>
         <span style="width: 50%; margin-right: 10px;">
-        <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Nombre<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="nombre" onkeypress="foco2('telefono');">
+        <img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Nombre<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%; color: #000080;" id="nombre" onkeypress="foco2('telefono');">
         </span>
         <span style="width: 30%; margin-right: 10px;">
-        <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Teléfono<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="telefono" onkeypress="foco2('motivo');">
+        <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Teléfono<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%; color: #000080;" id="telefono" onkeypress="foco2('motivo');">
         </span>
         <span style="width: 140%; margin-right: 10px;">
-            <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Datos de pago<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="motivo" onkeypress="foco2('pago');">
+            <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Datos de pago<input type="text" style="text-transform: uppercase; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%; color: #000080;" id="motivo" onkeypress="foco2('pago');">
         </span>
         <span style="width: 25%; margin-right: 10px;">
-            <img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Pago<input type="number" style="color: #008080; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" id="pago" >
+            <img src="{{ url_for('static', filename='img/circle-dollar-to-slot-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Pago<input type="number" style="color: #2ECC71; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%; font-weight: bold;" id="pago" >
         </span>
         <span style="width: 35%; margin-right: 10px;">
             <img src="{{ url_for('static', filename='img/landmark-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Medio<br><select id="forma_pago" style="font-family: 'Rubik', sans-serif; font-size: 16px; padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;">
@@ -48,15 +44,15 @@ Administración Los Andes | Pagos
             </select>
         </span>
         <span style="width: 35%; margin-right: 10px;">
-            <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Fecha<input type="date" id="fecha_pago" style="padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%;" value="{{hoy}}">
+            <img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="20" height="20" style="vertical-align: bottom;"> Fecha<input type="date" id="fecha_pago" style="padding: 2px 4px 2px 4px; margin-top: 5px; width: 100%; color: black;" value="{{hoy}}">
         </span>
         <span style="width: 40%; display: grid;">
-            <button type="button" onclick="var xhr = new XMLHttpRequest(); xhr.open('POST', '/pagos/registrar_pago', true); xhr.setRequestHeader('Content-Type', 'application/json'); xhr.send(JSON.stringify({pago: [document.getElementById('empresa').value, document.getElementById('motivo').value, null, document.getElementById('nombre').value, document.getElementById('telefono').value, '0000-00-00', document.getElementById('fecha_pago').value, document.getElementById('forma_pago').value, document.getElementById('pago').value]})); registroListo('El pago fue registrado con éxito!'); window.location.replace('/pagos');" class="btn success" style="padding-top: 7px; padding-bottom: 7px; vertical-align: bottom; width: 100%;"><img src="{{ url_for('static', filename='img/reduction.png') }}" width="30" height="30" style="vertical-align: middle;"> Registrar pago</button>
+            <button type="button" onclick="registrarPago('nuevo', document.getElementById('empresa').value, document.getElementById('motivo').value, null, document.getElementById('nombre').value, document.getElementById('telefono').value, null, document.getElementById('fecha_pago').value, document.getElementById('forma_pago').value, document.getElementById('pago').value, null)" class="btn success" style="padding-top: 7px; padding-bottom: 7px; vertical-align: bottom; width: 100%;"><img src="{{ url_for('static', filename='img/reduction.png') }}" width="30" height="30" style="vertical-align: middle;"> Registrar pago</button>
         </span>
         </div>
     </h3>
     <div style="width: 95%; margin: 0 auto; text-align: center; margin-bottom: 10px; vertical-align: middle; display: flex; justify-content:center;">
-        <span style="text-align: center; font-size: 30px; vertical-align: middle;"><img src="{{ url_for('static', filename='img/month.png') }}" width="30" height="30" style="vertical-align: top; padding: 0; margin: 0; margin-right: 5px;">Registros {% if mes == 'entrefechas' %}entre el <span style="color: #008080;">{{fecha_inicial}}</span> y el <span style="color: #008080">{{fecha_final}}</span></span>{% else %}</span><input style="margin-left: 12px; width: auto; font-size: 30px; padding: 0; background: none; border: none;" type="month" onchange="document.getElementById('cambiar_mes').value = this.value; document.cambio_mes.submit();" value="{{mes}}">{% endif %}
+        <span style="text-align: center; font-size: 30px; vertical-align: middle;"><img src="{{ url_for('static', filename='img/month.png') }}" width="30" height="30" style="vertical-align: top; padding: 0; margin: 0; margin-right: 5px;">Registros {% if mes == 'entrefechas' %}entre el <span style="color: #000080;">{{fecha_inicial}}</span> y el <span style="color: #000080">{{fecha_final}}</span></span>{% else %}</span><input style="margin-left: 12px; width: auto; font-size: 30px; padding: 0; background: none; border: none; cursor: pointer; color: #000080;" type="month" onchange="document.getElementById('cambiar_mes').value = this.value; document.cambio_mes.submit();" value="{{mes}}">{% endif %}
     </div>
     <form action="/pagos" method="POST" name="cambio_mes">
         <input type="hidden" name="cambiar_mes" id="cambiar_mes">
@@ -86,12 +82,12 @@ Administración Los Andes | Pagos
             <td><img src="{{ url_for('static', filename='img/industry-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[1]}} • <img src="{{ url_for('static', filename='img/headset-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[10]}}</td>
             <td><img src="{{ url_for('static', filename='img/person-circle.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[4]}} • <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[5]}}</td>
             <td>{% if pago[3] != None %}<img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Hoja N°{{pago[3]}} • {% endif %}{% if pago[2] != '' %}<img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[2]}}{% endif %}{% if pago[6] != None %} • <span style="color: red;"><img src="{{ url_for('static', filename='img/calendar-xmark-regular.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Vencimiento: {{pago[6]}}</span>{% endif %}</td>
-            <td style="text-align: center; color: #008080">$ {{pago[9]}}</td>
+            <td style="text-align: center; color: #000080">$ {{pago[9]}}</td>
             <td style="width: 10px;"><img src="{{ url_for('static', filename='img/logo_'+pago[8]+'.png') }}" height="20" style="vertical-align: middle; margin: 0; padding: 0;"></td>
             <td><img src="{{ url_for('static', filename='img/check-to-slot-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{pago[7]}}</td>
             {% if current_user.rol == 'admin' %}
             <td style="text-align: center;">
-                <span class="icon-container"><button type="button" onclick="eliminarRegistroPago('{{pago[0]}}', '{{pago[4]}}', '{{pago[9]}}');" style="background: none; border: none;"><img src="{{ url_for('static', filename='img/delete.png') }}" width="15" height="15" style="vertical-align: middle; margin: 0; padding: 0;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">Eliminar registro</span></span>
+                <span class="icon-container"><button type="button" onclick="eliminarRegistroPago('{{pago[0]}}', '{{pago[4]}}', '{{pago[5]}}','{{pago[9]}}');" style="background: none; border: none; cursor: pointer;"><img src="{{ url_for('static', filename='img/delete.png') }}" width="15" height="15" style="vertical-align: middle; margin: 0; padding: 0;"></button><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">Eliminar registro</span></span>
             </td>
             {% endif %}
         </tr>
@@ -129,7 +125,7 @@ Administración Los Andes | Pagos
                 <img src="{{ url_for('static', filename='img/person-circle.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[2]}} • <img src="{{ url_for('static', filename='img/phone-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[3]}}
             </td>
             <td>
-                <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Hoja N°{{p[0]}} {% if p[4] != '' %}• <img src="{{ url_for('static', filename='img/toolbox-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[4]}} {% endif %}{% if p[5] != '' %}• <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[5]}}{% endif %}• <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"><span style="color: #008080;"> {{p[11]}}</span>
+                <img src="{{ url_for('static', filename='img/house-flag-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> Hoja N°{{p[0]}} {% if p[4] != '' %}• <img src="{{ url_for('static', filename='img/toolbox-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[4]}} {% endif %}{% if p[5] != '' %}• <img src="{{ url_for('static', filename='img/network-wired-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"> {{p[5]}}{% endif %}• <img src="{{ url_for('static', filename='img/thumbtack-solid.svg') }}" height="15" width="15" style="vertical-align: middle; margin: 0; padding: 0;"><span style="color: #000080;"> {{p[11]}}</span>
             </td>
             <td style="color: orangered; text-align: center;">
                 $ {{p[10]}}
@@ -146,21 +142,36 @@ Administración Los Andes | Pagos
 
 {% block js %}
 <script>
-    function eliminarRegistroPago(idpago, cliente, total){
-        let opcion = confirm("¿Está seguro de eliminar el pago N° de registro "+idpago+" de "+cliente+" de $"+total);
+    function eliminarRegistroPago(idpago, nombre, telefono, total){
+        let opcion = confirm("¿Está seguro de eliminar el pago de "+nombre+" de $"+total);
         if (opcion == true) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/pagos/eliminar_pago', true);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.send(JSON.stringify({pagosid: [idpago, cliente]}));
-            Swal.fire
-            ({
-                title: "Listo!",
-                text: "Registro de pago eliminado con éxito!",
-                icon: "success"
-            });
-            window.location.replace('/pagos')
-        }
+            var formData = {
+    'idpago': idpago,
+    'nombre': nombre,
+    'telefono': telefono,
+    'total': total
+};
+$.ajax({
+    type: 'POST',
+    url: '/pagos/eliminarpago',
+    data: formData,
+    dataType: 'json',
+    encode: true
+})
+.done(function(data){
+    if(data.status === 'success'){
+        alert("Pago eliminado con éxito!")
+        location.reload();
+    }else{
+        alert('Error al eliminar pago.')
+    }
+})
+
+.fail(function(xhr, status, error) {
+  alert("Error en la solicitud.");
+  console.error('Error: ', error);
+});
+}
     }
 </script>
 {% endblock %}

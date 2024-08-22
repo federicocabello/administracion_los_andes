@@ -15,23 +15,16 @@ MÓDULO DE ACTIVIDADES:
 <Consultar si se debe realizar para cada agente. Si se va a solicitar o no una fecha de recordatorio.
 
 MÓDULO DE REGISTROS:
-<Cambiar la el elemento para modificar la fecha, poner un INPUT DATE. Consultar si hacer un pop-up para modificar fecha, hora y tarea.
 <Modificar automaticamente el servicio del PDF cuando se cambie una tarea.
 <Cuando cambiamos el nombre en REGISTROS, también cambiarlo en HOJA DE INSPECCIÓN.
 
 VISTA DE EMPRESA:
 <En la adevertencia de registro duplicado, mostrar a nombre de quien está (el ultimo registro).
-<Galería de imágenes de cada artículo.
-
-MÓDULO DE CRECIÓN DE UNA NUEVA EMPRESA:
-<Revisar logo
-<Cambiar para agregar distintas imágenes a cada artículo.
 
 MÓDULO DE IMPULSOS:
 <Planificar diseño y lógica. Se puede agregar como INVERSIONES/GASTOS. Consultar si deben agregarse en REPORTE DE PAGOS.
 
 VISTA PRINCIPAL:
-<Agregar acceso al SEGUIMIENTO de cada cliente.
 <Clasificación y división de empresas. Agregar opción cuando cree una nueva.
 <Agregar RECORDATORIO (PAGO) fuera de ser una cuota.
 
@@ -46,14 +39,11 @@ MÓDULO DE MOVIMIENTOS:
 <Corregir para buscar movimiento por numero de telefono.
 <Que el filtro de búsqueda quede almacenado en memoria.
 
-MÓDULO DE SEGUIMIENTO DEL CLIENTE:
-<Separar tabla de datos con columnas.
-
 MÓDULO DE CAMBIOS MASIVOS:
-<Enviar registros a otro usuarios
+<Enviar registros a otro usuarios, borrar registros de agentes, fechas, etc.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Actualmente desarrollando: <que vista retornar cuando se edita una nota, un telefono, nombre, etc.
-Proximo: revisar si agrega el movimiento cuando una hoja de inspeccion se cree o se actualice.
+Actualmente desarrollando: <Vista nueva de la creacion de empresas
+Proximo: 
 
-Seguir con: vista de seguimiento, preguntar como armar la estructura con el dato nuevo y el viejo.
+Seguir con:

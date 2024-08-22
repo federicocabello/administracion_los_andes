@@ -1,9 +1,5 @@
 {% extends 'index.html' %}
 
-{% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
-{% endblock %}
-
 {% block titulo %}
 Administración Los Andes | Usuarios
 {% endblock %}
@@ -22,7 +18,7 @@ Administración Los Andes | Usuarios
         <form action="/usuarios/eliminarusuario" method="POST" name="formulario">
         {% for i in tablas %}
         <tr>
-                <td style="color: #008080;">{{ i[0] }}</td>
+                <td style="color: #000080;">{{ i[0] }}</td>
                 <td>{{ i[1] }}</td>
                 <td>{{ i[2] }}</td>
                 {% if i[3] == 'admin' %}

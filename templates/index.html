@@ -5,34 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/mount_icon.ico')}}">
     <!--CSS-->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/altacliente-style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-style.css') }}">
+    <style>
+      .pantalla-carga {
+    display: none; /* Ocultar por defecto */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+    z-index: 9999; /* Asegura que la pantalla de carga esté por encima de otros elementos */
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease; /* Animación suave */
+}
+
+.pantalla-carga.active {
+    display: flex; /* Mostrar cuando se active */
+}
+
+.loader {
+    border: 16px solid #f3f3f3; /* Color del borde */
+    border-top: 16px solid #3498db; /* Color de la animación */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: girar 2s linear infinite;
+}
+
+@keyframes girar {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+    </style>
     {% block css %}{% endblock %}
     <!--TÍTULO-->
     <title>{% block titulo %}{% endblock %}</title>
 </head>
-<body onload="toggleSidebar('-0px')" style="background: url('{{ url_for('static', filename='img/background.jpg') }}'); background-size: cover;">
-  <div id="sidebar">
-    <ul>
-      <a href="{{ url_for('dashboard') }}" style="text-decoration:none"><li>Inicio</li></a>
-      {% if current_user.rol == 'admin' %}
-      <a href="{{ url_for('usuarios') }}" style="text-decoration:none"><li>Usuarios</li></a>
-      {% endif %}
-      <a href="{{ url_for('clientes') }}" style="text-decoration:none"><li>Clientes</li><a>
-      <a href="{{ url_for('pagos') }}" style="text-decoration: none;"><li>Pagos</li></a>
-      <!-- <a href="{{ url_for('preguntas') }}" style="text-decoration:none"><li>Cotizaciones pendientes</li></a> -->
-      <!-- <a href="{{ url_for('enviadas') }}" style="text-decoration:none"><li>Cotizaciones enviadas</li></a> -->
-      <a href="{{ url_for('registros') }}" style="text-decoration:none"><li>Registros</li></a>
-      <a href="{{ url_for('movimientos') }}" style="text-decoration:none"><li>Movimientos</li></a>
-      <a href="{{ url_for('impulsos')}}" style="text-decoration:none"><li>Impulsos</li></a>
-      <!-- <a href="{{ url_for('tareas') }}" style="text-decoration: None;"><li style="color: orange;">Tareas</li></a> -->
-      <a href="{{ url_for('planes') }}" style="text-decoration: None;"><li style="color: orange;">Planes</li></a>
-    </ul>
-  </div>
-  <button id="toggle-btn" onclick="toggleSidebar('-250px')">☰</button>
+<body style="background: url('{{ url_for('static', filename='img/background.jpg') }}'); background-size: cover;">
+  <header style="font-family: 'Rubik', sans-serif; font-size: 16px; padding: 0; box-shadow: none; width: 100%;">
+    <div class="navbar">
+      <nav>
+        <ul>
+          <li><a href="{{ url_for('dashboard') }}">Inicio</a></li>
+          {% if current_user.rol == 'admin' %}
+          <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('pagos') }}">Pagos</a></li>
+          <li><a type="button" onclick="mostrarPantallaCarga()" style="cursor: pointer;">Registros</a></li>
+          <li><a href="{{ url_for('movimientos') }}">Movimientos</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
   <!--BODY-->
   {% block body %}
   {% endblock %}
@@ -43,10 +72,10 @@
         <input type="hidden" id="m_id">
         <span class="close" onclick="document.getElementById('myModal').style.display = 'none';">&times;</span>
         <h3 style="padding: 0; margin: 0;"><img src="{{ url_for('static', filename='img/person-circle.svg') }}" width="22" height="22" style="vertical-align: top; margin-right: 4px;"><label id="m_cliente"></label></h3>
-        <p style="color: #008080">Notas de llamada:
+        <p style="color: #000080">Notas de llamada:
         <textarea id="m_notas" rows="10" style="font-family: 'Rubik', sans-serif; font-size: 14px; color: black; margin: 0 auto; text-transform: uppercase;"></textarea>
         </p>
-        <p style="color: #008080">Tarea
+        <p style="color: #000080">Tarea
         <br>
         <select id="m_tareas" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
             {% for t in tareas %}
@@ -54,7 +83,7 @@
             {% endfor %}
         </select>
         </p>
-        <p style="color: #008080">
+        <p style="color: #000080">
         Fecha de tarea
         <input type="text" name="appointment" id="calendario-emergente" onclick="document.getElementById('confirm-button-calendar').removeAttribute('hidden');" style="width: auto; text-align: center; color: black; margin: 0 auto;">
         <button type="button" id="confirm-button-calendar" class="confirm-button-calendar" style="transform: translate(700%, -250%);" onclick="this.setAttribute('hidden', 'hidden');" hidden>✔</button>
@@ -62,21 +91,17 @@
         <button type="button" class="btn primary" onclick="cambiarRegistro(document.getElementById('m_notas').value, document.getElementById('m_id').value, document.getElementById('calendario-emergente').value, document.getElementById('m_nombre').value, document.getElementById('m_telefono').value, document.getElementById('m_tareas').value)" id="boton-guardar-popup">Guardar</button>
     </div>
   </div>
+  <div id="pantallaCarga" class="pantalla-carga">
+    <div class="loader"></div>
+  </div>
 </body>
 <footer>
   <!--FOOTER-->
   {% block footer %}
   {% endblock %}
-  <div id="footer">
+  <div id="footer" style="margin-top: 20px;">
     <a href="{{ url_for('logout') }}"><button class="btn-cerrar" style="vertical-align:middle;"><span>Cerrar sesión </span></button></a>
   </div>
-<!--
-  <p>
-  <div style="text-align: center;">  
-    <img src="{{ url_for('static', filename='img/logolosandes2.jpg')}}" style="border-radius: 5px ;height: 100px;">
-  </div>
-  </p>
--->
 </footer>
   <!--JS-->
 <script src="{{ url_for('static', filename='js/index-scripts.js') }}"></script>
@@ -84,4 +109,21 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   {% block js %}{% endblock %}
+  <script>
+    function mostrarPantallaCarga() {
+    const pantallaCarga = document.getElementById('pantallaCarga');
+    pantallaCarga.classList.add('active'); // Mostrar la pantalla de carga
+
+    // Simula la carga de datos
+    setTimeout(() => {
+        // Aquí iría la lógica de carga de datos o redirección a la nueva página
+        
+        // Una vez que los datos estén listos, oculta la pantalla de carga
+        //pantallaCarga.classList.remove('active');
+
+        // Redirige a otra página (opcional)
+        window.location.href = "{{ url_for('registros') }}"; // Reemplaza con la URL de destino
+    }); // Simulación de 3 segundos
+}
+  </script>
 </html>

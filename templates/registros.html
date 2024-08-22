@@ -17,7 +17,7 @@ Administración Los Andes | Registros
         <option value="75" {% if mostrados == '75' %}selected{% endif %}>Mostrar 75</option>
         <option value="100" {% if mostrados == '100' %}selected{% endif %}>Mostrar 100</option>
         <option value="all" {% if mostrados == n_registros[0] %}selected{% endif %}>Mostrar todos ({{n_registros[0]}})</option>
-    </select><span class="icon-container"><button type="button" style="margin-left: 10px; padding: 3px; vertical-align: middle;" onclick="localStorage.removeItem('filtros'); document.getElementById('filtro_agentes').value = ''; document.getElementById('filtro_cliente').value = ''; document.getElementById('filtro_tarea').value = '';"><a href="{{ url_for('registros') }}"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></a></button><span class="tooltip" id="tooltip-editar">Recargar "Registros"</span></span>
+    </select><span class="icon-container"><button type="button" style="margin-left: 10px; padding: 3px; vertical-align: middle;" onclick="localStorage.removeItem('filtros'); document.getElementById('filtro_agentes').value = ''; document.getElementById('filtro_cliente').value = ''; document.getElementById('filtro_tarea').value = ''; document.getElementById('filtro_perfil').value = ''; document.getElementById('filtro_empresa').value = '';"><a type="button" onclick="mostrarPantallaCarga()" style="cursor: pointer;"><img src="{{ url_for('static', filename='img/rotate-left-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></a></button><span class="tooltip" id="tooltip-editar">Recargar "Registros"</span></span>
     {% if repetidos[0] != 0 %}
     <button style="float: right;" class="btn warning" onclick="document.getElementById('filtro').value = 'duplicados'; document.getElementById('btn-enviar').click();"><img src="{{ url_for('static', filename='img/warning_icon.svg.png') }}" height="25" style="vertical-align: middle;"> Hay registros duplicados</button>
     {% endif %}
@@ -36,7 +36,7 @@ Administración Los Andes | Registros
             row.style.transition = 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out';
             row.style.transform = 'scale(1.03)';
             //row.style.boxShadow = '2px 2px 10px rgba(0, 0, 0, 0.2)';
-            row.style.boxShadow = '0 0 10px #008080';
+            row.style.boxShadow = '0 0 10px #000080';
         });
 
         row.addEventListener('mouseleave', () => {
@@ -48,12 +48,20 @@ Administración Los Andes | Registros
 });
         </script>
         <tr>
-            <td>
-            <select id="filtro_empresa" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="document.getElementById('filtro').value = 'empresa'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click()">
+            <td style="display: flex;">
+            <select id="filtro_empresa" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px;" onchange="guardarFiltros(); aplicarFiltros();">
+                <!--onchange="document.getElementById('filtro').value = 'empresa'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click()"-->
                 <option value="" style="color:gainsboro">Filtro por empresa...</option>
                 {% for emp in empresas %}
                 <option value="{{emp[0]}}" {% if empresa == emp[0] %}selected{% endif %}>{{emp[0]}}</option>
                 {% endfor %}
+            </select>
+            <select id="filtro_perfil" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="guardarFiltros(); aplicarFiltros();">
+                <option value="" style="color:gainsboro">Filtro por perfil...</option>
+                <option value="LOS ANDES">LOS ANDES</option>
+                <option value="TS NETWORK">TS NETWORK</option>
+                <option value="LUCAS M REHDER">LUCAS M REHDER</option>
+                <option value="JESÚS PALMA">JESÚS PALMA</option>
             </select>
             </td>
             <td>            
@@ -65,7 +73,7 @@ Administración Los Andes | Registros
             </select>
             </td>
             <td colspan="2">
-                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="guardarFiltros(); aplicarFiltros();">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px; color: #000080;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="guardarFiltros(); aplicarFiltros();">
             <!--
                 <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
                     <option value="" style="color:gainsboro">Filtro por cliente...</option>
@@ -94,10 +102,10 @@ Administración Los Andes | Registros
                     <option value="-12-">Diciembre</option>
                 </select>
             -->
-            Desde<input name="fecha_inicial" id="fecha_inicial" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 75%; margin: 0 10px 0 10px;" value="{{fecha_inicial}}">hasta
-            <input name="fecha_final" id="fecha_final" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 75%; margin: 0 10px 0 10px;" value="{{fecha_final}}">
+            Desde<input name="fecha_inicial" id="fecha_inicial" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 75%; margin: 0 10px 0 10px; color: #000080;" value="{{fecha_inicial}}">hasta
+            <input name="fecha_final" id="fecha_final" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 75%; margin: 0 10px 0 10px; color: #000080;" value="{{fecha_final}}">
             <span class="icon-container">
-            <button type="button" onclick="document.getElementById('filtro').value = 'fechas'; document.getElementById('limite').value = document.getElementById('campo').value; document.getElementById('btn-enviar').click();" style="margin-right: 10px; height: 25px;"><img src="{{ url_for('static', filename='img/magnifying-glass-chart-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></button>
+            <button type="button" onclick="document.getElementById('filtro').value = 'fechas'; document.getElementById('limite').value = document.getElementById('campo').value; document.getElementById('btn-enviar').click();" style="margin-right: 10px; height: 25px; cursor: pointer;"><img src="{{ url_for('static', filename='img/magnifying-glass-chart-solid.svg') }}" width="20" height="20" style="vertical-align: middle;"></button>
             <span class="tooltip" id="tooltip-editar">Filtrar entre fechas</span></span>
             <button type="submit" id="btn-enviar" hidden></button>
             <input type="hidden" id="filtro" name="filtro">
@@ -128,7 +136,7 @@ Administración Los Andes | Registros
                     {% endif %}
                 </select>
                 <span class="icon-container">
-                <input onchange="document.getElementById('fecha_inicial').value = this.value; document.getElementById('filtro').value = 'fecha_unica'; document.getElementById('btn-enviar').click();" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%;" value="{{fechaunica}}">
+                <input onchange="document.getElementById('fecha_inicial').value = this.value; document.getElementById('filtro').value = 'fecha_unica'; document.getElementById('btn-enviar').click();" type="date" style="font-family: 'Rubik', sans-serif; font-size: 14px; height: 25px; width: 100%; color: #000080;" value="{{fechaunica}}">
                 <span class="tooltip" id="tooltip-editar">Filtrar tareas por una fecha específica</span></span>
             </span>
             </td>
@@ -147,8 +155,6 @@ Administración Los Andes | Registros
                 <td><span class="icon-container"><i class="fa fa-industry"></i><select onchange="cambiarRegistro(this.value, '{{i[8]}}', 'empresa', '{{i[2]}}', '{{i[3]}}', null);" style="{% if i[9] == 'NO LE INTERESA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer; width: 85%;"><option value="{{i[0]}}" selected>{{i[0]}}</option>{% for e in empresas %}{% if e[0] != i[0] %}<option value="{{e[0]}}" style="color: black">{{e[0]}}</option>{% endif %}{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar empresa</span></span></td>
                 
                 <td><span class="icon-container"><i class="fa fa-headphones"></i><select style="{% if i[9] == 'NO LE INTERESA' %}color: white;{% endif %}font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; margin: 0; cursor: pointer;" onchange="cambiarRegistro(this.value, '{{i[8]}}', 'agente', '{{i[2]}}', '{{i[3]}}', null)"><option value="{{i[1]}}" selected>{{i[1]}}</option>{% for a in agentes %}{% if a[0] != i[1]%}<option value="{{a[0]}}" style="color: black">{{a[0]}}</option>{% endif %}{% endfor %}</select><span class="tooltip" id="tooltip-editar">Cambiar agente</span></span></td>
-                
-                <td hidden>{{i[1]}}</td>
                 
                 <td><span class="icon-container"><i class="fa fa-user-circle" onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'nombre', '{{i[2]}}', '{{i[3]}}', '{{i[2]}}', null);" style="cursor: pointer;"></i><span class="tooltip" id="tooltip-editar">Cambiar nombre</span></span> {{ i[2] }}
 
@@ -175,7 +181,7 @@ Administración Los Andes | Registros
                     {% if i[3] %}
                     <div class="icon-container"><a href="{{ url_for('seguimiento', telefono=i[3], nombre=i[2]) }}" style="color: inherit"><i class="fa fa-vcard"></i></a><div class="tooltip" id="tooltip-editar">Seguimiento</div></div>
                     {% else %}
-                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{i[3]}}', 'telefono sin registrar', '{{i[2]}}', null, '', null);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
+                    <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{i[8]}}', 'telefono sin registrar', '{{i[2]}}', null, '', null);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
                     {% endif %}
 
                     {% if i[9] == 'YA INSTALÓ' or i[9] == 'INSPECCIÓN PROGRAMADA' or i[9] == 'INSPECCIÓN REALIZADA' or i[9] == 'INSTALACIÓN PROGRAMADA' %}
@@ -235,6 +241,16 @@ Administración Los Andes | Registros
 
                 <td>
                     <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; text-shadow: 0 0 5px black; color: red;" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'razon de desinteres', '{{i[2]}}', '{{i[3]}}', '', null);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336; border: 0.5px solid black;">No le interesó</span></span>
+                </td>
+
+                <td>
+                    {{i[1]}}
+                </td>
+                <td>
+                    {{i[17]}}
+                </td>
+                <td>
+                    {{i[0]}}
                 </td>
                 <!--      
                     
@@ -341,7 +357,9 @@ function guardarFiltros() {
     const filtros = {
         filtro1: document.getElementById('filtro_agentes').value,
         filtroTexto: document.getElementById('filtro_cliente').value,
-        filtro3: document.getElementById('filtro_tarea').value
+        filtro3: document.getElementById('filtro_tarea').value,
+        filtro2: document.getElementById('filtro_perfil').value,
+        filtro4: document.getElementById('filtro_empresa').value
     };
     localStorage.setItem('filtros', JSON.stringify(filtros));
 }
@@ -352,6 +370,8 @@ function restaurarFiltros() {
         document.getElementById('filtro_agentes').value = filtros.filtro1;
         document.getElementById('filtro_cliente').value = filtros.filtroTexto;
         document.getElementById('filtro_tarea').value = filtros.filtro3;
+        document.getElementById('filtro_perfil').value = filtros.filtro2;
+        document.getElementById('filtro_empresa').value = filtros.filtro4;
         aplicarFiltros()
     }
 }
@@ -376,28 +396,80 @@ document.getElementById('filtro_cliente').addEventListener('input', function() {
     aplicarFiltros();
 });
 
+document.getElementById('filtro_perfil').addEventListener('input', function() {
+    guardarFiltros();
+    aplicarFiltros();
+});
+
+document.getElementById('filtro_empresa').addEventListener('input', function() {
+    guardarFiltros();
+    aplicarFiltros();
+});
+
 function aplicarFiltros() {
     if (document.getElementById('filtro_cliente').value == '') {
         document.getElementById('filtro_agentes').removeAttribute('disabled');
         document.getElementById('filtro_tarea').removeAttribute('disabled');
+        document.getElementById('filtro_perfil').removeAttribute('disabled');
+        document.getElementById('filtro_empresa').removeAttribute('disabled');
         filtro('filtro_cliente', 'tabla_registros', 3, 1);
 
         if(document.getElementById('filtro_tarea').value != ''){
+            /*
             document.getElementById('filtro_agentes').value = '';
             document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_perfil').value = '';
+            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_empresa').value = '';
+            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
+            */
             filtro('filtro_tarea', 'tabla_registros', 6, 1);
         }
 
         if(document.getElementById('filtro_agentes').value != ''){
+            /*
             document.getElementById('filtro_tarea').value = '';
-            document.getElementById('filtro_tarea').removeAttribute('disabled');
+            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_perfil').value = '';
+            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_empresa').value = '';
+            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
+            */
             filtro('filtro_agentes', 'tabla_registros', 2, 1);
+        }
+
+        if(document.getElementById('filtro_perfil').value != ''){
+            /*
+            document.getElementById('filtro_tarea').value = '';
+            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_agentes').value = '';
+            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_empresa').value = '';
+            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
+            */
+            filtro('filtro_perfil', 'tabla_registros', 8, 1);
+        }
+
+        if(document.getElementById('filtro_empresa').value != ''){
+            /*
+            document.getElementById('filtro_tarea').value = '';
+            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_agentes').value = '';
+            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+            document.getElementById('filtro_perfil').value = '';
+            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
+            */
+            filtro('filtro_empresa', 'tabla_registros', 9, 1);
         }
     }else{
         document.getElementById('filtro_tarea').value = '';
         document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
         document.getElementById('filtro_agentes').value = '';
         document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
+        document.getElementById('filtro_perfil').value = '';
+        document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
+        document.getElementById('filtro_empresa').value = '';
+        document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
         filtro('filtro_cliente', 'tabla_registros', 3, 1);
     };
 }
