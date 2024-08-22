@@ -174,7 +174,7 @@ function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redirecci
       }
   })
 
-  .fail(function(xhr, status, error) {
+  .fail(function(error) {
     alert("Error en la solicitud.");
     console.error('Error: ', error);
   });
@@ -197,4 +197,65 @@ function setearPopUp(idregistro, nombre, nota, tarea, fecha, hora, telefono, omi
     })
   }
   document.getElementById('myModal').style.display = 'flex';
+}
+
+function registrarPago(pago_condicional, empresa, motivo, idhoja, nombre, telefono, fecha_vencimiento, fecha_pago, forma_pago, pago, idrecordatorio){
+  var formData = {
+    'pago_condicional': pago_condicional,
+    'empresa': empresa,
+    'motivo': motivo,
+    'idhoja': idhoja,
+    'nombre': nombre,
+    'telefono': telefono,
+    'fecha_vencimiento': fecha_vencimiento,
+    'fecha_pago': fecha_pago,
+    'forma_pago': forma_pago,
+    'pago': pago,
+    'idrecordatorio': idrecordatorio
+};
+$.ajax({
+    type: 'POST',
+    url: '/pagos/registrarpago',
+    data: formData,
+    dataType: 'json',
+    encode: true
+})
+.done(function(data){
+    if(data.status === 'success'){
+        registroListo('Pago registrado con éxito!')
+        location.reload();
+    }else{
+        alert('Error al modificar registro.')
+    }
+})
+
+.fail(function(error) {
+  alert("Error en la solicitud.");
+  console.error('Error: ', error);
+});
+}
+
+function nuevoRegistro(url, nuevo){
+  var formData = {
+    'nuevo': nuevo
+};
+$.ajax({
+    type: 'POST',
+    url: url,
+    data: formData,
+    dataType: 'json',
+    encode: true
+})
+.done(function(data){
+    if(data.status === 'success'){
+        location.replace('/empresas/'+data.redireccion)
+    }else{
+        alert('Error al guardar registro.')
+    }
+})
+
+.fail(function(error) {
+  alert("Error en la solicitud. Ha ingresado caracteres incorrectos o raros.");
+  console.error('Error: ', error);
+});
 }
