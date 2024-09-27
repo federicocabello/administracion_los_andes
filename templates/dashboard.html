@@ -278,7 +278,7 @@ Administración Los Andes | Inicio
           {% else %}
                     <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{t[9]}}', 'telefono sin registrar', '{{t[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
           {% endif %}
-          <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="cambiarRegistroPopUp('a', '{{t[9]}}', 'razon de desinteres', '{{t[2]}}', '{{t[3]}}', '', null, true);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+          <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="noInteresa('{{t[2]}}', '', '{{t[8]}}', '{{t[9]}}', '{{t[3]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
       </tr>
       <tr>
@@ -393,7 +393,7 @@ Administración Los Andes | Inicio
           {% else %}
                     <div class="icon-container"><i class="fa fa-volume-control-phone" onclick="cambiarRegistroPopUp('o', '{{a[9]}}', 'telefono sin registrar', '{{a[2]}}', null, '', null, true);" style="cursor: pointer"></i><div class="tooltip" id="tooltip-editar">Agregar teléfono</div></div>
           {% endif %}
-          <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="cambiarRegistroPopUp('a', '{{a[9]}}', 'razon de desinteres', '{{a[2]}}', '{{a[3]}}', '', null, true);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
+          <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="noInteresa('{{a[2]}}', '', '{{a[8]}}', '{{a[9]}}', '{{a[3]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
       </tr>
       <tr>

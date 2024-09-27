@@ -30,7 +30,7 @@ Administración Los Andes | Movimientos
                 </select>
             </td>
             <td>
-                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos',2,1)">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0;" placeholder="Filtro..." id="filtro_mov" onkeyup="filtro('filtro_mov','tabla_movimientos', 1, 1)">
             </td>
             <td>
             <input name="fecha_unica" id="fecha_unica" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; width: 100%; margin: 0; color: #000080;" onchange="document.getElementById('fecha_unica').removeAttribute('disabled'); document.getElementById('accion').value = 'filtro_fecha'; document.formulario.submit();" type="date" {% if fecha %}value="{{fecha}}"{% endif %}>

@@ -10,7 +10,7 @@ Administración Los Andes | Registros
 
 {% block body %}
 <div id="main-content">
-    <h1>Panel de registros. <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="document.getElementById('filtro').value = 'limite'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click();">
+    <h1>Panel de registros • <span style="color: #6495ED;" id="contador-registros">{{mostrados}}</span> • <select style="font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="document.getElementById('filtro').value = 'limite'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click();">
         {% if mostrados != 25 and mostrados != 50 and mostrados != 75 and mostrados != 100 and mostrados != n_registros[0] %}<option selected>Mostrar {{mostrados}}</option>{% endif %}
         <option value="25" {% if mostrados == '25' %}selected{% endif %}>Mostrar 25</option>
         <option value="50" {% if mostrados == '50' %}selected{% endif %}>Mostrar 50</option>
@@ -49,14 +49,14 @@ Administración Los Andes | Registros
         </script>
         <tr>
             <td style="display: flex;">
-            <select id="filtro_empresa" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px;" onchange="guardarFiltros(); aplicarFiltros();">
+            <select id="filtro_empresa" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px;">
                 <!--onchange="document.getElementById('filtro').value = 'empresa'; document.getElementById('limite').value = this.value; document.getElementById('btn-enviar').click()"-->
                 <option value="" style="color:gainsboro">Filtro por empresa...</option>
                 {% for emp in empresas %}
                 <option value="{{emp[0]}}" {% if empresa == emp[0] %}selected{% endif %}>{{emp[0]}}</option>
                 {% endfor %}
             </select>
-            <select id="filtro_perfil" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="guardarFiltros(); aplicarFiltros();">
+            <select id="filtro_perfil" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
                 <option value="" style="color:gainsboro">Filtro por perfil...</option>
                 <option value="LOS ANDES">LOS ANDES</option>
                 <option value="TS NETWORK">TS NETWORK</option>
@@ -65,7 +65,7 @@ Administración Los Andes | Registros
             </select>
             </td>
             <td>            
-            <select id="filtro_agentes" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;" onchange="guardarFiltros(); aplicarFiltros();">
+            <select id="filtro_agentes" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
                 <option value="" style="color:gainsboro">Filtro por agente...</option>
                 {% for agt in agentes_purgados %}
                 <option value="{{agt[0]}}">{{agt[0]}}</option>
@@ -73,7 +73,7 @@ Administración Los Andes | Registros
             </select>
             </td>
             <td colspan="2">
-                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px; color: #000080;" placeholder="Filtro por cliente..." id="filtro_cliente" onkeyup="guardarFiltros(); aplicarFiltros();">
+                <input type="text" style="font-size: 14px; background: none; border: none; margin: 0; height: 25px; color: #000080;" placeholder="Filtro por cliente..." id="filtro_cliente">
             <!--
                 <select id="filtro_cliente" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="filtro('filtro_cliente', 'tabla_registros', 3, 1)">
                     <option value="" style="color:gainsboro">Filtro por cliente...</option>
@@ -123,7 +123,7 @@ Administración Los Andes | Registros
             </form>
             <td>
                 <span style="display: flex;">
-                <select id="filtro_tarea" onchange="guardarFiltros(); aplicarFiltros();" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
+                <select id="filtro_tarea" style="margin-right: 5px; font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px;">
                     <option value="" style="color: gainsboro;">Tarea...</option>
                     {% if tareas_empresa != () %}
                         {% for te in tareas_empresa %}
@@ -240,58 +240,18 @@ Administración Los Andes | Registros
                 </td>
 
                 <td>
-                    <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; text-shadow: 0 0 5px black; color: red;" onclick="cambiarRegistroPopUp('a', '{{i[8]}}', 'razon de desinteres', '{{i[2]}}', '{{i[3]}}', '', null);"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336; border: 0.5px solid black;">No le interesó</span></span>
+                    <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; text-shadow: 0 0 5px black; color: red;" onclick="noInteresa('{{i[2]}}', '{{i[12]}}', '{{i[6]}}', '{{i[8]}}', '{{i[3]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336; border: 0.5px solid black;">No le interesó</span></span>
                 </td>
 
-                <td>
-                    {{i[1]}}
-                </td>
-                <td>
-                    {{i[17]}}
-                </td>
-                <td>
+                <td hidden>
                     {{i[0]}}
                 </td>
-                <!--      
-                    
-                    <span class="icon-container" id="flotante_calendar_{{i[8]}}"><img src="{{ url_for('static', filename='img/calendar-days-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('myModal').style.display = 'flex';"><span class="tooltip" id="tooltip-editar">Cambiar fecha de tarea</span></span>
-
-                    <span class="icon-container" id="flotante_tarea_{{i[8]}}"><img src="{{ url_for('static', filename='img/briefcase-solid.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_tarea_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_tarea{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar tarea</span></span>
-                    <select name="tarea" id="select_tarea{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'tarea', 'null', null, '', '', '');" hidden>
-                        {% for t in tareas %}
-                        {% if t[1] != 'NO LE INTERESA' %}
-                        {% if i[9] == t[1] %}
-                        <option value="{{t[0]}}" selected>{{t[1]}}</option>
-                        {% else %}
-                        <option value="{{t[0]}}">{{t[1]}}</option>
-                        {% endif %}
-                        {% endif %}
-                        {% endfor %}
-                    </select>
-                       
-                    <select name="calendario" id="select_calendar{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'fecha', 'null', null, '', '', '');" hidden>
-                    {% for c in calendario %}
-                    {% if i[10] == c[0] %}
-                    <option value="{{ c[0] }}" selected>{{c[1]}}</option>
-                    {% else %}
-                    <option value="{{ c[0] }}">{{c[1]}}</option>
-                    {% endif %}
-                    {% endfor %}
-                    </select>
-
-                    <span class="icon-container" id="flotante_hora_{{i[8]}}"><img src="{{ url_for('static', filename='img/clock-regular.svg') }}" width="15" height="15" class="icon" id="editar-icono" type="button" onclick="document.getElementById('flotante_hora_{{i[8]}}').setAttribute('hidden', 'hidden'); document.getElementById('select_hora{{i[8]}}').removeAttribute('hidden');"><span class="tooltip" id="tooltip-editar">Cambiar hora de tarea</span></span>
-                    <select name="hora" id="select_hora{{i[8]}}" style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px;" onchange="cambiarRegistro('/registros/editarregistro/actualizar', this.value, '{{i[8]}}', 'hora', 'null', null, '', '', '');" hidden>
-                        <option value='{{ i[11] }}' style="color: #008080;" selected>{{ i[11] }}</option>
-                        {% for hora in range(9,20) %}
-                        <option value="{{hora}}:00 h">{{ hora }}:00 h</option>
-                        {% endfor %}
-                    </select>
-
-                    <span class="icon-container"><img src="{{ url_for('static', filename='img/send-blue.png') }}" width="15" height="15" class="icon" id="editar-icono" type="button"><span class="tooltip" id="tooltip-editar" style="background-color: blue;">Enviar cotización</span></span>
-              
-                <td style="border: none; text-align: center; border-radius: 5px;"><button type="button" class="btn danger" style="padding: 6px; font-size: 14px;" onclick="rechazar('{{ i[8] }}')">No le interesó</button></td>
-                <td style="border: none; text-align: center; border-radius: 5px;"><button style="padding: 6px; font-size: 14px;" class="btn primary">Enviar cotización</button></td>
-                -->
+                <td hidden>
+                    {{i[1]}}
+                </td>
+                <td hidden>
+                    {{i[17]}}
+                </td>
         </tr>
         {% endfor %}
         <form method="POST" name="formulario" action="/registros/editarregistro" id="formulario">
@@ -372,7 +332,7 @@ function restaurarFiltros() {
         document.getElementById('filtro_tarea').value = filtros.filtro3;
         document.getElementById('filtro_perfil').value = filtros.filtro2;
         document.getElementById('filtro_empresa').value = filtros.filtro4;
-        aplicarFiltros()
+        //aplicarFiltros()
     }
 }
 
@@ -380,6 +340,11 @@ function restaurarFiltros() {
 window.onload = function() {
     restaurarFiltros();
 };
+
+document.getElementById('filtro_cliente').addEventListener('input', function() {
+    guardarFiltros();
+    aplicarFiltroCliente();
+});
 
 document.getElementById('filtro_tarea').addEventListener('change', function() {
     guardarFiltros();
@@ -391,76 +356,22 @@ document.getElementById('filtro_agentes').addEventListener('change', function() 
     aplicarFiltros();
 });
 
-document.getElementById('filtro_cliente').addEventListener('input', function() {
+document.getElementById('filtro_perfil').addEventListener('change', function() {
     guardarFiltros();
     aplicarFiltros();
 });
 
-document.getElementById('filtro_perfil').addEventListener('input', function() {
+document.getElementById('filtro_empresa').addEventListener('change', function() {
     guardarFiltros();
     aplicarFiltros();
 });
 
-document.getElementById('filtro_empresa').addEventListener('input', function() {
-    guardarFiltros();
-    aplicarFiltros();
-});
-
-function aplicarFiltros() {
-    if (document.getElementById('filtro_cliente').value == '') {
+function aplicarFiltroCliente() {
+    if (!document.getElementById('filtro_cliente').value) {
         document.getElementById('filtro_agentes').removeAttribute('disabled');
         document.getElementById('filtro_tarea').removeAttribute('disabled');
         document.getElementById('filtro_perfil').removeAttribute('disabled');
         document.getElementById('filtro_empresa').removeAttribute('disabled');
-        filtro('filtro_cliente', 'tabla_registros', 3, 1);
-
-        if(document.getElementById('filtro_tarea').value != ''){
-            /*
-            document.getElementById('filtro_agentes').value = '';
-            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_perfil').value = '';
-            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_empresa').value = '';
-            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
-            */
-            filtro('filtro_tarea', 'tabla_registros', 6, 1);
-        }
-
-        if(document.getElementById('filtro_agentes').value != ''){
-            /*
-            document.getElementById('filtro_tarea').value = '';
-            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_perfil').value = '';
-            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_empresa').value = '';
-            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
-            */
-            filtro('filtro_agentes', 'tabla_registros', 2, 1);
-        }
-
-        if(document.getElementById('filtro_perfil').value != ''){
-            /*
-            document.getElementById('filtro_tarea').value = '';
-            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_agentes').value = '';
-            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_empresa').value = '';
-            document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
-            */
-            filtro('filtro_perfil', 'tabla_registros', 8, 1);
-        }
-
-        if(document.getElementById('filtro_empresa').value != ''){
-            /*
-            document.getElementById('filtro_tarea').value = '';
-            document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_agentes').value = '';
-            document.getElementById('filtro_agentes').setAttribute('disabled', 'disabled');
-            document.getElementById('filtro_perfil').value = '';
-            document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
-            */
-            filtro('filtro_empresa', 'tabla_registros', 9, 1);
-        }
     }else{
         document.getElementById('filtro_tarea').value = '';
         document.getElementById('filtro_tarea').setAttribute('disabled', 'disabled');
@@ -470,8 +381,73 @@ function aplicarFiltros() {
         document.getElementById('filtro_perfil').setAttribute('disabled', 'disabled');
         document.getElementById('filtro_empresa').value = '';
         document.getElementById('filtro_empresa').setAttribute('disabled', 'disabled');
-        filtro('filtro_cliente', 'tabla_registros', 3, 1);
     };
+    filtro('filtro_cliente', 'tabla_registros', 2, 1);
+}
+
+function aplicarFiltros() {
+    const filtros = {
+        perfil: document.getElementById('filtro_perfil').value.toUpperCase(),
+        empresa: document.getElementById('filtro_empresa').value.toUpperCase(),
+        agentes: document.getElementById('filtro_agentes').value.toUpperCase(),
+        tarea: document.getElementById('filtro_tarea').value.toUpperCase()
+    };
+    filtrarTabla('tabla_registros', filtros);
+}
+
+function filtrarTabla(tabla, filtros) {
+    const table = document.getElementById(tabla);
+    const tr = table.getElementsByTagName("tr");
+
+    let contador = 0;
+
+    for (let i = 1; i < tr.length; i++) {  // Suponiendo que la primera fila es el encabezado
+        let mostrar = true;
+
+        // Filtrar por perfil
+        const tdPerfil = tr[i].getElementsByTagName("td")[9];  // Columna del perfil
+        if (tdPerfil) {
+            const txtPerfil = tdPerfil.textContent || tdPerfil.innerText;
+            if (filtros.perfil && txtPerfil.toUpperCase().indexOf(filtros.perfil) === -1) {
+                mostrar = false;
+            }
+        }
+
+        // Filtrar por empresa
+        const tdEmpresa = tr[i].getElementsByTagName("td")[7];  // Columna de la empresa
+        if (tdEmpresa) {
+            const txtEmpresa = tdEmpresa.textContent || tdEmpresa.innerText;
+            if (filtros.empresa && txtEmpresa.toUpperCase().indexOf(filtros.empresa) === -1) {
+                mostrar = false;
+            }
+        }
+
+        // Filtrar por tarea
+        const tdTarea = tr[i].getElementsByTagName("td")[5];  // Columna de la empresa
+        if (tdTarea) {
+            const txtTarea = tdTarea.textContent || tdTarea.innerText;
+            if (filtros.tarea && txtTarea.toUpperCase().indexOf(filtros.tarea) === -1) {
+                mostrar = false;
+            }
+        }
+
+        // Filtrar por agentes
+        const tdAgentes = tr[i].getElementsByTagName("td")[8];  // Columna de la empresa
+        if (tdAgentes) {
+            const txtAgentes = tdAgentes.textContent || tdAgentes.innerText;
+            if (filtros.agentes && txtAgentes.toUpperCase().indexOf(filtros.agentes) === -1) {
+                mostrar = false;
+            }
+        }
+
+        // Mostrar u ocultar la fila dependiendo de los filtros
+        tr[i].style.display = mostrar ? "" : "none";
+
+        if (mostrar) {
+            contador++;
+        }
+    }
+    document.getElementById('contador-registros').textContent = contador-1;
 }
 </script>
 {% endblock %}

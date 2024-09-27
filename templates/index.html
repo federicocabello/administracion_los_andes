@@ -10,7 +10,40 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-style.css') }}">
     <style>
-      .pantalla-carga {
+
+      .custom-modal{
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .custom-modal-content{
+        background-color: white;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 20%;
+        border-radius: 5px;
+      }
+
+      .custom-close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .custom-close-btn:hover, .custom-close-btn:focus {
+        color: black;
+        cursor: pointer;
+      }
+
+    .pantalla-carga {
     display: none; /* Ocultar por defecto */
     position: fixed;
     top: 0;
@@ -94,6 +127,31 @@
   <div id="pantallaCarga" class="pantalla-carga">
     <div class="loader"></div>
   </div>
+
+<div id="customModal" class="custom-modal">
+  <div class="custom-modal-content">
+      <span class="custom-close-btn">&times;</span>
+      <div style="display: flex">
+      <i class="fa fa-user-circle" style="margin-right: 5px;"></i>
+      <div id="modal-nointeresa-cliente"></div>
+      </div>
+      <h2>Selecciona una opción:</h2>
+      <select id="customComboBox" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px;" onchange="comprobarEliminarMotivo()">
+        <option value="" style="color: gainsboro">Seleccionar motivo...</option>
+      </select>
+      <span class="icon-container">
+      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: green; color: white; border-radius: 5px; cursor: pointer; margin-right: 5px;" onclick="agregarMotivo()"><i class="fa fa-plus"></i></button>
+      <span class="tooltip" id="tooltip-editar" style="color: white; background-color: green; border: 1px solid white;">Nuevo motivo</span></span>
+      <span class="icon-container">
+      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: red; color: white; border-radius: 5px; cursor: pointer;" id="btn-borrar-motivo"><i class="fa fa-trash"></i></button>
+      <span class="tooltip" id="tooltip-editar" style="color: white; background-color: red; border: 1px solid white;">Eliminar motivo</span></span>
+      <br><br>
+      <button id="customSubmitBtn" class="btn warning">Confirmar</button>
+      <input type="hidden" id="modal-nointeresa-fecha">
+      <input type="hidden" id="modal-nointeresa-telefono">
+  </div>
+</div>
+
 </body>
 <footer>
   <!--FOOTER-->
@@ -110,6 +168,113 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   {% block js %}{% endblock %}
   <script>
+
+    function comprobarEliminarMotivo() {
+      if (!document.getElementById('customComboBox').value){
+        document.getElementById('btn-borrar-motivo').setAttribute('hidden', 'hidden');
+      }else{
+        document.getElementById('btn-borrar-motivo').removeAttribute('hidden');
+      }
+    }
+
+    function agregarMotivo() {
+      let nuevoDato = prompt("Nuevo motivo:");
+      nuevoDato = nuevoDato.trim().toUpperCase();
+
+      if (nuevoDato) {
+        const confirmacion = confirm("¿Desea agregar "+nuevoDato+" como un motivo nuevo?");
+        if (confirmacion) {
+          const nuevoMotivo = document.createElement('option');
+          nuevoMotivo.value = nuevoDato;
+          nuevoMotivo.text = nuevoDato;
+          customComboBox.add(nuevoMotivo);
+          nuevoMotivo.selected = true;
+          comprobarEliminarMotivo();
+          agregarMotivoDB(nuevoDato);
+        }
+      }
+    }
+
+    function agregarMotivoDB(nuevoMotivo){
+      var formData = {
+      'nuevom': nuevoMotivo
+  };
+  $.ajax({
+      type: 'POST',
+      url: '/motivos/nuevo',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+        alert('Se agregó '+nuevoMotivo+' como un nuevo motivo.');
+      }else{
+        alert('Error al agregar motivo a la base de datos. Dato ya registrado/duplicado o con caracteres inválidos. Puede utilizarlo temporalmente.')
+      }
+  })
+
+  .fail(function(error) {
+    alert("Error al agregar motivo a la base de datos. Dato ya registrado/duplicado o con caracteres inválidos. Puede utilizarlo temporalmente.");
+    console.error('Error: ', error);
+  });
+    }
+
+    function loadMotivos() {
+      fetch('/get_motivos')
+      .then(response => response.json())
+      .then(motivos => {
+        const select = document.getElementById('customComboBox');
+        select.innerHTML = '<option value="" style="color: gainsboro">Seleccionar motivo...</option>';
+        motivos.forEach(motivo => {
+          const option = document.createElement('option');
+          option.value = motivo.razon;
+          option.textContent = motivo.razon;
+          select.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error("Error al cargar los motivos:", error);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadMotivos);
+
+var customModal = document.getElementById('customModal');
+var openCustomModalBtn = document.getElementById('openCustomModalBtn');
+var customCloseBtn = document.getElementsByClassName('custom-close-btn')[0];
+var customSubmitBtn = document.getElementById('customSubmitBtn');
+var customComboBox = document.getElementById('customComboBox');
+
+function noInteresa(nombre, valor, tarea, fecha, telefono) {
+  document.getElementById('modal-nointeresa-cliente').textContent = nombre;
+  document.getElementById('modal-nointeresa-fecha').value = fecha;
+  document.getElementById('modal-nointeresa-telefono').value = telefono;
+  if (tarea == 2 && valor){
+    document.getElementById('customComboBox').value = valor;
+  };
+  comprobarEliminarMotivo();
+  customModal.style.display = "block";
+}
+
+customCloseBtn.onclick = function() {
+  customModal.style.display = 'none';
+}
+
+window.onclick = function(event){
+  if (event.target == customModal) {
+    customModal.style.display = "none";
+  }
+}
+
+if(window.location.pathname.includes('registros.html')){
+  customSubmitBtn.onclick = function() {
+    cambiarRegistro(document.getElementById('customComboBox').value, document.getElementById('modal-nointeresa-fecha').value, 'razon de desinteres', document.getElementById('modal-nointeresa-cliente').textContent, document.getElementById('modal-nointeresa-telefono').value, null);
+}} else {
+customSubmitBtn.onclick = function() {
+  cambiarRegistro(document.getElementById('customComboBox').value, document.getElementById('modal-nointeresa-fecha').value, 'razon de desinteres', document.getElementById('modal-nointeresa-cliente').textContent, document.getElementById('modal-nointeresa-telefono').value, null, true);
+}}
+
     function mostrarPantallaCarga() {
     const pantallaCarga = document.getElementById('pantallaCarga');
     pantallaCarga.classList.add('active'); // Mostrar la pantalla de carga

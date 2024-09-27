@@ -175,7 +175,7 @@ Administración Los Andes | {{new[1]}}
             </td>
             <td style="vertical-align: top; width: 50%;">
                 <div>
-                    <h4 style="margin: 0; padding: 0;">¿QUE VENDE?</h4>
+                    <h4 style="margin: 0; padding: 0;">{% if new[5] == 'CONTACTOS PARA VACANTES' %}¿QUE SE ESPERA?{% else %}¿QUE VENDE?{% endif %}</h4>
                     <textarea id="que_vende" style="display: none;"></textarea>
                     <div id="e_que_vende" class="divLectura">{{new[6]}}</div>
                 </div>
@@ -200,21 +200,21 @@ Administración Los Andes | {{new[1]}}
         </tr>
         <tr style="height: 12px;"></tr>
         <tr>
-            <td style="vertical-align: top; width: 33%;">
+            <td {% if new[5] == 'CONTACTOS PARA VACANTES' %}style="vertical-align: top; width: 50%;"{% else %}style="vertical-align: top; width: 33%;"{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
-                    <h4 style="margin: 0; padding: 0;">INTRODUCCIÓN</h4>
+                    <h4 style="margin: 0; padding: 0;">{% if new[5] == 'CONTACTOS PARA VACANTES' %}REQUISITOS{% else %}INTRODUCCIÓN{% endif %}</h4>
                     <textarea id="introduccion" style="display: none;"></textarea>
                     <div id="e_introduccion" class="divLectura">{{new[7]}}</div>
                 </div> 
             </td>
-            <td style="vertical-align: top; width: 34%;">
+            <td {% if new[5] == 'CONTACTOS PARA VACANTES' %}style="vertical-align: top; width: 50%;"{% else %}style="vertical-align: top; width: 34%;"{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
-                    <h4 style="margin: 0; padding: 0;">TENER EN CUENTA</h4>
+                    <h4 style="margin: 0; padding: 0;">{% if new[5] == 'CONTACTOS PARA VACANTES' %}HABILIDADES{% else %}TENER EN CUENTA{% endif %}</h4>
                     <textarea id="tener_en_cuenta" style="display: none;"></textarea>
                     <div id="e_tener_en_cuenta" class="divLectura">{{new[8]}}</div>
                 </div> 
             </td>
-            <td style="vertical-align: top; width: 33%;">
+            <td style="vertical-align: top; width: 33%;" {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0;">ESTRUCTURA DE LA LLAMADA</h4>
                     <textarea id="estructura" style="display: none;"></textarea>
@@ -222,14 +222,14 @@ Administración Los Andes | {{new[1]}}
                 </div> 
             </td>
         </tr>
-        <tr style="height: 15px;"></tr>
-        <tr>
+        <tr style="height: 15px;" {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}></tr>
+        <tr {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}>
             <th colspan="3" style="background-color: #000080;">
             SEGUIMIENTO
             </th>
         </tr>
-        <tr style="height: 12px;"></tr>
-        <tr>
+        <tr style="height: 12px;" {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}></tr>
+        <tr {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}>
             <td style="vertical-align: top; width: 33%;">
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0;">CLIENTE NO INTERESADO</h4>
@@ -259,14 +259,14 @@ Administración Los Andes | {{new[1]}}
         </tr>
         <tr style="height: 12px;"></tr>
         <tr>
-            <td style="vertical-align: top; width: 50%;">
+            <td style="vertical-align: top; width: 50%;" {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0;">SPEECH DE LLAMADA ENTRANTE</h4>
                     <textarea id="speech_entrada" style="display: none;"></textarea>
                     <div id="e_speech_entrada" class="divLectura">{{new[13]}}</div>
                 </div> 
             </td>
-            <td style="vertical-align: top; width: 50%;">
+            <td {% if new[5] == 'CONTACTOS PARA VACANTES' %}style="vertical-align: top; width: 100%;" colspan="2"{% else %}style="vertical-align: top; width: 50%;"{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0;">SPEECH DE LLAMADA SALIENTE</h4>
                     <textarea id="speech_salida" style="display: none;"></textarea>
@@ -289,21 +289,21 @@ Administración Los Andes | {{new[1]}}
             </td>
             <td style="vertical-align: top; width: 50%;">
                 <div style="margin-bottom: 5px; text-align: center;">
-                    <h4 style="margin: 0; padding: 0;">FORMAS DE PAGOS - COMISIÓN</h4>
+                    <h4 style="margin: 0; padding: 0;">{% if new[5] == 'CONTACTOS PARA VACANTES' %}SUELDO Y CONDICIONES{% else %}FORMAS DE PAGOS - COMISIÓN{% endif %}</h4>
                     <textarea id="formas_pago" style="display: none;"></textarea>
                     <div id="e_formas_pago" class="divLectura">{{new[16]}}</div>
                 </div> 
             </td>
         </tr>
         <tr>
-            <td style="vertical-align: top; width: 50%;">
+            <td {% if new[5] == 'CONTACTOS PARA VACANTES' %}style="vertical-align: top; width: 100%;" colspan="2"{% else %}style="vertical-align: top; width: 50%;"{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0; color: #000080;">PREGUNTAS FRECUENTES</h4>
                     <textarea id="preguntas_frecuentes" style="display: none;"></textarea>
                     <div id="e_preguntas_frecuentes" class="divLectura">{{new[17]}}</div>
                 </div> 
             </td>
-            <td style="vertical-align: top; width: 50%;">
+            <td style="vertical-align: top; width: 50%;" {% if new[5] == 'CONTACTOS PARA VACANTES' %}hidden{% endif %}>
                 <div style="margin-bottom: 5px; text-align: center;">
                     <h4 style="margin: 0; padding: 0; color: #000080;">TERMINOLOGÍAS</h4>
                     <textarea id="terminologias" style="display: none;"></textarea>
@@ -326,7 +326,7 @@ Administración Los Andes | {{new[1]}}
                             <img src="{{ url_for('get_image_art', empresa=new[1], articulo=articulos[i][0], precio=articulos[i][1]) }}" alt="img" class="item-image">
                         {% endif %}
                         <div class="item-title">{{ articulos [i][0] }}</div>
-                        <div class="item-price">Precio: ${{articulos[i][1]}}</div>
+                        <div class="item-price">Precio: ${{ '{:,.0f}'.format(articulos[i][1]).replace(',', '.') }}</div>
                         <div class="divLectura" style="padding: 0; border: none; margin-top: 1%;">{{articulos[i][2]}}</div>
                     </div>
                 </td>
@@ -337,7 +337,7 @@ Administración Los Andes | {{new[1]}}
                             <img src="{{ url_for('get_image_art', empresa=new[1], articulo=articulos[i+1][0], precio=articulos[i+1][1]) }}" alt="img" class="item-image">
                         {% endif %}
                         <div class="item-title">{{ articulos [i+1][0] }}</div>
-                        <div class="item-price">Precio: ${{articulos[i+1][1]}}</div>
+                        <div class="item-price">Precio: ${{ '{:,.0f}'.format(articulos[i+1][1]).replace(',', '.') }}</div>
                         <div class="divLectura" style="padding: 0; border: none; margin-top: 1%;">{{articulos[i+1][2]}}</div>
                     </div>
                 </td>
@@ -380,9 +380,10 @@ Administración Los Andes | {{new[1]}}
     </select>
     <input type="text" name="appointment" id="calendario-emergente-registro" onclick="document.getElementById('confirm-button-calendar-registro').removeAttribute('hidden');" style="width: 100%; color: black; padding: 3px; margin-bottom: 15px;" placeholder="Fecha y hora de tarea...">
     <button type="button" id="confirm-button-calendar-registro" class="confirm-button-calendar" style="transform: translate(-410%, -260%); border: 1px solid white" onclick="this.setAttribute('hidden', 'hidden');" hidden>✔</button>
-<div style="display: flex; margin-bottom: 15px;">
+<div style="display: flex; margin-bottom: 15px;" id="div-perfil">
     <span>Perfil:</span>
     <select id="perfil" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px; margin-left: 5px;">
+        <option value="" style="color: gainsboro;">Seleccionar...</option>
         <option value="LOS ANDES">Los Andes</option>
         <option value="TS NETWORK">TS Network</option>
         <option value="LUCAS M REHDER">Lucas M Rehder</option>
@@ -415,6 +416,9 @@ Administración Los Andes | {{new[1]}}
                 <td style="width: 50px; text-align: center;">
                     {% if art[3] %}
                     <img src="{{ url_for('get_image_art', empresa=new[1], articulo=art[0], precio=art[1]) }}" alt="img" width="50">
+                    <button type="button" style="max-width: 100%; cursor: pointer; font-size: 16px; border-radius: 5px;" onclick="abrirInputFile(this)">
+                        <i class="fa fa-pencil"></i>
+                    </button>
                     {% else %}
                     <button type="button" style="max-width: 100%; cursor: pointer; font-size: 24px;" onclick="abrirInputFile(this)">
                         <i class="fa fa-image"></i>
@@ -755,16 +759,22 @@ function agregarFilaArticulo() {
 }
 
 function eliminarRowArticulo(elemento){
-    const fila = elemento.parentNode.parentNode;
-    fila.parentNode.removeChild(fila);
+    var resultado = confirm('¿Está seguro de eliminar este artículo?');
+    if (resultado){
+        const fila = elemento.parentNode.parentNode;
+        fila.parentNode.removeChild(fila);
+    }
 }
 
 function eliminarFilaArticulo(elemento, articulo, precio) {
-    const fila = elemento.closest('.fila_articulos');
-    fila.classList.add('fila_oculta');
-    const inputImagenExistente = fila.querySelector('input[name="imagen_existente"]');
-    if (inputImagenExistente){
-        inputImagenExistente.value = "deleteæ"+articulo+"æ"+precio;
+    var resultado = confirm("¿Estás seguro de eliminar "+articulo+"?");
+    if (resultado){
+        const fila = elemento.closest('.fila_articulos');
+        fila.classList.add('fila_oculta');
+        const inputImagenExistente = fila.querySelector('input[name="imagen_existente"]');
+        if (inputImagenExistente){
+            inputImagenExistente.value = "deleteæ"+articulo+"æ"+precio;
+        }
     }
 }
 
@@ -774,6 +784,13 @@ function abrirInputFile(boton) {
 }
 
 function registrarLlamada(empresa, nombre, telefono, direccion, email, nota, tarea, fechatarea, perfil){
+if (document.getElementById('perfil').value === ""){
+    var divperfil = document.getElementById('div-perfil');
+    alert("Debe seleccionar un perfil antes de guardar un registro.");
+    divperfil.style.borderRadius = "5px";
+    divperfil.style.border = "4px solid red";
+    divperfil.style.padding = "6px";
+}else{
     var formData = {
       'empresa': empresa,
       'nombre': nombre,
@@ -809,6 +826,7 @@ function registrarLlamada(empresa, nombre, telefono, direccion, email, nota, tar
     alert("Error en la solicitud.");
     console.error('Error: ', error);
   });
+}
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
