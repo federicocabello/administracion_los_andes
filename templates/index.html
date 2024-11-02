@@ -68,12 +68,94 @@
     width: 120px;
     height: 120px;
     animation: girar 2s linear infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#imagen-carga {
+  position: absolute;
+  width: 85px;
+  height: auto;
+  animation: flotar 3s ease-in-out infinite;
+  z-index:1;
+  border-radius: 50%;
 }
 
 @keyframes girar {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+@keyframes flotar {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.new-tasks-modal {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  z-index: 9999; /* Por encima de todo */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente */
+}
+
+/* Contenido del modal */
+.new-tasks-modal-content {
+  background-color: white;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 35%;
+}
+
+/* Estilos para el botón de cierre */
+.new-tasks-close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.new-tasks-close:hover,
+.new-tasks-close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Estilos del formulario */
+.new-tasks-modal input, .new-tasks-modal textarea, .new-tasks-modal select {
+  width: 100%;
+  /*
+  padding: 10px;
+  margin: 10px 0;
+  */
+  box-sizing: border-box;
+}
+
+#new-tasks-submit {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+#new-tasks-submit:hover {
+  background-color: #45a049;
+}
+
     </style>
     {% block css %}{% endblock %}
     <!--TÍTULO-->
@@ -85,11 +167,12 @@
       <nav>
         <ul>
           <li><a href="{{ url_for('dashboard') }}">Inicio</a></li>
+          <li><a type="button" style="cursor: pointer;" id="open-new-tasks-modal">Nuevo recordatorio</a></li>
           {% if current_user.rol == 'admin' %}
           <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
           {% endif %}
           <li><a href="{{ url_for('pagos') }}">Pagos</a></li>
-          <li><a type="button" onclick="mostrarPantallaCarga()" style="cursor: pointer;">Registros</a></li>
+          <li><a type="button" onclick="mostrarPantallaCarga('registros')" style="cursor: pointer;">Registros</a></li>
           <li><a href="{{ url_for('movimientos') }}">Movimientos</a></li>
         </ul>
       </nav>
@@ -125,7 +208,9 @@
     </div>
   </div>
   <div id="pantallaCarga" class="pantalla-carga">
-    <div class="loader"></div>
+    <div class="loader">
+    </div>
+    <img src="{{ url_for('static', filename='img/logolosandes1.jpg') }}" id="imagen-carga">
   </div>
 
 <div id="customModal" class="custom-modal">
@@ -136,19 +221,85 @@
       <div id="modal-nointeresa-cliente"></div>
       </div>
       <h2>Selecciona una opción:</h2>
-      <select id="customComboBox" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px;" onchange="comprobarEliminarMotivo()">
+      <select id="customComboBox" style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; margin-right: 5px; width: 70%;;" onchange="comprobarEliminarMotivo()">
         <option value="" style="color: gainsboro">Seleccionar motivo...</option>
       </select>
+
       <span class="icon-container">
-      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: green; color: white; border-radius: 5px; cursor: pointer; margin-right: 5px;" onclick="agregarMotivo()"><i class="fa fa-plus"></i></button>
+      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: green; color: white; border-radius: 5px; cursor: pointer; margin-right: 5px;" onclick={% if current_user.rol == 'admin' %}"agregarMotivo()"{% else %}"alertaAdministrador()"{% endif %}><i class="fa fa-plus"></i></button>
       <span class="tooltip" id="tooltip-editar" style="color: white; background-color: green; border: 1px solid white;">Nuevo motivo</span></span>
       <span class="icon-container">
-      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: red; color: white; border-radius: 5px; cursor: pointer;" id="btn-borrar-motivo"><i class="fa fa-trash"></i></button>
+      <button style="font-family: 'Rubik', sans-serif; font-size: 16px; height: 25px; background-color: red; color: white; border-radius: 5px; cursor: pointer;" id="btn-borrar-motivo" onclick={% if current_user.rol == 'admin' %}"eliminarMotivo()"{% else %}"alertaAdministrador()"{% endif %}><i class="fa fa-trash"></i></button>
       <span class="tooltip" id="tooltip-editar" style="color: white; background-color: red; border: 1px solid white;">Eliminar motivo</span></span>
+
       <br><br>
       <button id="customSubmitBtn" class="btn warning">Confirmar</button>
       <input type="hidden" id="modal-nointeresa-fecha">
       <input type="hidden" id="modal-nointeresa-telefono">
+  </div>
+</div>
+
+<div id="new-tasks-modal" class="new-tasks-modal">
+  <div class="new-tasks-modal-content">
+    <span id="new-tasks-close" class="new-tasks-close">&times;</span>
+    
+    <h2>Recordatorios</h2>
+    
+    <!-- Input para el título -->
+    <div style="margin-bottom: 15px;">
+    <label for="new-tasks-title">Título:</label>
+    <input type="text" id="new-tasks-title" name="new-tasks-title" style="text-transform: uppercase;">
+    </div>
+
+    <!-- Input para la descripción -->
+    <div style="margin-bottom: 15px;">
+    <label for="new-tasks-description">Descripción:</label>
+    <textarea id="new-tasks-description" rows="10" style="text-transform: uppercase;"></textarea>
+    </div>
+    
+    <!-- Input para fecha y hora -->
+    <div style="margin-bottom: 15px; display: flex; justify-content: space-between;">
+      <span style="margin-right: 15px;">
+          <label for="new-tasks-datetime">Fecha y Hora:</label>
+          <input type="text" name="appointment" id="new-tasks-date" style="width: auto; text-align: center; color: black; font-size: 16px;" id="new-tasks-datetime">
+      </span>
+      <span style="margin-right: 15px;">
+        <label for="new-tasks-anticipacion">Aviso:</label>
+        <select id="new-tasks-anticipacion" style="font-family: 'Rubik', sans-serif; font-size: 16px">
+          <option value="5" selected>5 minutos antes</option>
+          <option value="10">10 minutos antes</option>
+          <option value="15">15 minutos antes</option>
+          <option value="30">30 minutos antes</option>
+          <option value="45">45 minutos antes</option>
+          <option value="60">1 hora antes</option>
+        </select>
+      </span>
+      <span style="margin-right: 15px;">
+        <label for="new-tasks-priority">Prioridad:</label>
+        <select id="new-tasks-priority" style="font-family: 'Rubik', sans-serif; font-size: 16px;">
+          <option value="4">Urgente</option>
+          <option value="3">Alta</option>
+          <option value="2" selected>Media</option>
+          <option value="1">Baja</option>
+        </select>
+      </span>
+      <span>
+        <fieldset style="display: flex;">
+          <legend>Tipo:</legend>
+          <span style="margin-right: 30px;">
+          <input type="radio" id="radio-personal" value="PERSONAL" name="radio-tipo" checked>
+          <label for="radio-personal">Personal</label>
+          </span>
+          <span>
+          <input type="radio" id="radio-global" value="GLOBAL" name="radio-tipo">
+          <label for="radio-global">Global</label>
+          </span>
+        </fieldset>
+      </span>
+      <input type="hidden" id="recordatorio-id">
+    </div>
+    
+    <button class="btn success" onclick="nuevoRecordatorio()">Confirmar</button>
   </div>
 </div>
 
@@ -168,7 +319,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   {% block js %}{% endblock %}
   <script>
-
+    function alertaAdministrador() {
+      alert('No tiene permisos de Administrador para realizar esta acción.');
+    }
     function comprobarEliminarMotivo() {
       if (!document.getElementById('customComboBox').value){
         document.getElementById('btn-borrar-motivo').setAttribute('hidden', 'hidden');
@@ -216,6 +369,91 @@
 
   .fail(function(error) {
     alert("Error al agregar motivo a la base de datos. Dato ya registrado/duplicado o con caracteres inválidos. Puede utilizarlo temporalmente.");
+    console.error('Error: ', error);
+  });
+    }
+
+    function nuevoRecordatorio(){
+      let tipo;
+
+      if (document.getElementById('radio-personal').checked){
+        tipo = 'PERSONAL';
+      }else{
+        tipo = 'GLOBAL';
+      };
+
+      let titulo = document.getElementById('new-tasks-title').value.toUpperCase().trim();
+
+      var formData = {
+      'titulo': titulo,
+      'descripcion': document.getElementById('new-tasks-description').value,
+      'fecha': document.getElementById('new-tasks-date').value,
+      'prioridad': document.getElementById('new-tasks-priority').value,
+      'tipo': tipo,
+      'preaviso': document.getElementById('new-tasks-anticipacion').value,
+      'recordatorioid': document.getElementById('recordatorio-id').value
+  };
+  $.ajax({
+      type: 'POST',
+      url: '/recordatorios/nuevo',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+        if (data.recordatorioid){
+          alert('Se modificó la tarea: '+titulo);
+        }else{
+        alert('Se creó una tarea '+tipo.toLowerCase()+': '+titulo);  
+        }
+        window.location.reload();
+      }else{
+        alert('No fue posible crear la tarea. Revisar los datos.')
+      }
+  })
+
+  .fail(function(error) {
+    alert("No fue posible crear la tarea. Revisar los datos.");
+    console.error('Error: ', error);
+  });
+    }
+
+    function eliminarMotivo() {
+      const selectedIndex = customComboBox.selectedIndex;
+      const datoEliminar = customComboBox.options[selectedIndex].text;
+      if (selectedIndex > 0) {
+        const confirmacion = confirm("¿Desea eliminar "+datoEliminar+"?");
+        if (confirmacion) {
+          customComboBox.remove(selectedIndex);
+          customComboBox.options[0].selected = true;
+          comprobarEliminarMotivo();
+          eliminarMotivoDB(datoEliminar);
+        }
+      }
+    }
+
+    function eliminarMotivoDB(datoEliminar){
+      var formData = {
+      'eliminarm': datoEliminar
+  };
+  $.ajax({
+      type: 'POST',
+      url: '/motivos/eliminar',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+        alert('Se eliminó '+datoEliminar+'.');
+      }else{
+        alert('Error al eliminar motivo. Reintentar.')
+      }
+  })
+
+  .fail(function(error) {
+    alert("Error al eliminar motivo. Reintentar.");
     console.error('Error: ', error);
   });
     }
@@ -275,20 +513,52 @@ customSubmitBtn.onclick = function() {
   cambiarRegistro(document.getElementById('customComboBox').value, document.getElementById('modal-nointeresa-fecha').value, 'razon de desinteres', document.getElementById('modal-nointeresa-cliente').textContent, document.getElementById('modal-nointeresa-telefono').value, null, true);
 }}
 
-    function mostrarPantallaCarga() {
-    const pantallaCarga = document.getElementById('pantallaCarga');
-    pantallaCarga.classList.add('active'); // Mostrar la pantalla de carga
+function mostrarPantallaCarga(funcion) {
+  const pantallaCarga = document.getElementById('pantallaCarga');
+  pantallaCarga.classList.add('active'); // Mostrar la pantalla de carga
 
-    // Simula la carga de datos
-    setTimeout(() => {
-        // Aquí iría la lógica de carga de datos o redirección a la nueva página
-        
-        // Una vez que los datos estén listos, oculta la pantalla de carga
-        //pantallaCarga.classList.remove('active');
+  // Simula la carga de datos
+  setTimeout(() => {
+      // Aquí iría la lógica de carga de datos o redirección a la nueva página
+      
+      // Una vez que los datos estén listos, oculta la pantalla de carga
+      //pantallaCarga.classList.remove('active');
 
-        // Redirige a otra página (opcional)
-        window.location.href = "{{ url_for('registros') }}"; // Reemplaza con la URL de destino
-    }); // Simulación de 3 segundos
+      // Redirige a otra página (opcional)
+      if (funcion == 'registros'){
+        window.location.href = "{{ url_for('registros') }}";
+      } else if (funcion == ''){
+        alert();
+      }
+  }); // Simulación de 3 segundos
+}
+
+var newTasksModal = document.getElementById('new-tasks-modal');
+var newTasksBtn = document.getElementById('open-new-tasks-modal'); // El botón que abre el modal
+var newTasksCloseBtn = document.getElementById('new-tasks-close'); // El botón que cierra el modal
+
+// Abrir el modal cuando se hace clic en el botón
+newTasksBtn.onclick = function() {
+  document.getElementById('recordatorio-id').value = null;
+  document.getElementById('new-tasks-title').value = null;
+  document.getElementById('new-tasks-description').value = null;
+  document.getElementById('new-tasks-date').value = null;
+  document.getElementById('new-tasks-anticipacion').selectedIndex = 0;
+  document.getElementById('new-tasks-priority').selectedIndex = 2;
+  newTasksModal.style.display = "block";
+  document.getElementById('new-tasks-title').focus();
+}
+
+// Cerrar el modal cuando se hace clic en la "X"
+newTasksCloseBtn.onclick = function() {
+  newTasksModal.style.display = "none";
+}
+
+// Cerrar el modal cuando se hace clic fuera de la ventana modal
+window.onclick = function(event) {
+  if (event.target == newTasksModal) {
+    newTasksModal.style.display = "none";
+  }
 }
   </script>
 </html>

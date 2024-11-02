@@ -46,9 +46,17 @@ Administración Los Andes | Inicio
         }
 
         .btn-empresa {
+          background-color: #6495ED;
+          color: white;
+        }
+
+        .btn-empresa-hidden {
+          background-color: #BDBDBD;
+          color: grey;
+        }
+
+        .btn-empresa, .btn-empresa-hidden {
             font-family: 'Rubik', sans-serif;
-            background-color: #6495ED;
-            color: white;
             border: none;
             padding: 15px 30px;
             cursor: pointer;
@@ -59,20 +67,28 @@ Administración Los Andes | Inicio
             font-weight: bold;
             margin-bottom: 10px;
             margin-right: 5px;
-            width: 85%;
+            width: 70%;
             /*text-shadow: 1px 1px 5px black;*/
         }
 
-        .btn-empresa:hover {
-            background-color: white;
-            color: #6495ED;
-            border: 2px solid #6495ED;
+        .btn-empresa:hover, .btn-empresa-hidden:hover {
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
             transform: scale(1.05);
             /*text-shadow: none;*/
         }
 
-        .btn-empresa:active {
+        .btn-empresa:hover {
+          background-color: white;
+          color: #6495ED;
+          border: 2px solid #6495ED;
+        }
+
+        .btn-empresa-hidden:hover {
+          color: black;
+          border: 2px solid black;
+        }
+
+        .btn-empresa:active, .btn-empresa-hidden:active {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transform: scale(0.95);
         }
@@ -132,64 +148,104 @@ Administración Los Andes | Inicio
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'ALOJAMIENTOS' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'VENTA DE INMUEBLES' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'RENTA DE APARTAMENTOS' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'TS NETWORK' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'VENTA DE CARROS' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'VENTA DE ARTÍCULOS' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
         <td class="td_empresa_nombre">
           {% for e in empresas %}
           {% if e[1] == 'CONTACTOS PARA VACANTES' %}
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+          <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+            <span class="icon-container">
+            <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+            <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+            </span></span>
+          </span>
           {% endif %}
           {% endfor %}
         </td>
           {% for e in empresas %}
           {% if not e[1] %}
           <td class="td_empresa_nombre">
-          <button class="btn-empresa" onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
-          <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="modificarEmpresa('eliminar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span></span>
+            <button class={% if e[2] %}"btn-empresa"{% else %}"btn-empresa-hidden" hidden{% endif %} onclick="location.replace('empresas/'+'{{e[0]}}')">{{e[0]}}</button>
+            <span class="span-empresa" hidden><span class="icon-container"><i class="fa fa-pencil" style="margin-right: 5px; cursor: pointer; color: gray;" onclick="modificarEmpresa('editar', '{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: gray; border: 1px white solid;">Editar "{{e[0]}}"</span></span><span class="icon-container"><i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="confirmarEliminarEmpresa('{{e[0]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: red; border: 1px white solid;">Eliminar "{{e[0]}}"</span></span>
+              <span class="icon-container">
+              <i class={% if e[2] %}"fa fa-eye-slash" onclick="modificarEmpresa('visible', '{{e[0]}}', '0')"{% else %}"fa fa-eye" onclick="modificarEmpresa('visible', '{{e[0]}}', '1')"{% endif%} style="cursor: pointer;"></i>
+              <span class="tooltip" id="tooltip-editar" style="background-color: grey; border: 1px white solid;">{% if e[2] %}Ocultar{% else %}Mostrar{% endif %} "{{e[0]}}"
+              </span></span>
+            </span>
           </td>
           {% endif %}
           {% endfor %}
@@ -223,15 +279,17 @@ Administración Los Andes | Inicio
     </tr>
     {% endif %}
     {% for t in pendiente %}
-      <tr>
+    
+    {% if t[14] == 'REGISTRO' %}
+    <tr>
         <td style="margin: 0; padding: 0;">
-          <span class="icon-container"><i class="fa fa-headphones"></i>
-          <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{t[9]}}','agente', '{{t[2]}}', '{{t[3]}}', null, true)">
-            {% for agente in agentes %}
-            <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
-            {% endfor %}
-          </select>
-          <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+        <span class="icon-container"><i class="fa fa-headphones"></i>
+        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarRegistro(this.value, '{{t[9]}}','agente', '{{t[2]}}', '{{t[3]}}', null, true)">
+          {% for agente in agentes %}
+          <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+          {% endfor %}
+        </select>
+        <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
         </td>
         <td style="color: #000080; text-align: center;">
           <span class="icon-container">
@@ -280,7 +338,53 @@ Administración Los Andes | Inicio
           {% endif %}
           <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="noInteresa('{{t[2]}}', '', '{{t[8]}}', '{{t[9]}}', '{{t[3]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
-      </tr>
+      {% else %}
+      <tr>
+        <td style="margin: 0; padding: 0;">
+        <span class="icon-container"><i class="fa fa-headphones"></i>
+        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarAgenteRecordatorio(this.value, '{{t[9]}}', 'agente')">
+          {% for agente in agentes %}
+          <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+          {% endfor %}
+        </select>
+        <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+        </td>
+      <td colspan="2">
+        <i class="fa fa-bell"></i> RECORDATORIO {{t[13]}}
+      </td>
+      <td>
+        <i class="fa fa-calendar-o"></i> Registro del {{t[0]}}
+          {% if t[4] %}
+          <br>
+          <i class="fa fa-tasks"></i> {{ t[4] }}
+          {% endif %}
+      </td>
+      <td style="color: #000080">
+          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{t[9]}}','{{t[4]}}','{{t[5]}}','{{t[16]}}','{{t[12]}}','{{t[13]}}','{{t[15]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{t[5]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
+          <br>
+          {% if t[12] == 'BAJA' %}
+          <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
+          {% elif t[12] == 'MEDIA' %}
+          <span style="color: rosybrown">
+          <i class="fa fa-angle-double-up"></i> MEDIA IMPORTANCIA
+          </span>
+          {% elif t[12] == 'ALTA' %}
+          <span style="color: orange;">
+          <i class="fa fa-exclamation-triangle"></i> ALTA IMPORTANCIA
+          </span>
+          {% elif t[12] == 'URGENTE' %}
+          <span style="color: red;">
+            <i class="fa fa-exclamation-circle"></i> URGENTE
+          </span>
+          {% endif %}
+      </td>
+      <td style="color: green;">
+        <span class="icon-container">
+          <i class="fa fa-check" style="cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{t[9]}}', 'realizado')"></i>
+        <span class="tooltip" id="tooltip-editar" style="background-color: green;">Marcar como REALIZADO</span></span>
+      </td>
+      {% endif %}
+    </tr>
       <tr>
       <td colspan="6" style="border-top: 1px solid #BDBDBD;"></td>
       </tr>
@@ -651,10 +755,12 @@ Administración Los Andes | Inicio
       modificarEmpresa('eliminar', empresa)
     }
   }
-  function modificarEmpresa(accion, empresa){
+  function modificarEmpresa(accion, empresa, visible){
     let datonuevo;
     if (accion == 'editar'){
       datonuevo = prompt('Nuevo nombre:', empresa);
+    } else if (accion == 'visible'){
+      datonuevo = visible;
     }
   var formData = {
     'accion': accion,
@@ -684,7 +790,7 @@ Administración Los Andes | Inicio
 }
 
   function mostrarEditarEmpresas(){
-    const spans = document.querySelectorAll('.span-empresa')
+    const spans = document.querySelectorAll('.span-empresa, .btn-empresa-hidden')
     spans.forEach(span => {
       span.removeAttribute('hidden');
     });
