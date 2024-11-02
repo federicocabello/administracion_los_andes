@@ -144,6 +144,10 @@ function cambiarRegistroPopUp(letra, idfecha, accion, nombre, telefono, datoviej
 }
 
 function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redireccion, omitir){
+  const pantallaCarga = document.getElementById('pantallaCarga');
+  pantallaCarga.classList.add('active'); 
+  setTimeout(() => {
+
   if(!omitir){
     guardarFiltros();
   }
@@ -178,6 +182,7 @@ function cambiarRegistro(datonuevo, idfecha, accion, nombre, telefono, redirecci
     alert("Error en la solicitud.");
     console.error('Error: ', error);
   });
+});
 }
 
 function setearPopUp(idregistro, nombre, nota, tarea, fecha, hora, telefono, omitir){
@@ -258,4 +263,69 @@ $.ajax({
   alert("Error en la solicitud. Ha ingresado caracteres incorrectos o raros.");
   console.error('Error: ', error);
 });
+}
+
+function cambiarAgenteRecordatorio(nuevo, idfecha, accion){
+  var formData = {
+    'nuevo': nuevo,
+    'idfecha': idfecha,
+    'accion': accion
+  };
+
+  $.ajax({
+      type: 'POST',
+      url: '/recordatorios/modificar/agente',
+      data: formData,
+      dataType: 'json',
+      encode: true
+  })
+  .done(function(data){
+      if(data.status === 'success'){
+        if(data.accion === 'agente'){
+          alert('Se envió el recordatorio a '+nuevo+'.');
+        }else{
+          alert('Se marcó al recordatorio como realizado.');
+        }
+        location.reload();
+      }else{
+          alert('Error al modificar recordatorio.')
+      }
+  })
+
+  .fail(function(error) {
+    alert("Error al modificar recordatorio.");
+    console.error('Error: ', error);
+  });
+}
+
+function editarRecordatorio(idrecordatorio, titulo, descripcion, fecha, prioridad, tipo, preaviso){
+  document.getElementById('recordatorio-id').value = idrecordatorio;
+  document.getElementById('new-tasks-title').value = titulo;
+  document.getElementById('new-tasks-description').value = descripcion;
+  document.getElementById('new-tasks-date').value = fecha;
+  const priority  = document.getElementById('new-tasks-priority');
+  const opcionesMap = {
+    'URGENTE': '4',
+    'ALTA': '3',
+    'MEDIA': '2',
+    'BAJA': '1'
+  };
+
+  const valor = opcionesMap[prioridad.toUpperCase()];
+  if (valor) {
+    priority.value = valor;
+  }
+  document.getElementById('new-tasks-anticipacion').value = preaviso;
+
+const radioPersonal = document.getElementById('radio-personal');
+const radioGlobal = document.getElementById('radio-global');
+
+if (tipo === 'PERSONAL'){
+  radioPersonal.checked = true;
+}else{
+  radioGlobal.checked = true;
+};
+
+  newTasksModal.style.display = "block";
+  document.getElementById('new-tasks-title').focus();
 }
