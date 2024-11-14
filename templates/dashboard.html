@@ -280,7 +280,7 @@ Administración Los Andes | Inicio
     {% endif %}
     {% for t in pendiente %}
     
-    {% if t[14] == 'REGISTRO' %}
+    {% if t[13] == 'REGISTRO' %}
     <tr>
         <td style="margin: 0; padding: 0;">
         <span class="icon-container"><i class="fa fa-headphones"></i>
@@ -350,7 +350,7 @@ Administración Los Andes | Inicio
         <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
         </td>
       <td colspan="2">
-        <i class="fa fa-bell"></i> RECORDATORIO {{t[13]}}
+        <i class="fa fa-bell"></i> RECORDATORIO
       </td>
       <td>
         <i class="fa fa-calendar-o"></i> Registro del {{t[0]}}
@@ -360,7 +360,7 @@ Administración Los Andes | Inicio
           {% endif %}
       </td>
       <td style="color: #000080">
-          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{t[9]}}','{{t[4]}}','{{t[5]}}','{{t[16]}}','{{t[12]}}','{{t[13]}}','{{t[15]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{t[5]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
+          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{t[9]}}','{{t[4]}}','{{t[5]}}','{{t[15]}}','{{t[12]}}', '{{t[14]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{t[5]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
           <br>
           {% if t[12] == 'BAJA' %}
           <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
@@ -421,6 +421,7 @@ Administración Los Andes | Inicio
         <th>Tarea pendiente</th>
       </tr>
       {% for a in atrasados %}
+      {% if a[16] == 'REGISTRO' %}
       <tr>
         <td style="margin: 0; padding: 0;">
           <span class="icon-container"><i class="fa fa-headphones"></i>
@@ -470,7 +471,7 @@ Administración Los Andes | Inicio
 
         <td>
           
-        {% if a[12] != None %}
+        {% if a[12] %}
         Fecha de tarea: {{a[12]}}
         <br>
         {% endif %}
@@ -487,7 +488,7 @@ Administración Los Andes | Inicio
         <span style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> No tiene ninguna tarea asignada.</span>
         {% endif %}
 
-        <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> {% if a[13] != None %}Debió realizarse {% if a[13] == 1 %}ayer.{% else %}hace {{a[13]}} días.{% endif %}{% else %}No tiene asignada ninguna fecha de tarea{% endif %}</div>
+        <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> {% if a[13] %}Debió realizarse {% if a[13] == 1 %}ayer.{% else %}hace {{a[13]}} días.{% endif %}{% else %}No tiene asignada ninguna fecha de tarea{% endif %}</div>
 
         </td>
 
@@ -499,6 +500,60 @@ Administración Los Andes | Inicio
           {% endif %}
           <span class="icon-container"><i class="fa fa-thumbs-down" style="cursor: pointer; color: red;" onclick="noInteresa('{{a[2]}}', '', '{{a[8]}}', '{{a[9]}}', '{{a[3]}}')"></i><span class="tooltip" id="tooltip-editar" style="background-color: #F44336;">No le interesó</span></span>
         </td>
+        {% else %}
+      <tr>
+        <td style="margin: 0; padding: 0;">
+        <span class="icon-container"><i class="fa fa-headphones"></i>
+        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer" onchange="cambiarAgenteRecordatorio(this.value, '{{a[9]}}', 'agente')">
+          {% for agente in agentes %}
+          <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+          {% endfor %}
+        </select>
+        <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+        </td>
+      <td colspan="2">
+        <i class="fa fa-bell"></i> RECORDATORIO
+      </td>
+      <td>
+        <i class="fa fa-calendar-o"></i> Registro del {{a[0]}}
+          {% if a[4] %}
+          <br>
+          <i class="fa fa-tasks"></i> {{ a[4] }}
+          {% endif %}
+      </td>
+      <td style="color: #000080">
+
+        {% if a[12] %}
+        <div style="color: black">
+        Fecha de tarea: {{a[12]}}
+        </div>
+        {% endif %}
+
+          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{a[9]}}','{{a[4]}}','{{a[5]}}','{{a[18]}}','{{a[15]}}','{{a[17]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{a[5]}}{% if a[10] %} a las {{a[10]}} h{% endif %}
+          <br>
+          {% if a[15] == 'BAJA' %}
+          <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
+          {% elif a[15] == 'MEDIA' %}
+          <span style="color: rosybrown">
+          <i class="fa fa-angle-double-up"></i> MEDIA IMPORTANCIA
+          </span>
+          {% elif a[15] == 'ALTA' %}
+          <span style="color: orange;">
+          <i class="fa fa-exclamation-triangle"></i> ALTA IMPORTANCIA
+          </span>
+          {% elif a[15] == 'URGENTE' %}
+          <span style="color: red;">
+            <i class="fa fa-exclamation-circle"></i> URGENTE
+          </span>
+          {% endif %}
+          <div style="color: red;"><img src="{{ url_for('static', filename='img/exclamation.png') }}" width="15" height="15" style="vertical-align: middle;"> {% if a[13] %}Debió realizarse {% if a[13] == 1 %}ayer.{% else %}hace {{a[13]}} días.{% endif %}{% else %}No tiene asignada ninguna fecha de tarea{% endif %}</div>
+      </td>
+      <td style="color: green;">
+        <span class="icon-container">
+          <i class="fa fa-check" style="cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[9]}}', 'realizado')"></i>
+        <span class="tooltip" id="tooltip-editar" style="background-color: green;">Marcar como REALIZADO</span></span>
+      </td>
+      {% endif %}
       </tr>
       <tr>
       <td colspan="6" style="border-top: 1px solid #BDBDBD;"></td>

@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user, UserMixin
 from config import config
 from io import BytesIO
+from datetime import datetime
 import datetime as dt
 import base64
 import io
@@ -371,7 +372,6 @@ def dashboard():
     hora_rec AS hora, 
     CAST(hora_rec AS unsigned) AS hora_entero, 
     prioridades.prioridad, 
-    tipo,
     'RECORDATORIO' AS origen,
     preaviso AS preaviso,
     CONCAT(fecha_rec, ' ', hora_rec) AS fechahoy
@@ -399,8 +399,7 @@ SELECT
     fecha, 
     hora_tarea AS hora, 
     CAST(hora_tarea AS unsigned) AS hora_entero, 
-    NULL AS prioridad, 
-    NULL AS tipo,
+    NULL AS prioridad,
     'REGISTRO' as origen,
     NULL as preaviso,
     NULL as fechahoy
@@ -418,9 +417,76 @@ WHERE
     )
 ORDER BY 
     hora_entero ASC,
-    prioridad DESC;
+    prioridad ASC;
                    """)
     pendiente = cursor.fetchall()
+    #cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, direccion, registros.tarea, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, DATE_FORMAT(fecha_tarea, '%d %M %Y'), datediff(current_date(), fecha_tarea) as dias, fecha_tarea from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 12 or tarea = 13 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 17 or tarea = 18 or tarea = 20 or tarea = 25 or tarea = 26) ORDER BY dias, hora, fecha asc;")
+    cursor.execute(f"""
+    SELECT 
+    DATE_FORMAT(idtarea, '%d %M') AS fecha_formateada, 
+    NULL AS empresa, 
+    NULL AS nombre, 
+    NULL AS telefono, 
+    titulo AS motivo, 
+    descripcion AS tarea, 
+    NULL AS email, 
+    NULL AS direccion, 
+    NULL AS tarea_id, 
+    idtarea AS fecha, 
+    hora_rec AS hora, 
+    CAST(hora_rec AS unsigned) AS hora_entero, 
+    DATE_FORMAT(fecha_rec, '%d %M %Y') AS fechahoy,
+    DATEDIFF(current_date(), fecha_rec) AS dias,  
+    fecha_rec AS fecha_tarea,
+    prioridades.prioridad, 
+    'RECORDATORIO' AS origen,
+    preaviso AS preaviso,
+    CONCAT(fecha_rec, ' ', hora_rec) AS fechahoy_hora
+FROM 
+    recordatorios 
+JOIN 
+    prioridades ON prioridades.idprioridades = recordatorios.prioridad 
+WHERE 
+    (fecha_rec < current_date OR fecha_rec IS NULL)
+    AND realizada = 0 
+    AND agente = '{current_user.fullname}'
+
+UNION ALL
+
+SELECT 
+    DATE_FORMAT(fecha, '%d %M'), 
+    empresa, 
+    nombre, 
+    telefono, 
+    motivo, 
+    tareas.tarea, 
+    email, 
+    direccion, 
+    registros.tarea AS tarea_id, 
+    fecha, 
+    hora_tarea AS hora, 
+    CAST(hora_tarea AS unsigned) AS hora_entero, 
+    DATE_FORMAT(fecha_tarea, '%d %M %Y'), 
+    DATEDIFF(current_date(), fecha_tarea) AS dias, 
+    fecha_tarea,
+    NULL AS prioridad,
+    'REGISTRO' AS origen,
+    NULL AS preaviso,
+    CONCAT(fecha, ' ', hora_tarea) AS fecha_hoy
+FROM 
+    registros 
+JOIN 
+    tareas ON registros.tarea = tareas.idtarea 
+WHERE 
+    (fecha_tarea < current_date OR fecha_tarea IS NULL)
+    AND agente = '{current_user.fullname}'
+    AND estado = 'registro' 
+    AND registros.tarea IN (0, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 25, 26)
+
+ORDER BY 
+    dias ASC, hora_entero ASC, prioridad ASC;
+    """)
+    atrasados = cursor.fetchall()
     cursor.execute("SELECT fullname from auth order by fullname")
     agentes = cursor.fetchall()
     cursor.execute("SELECT * from tareas")
@@ -431,8 +497,6 @@ ORDER BY
     vencidos = cursor.fetchall()
     cursor.execute("SELECT 'CUOTA 1' AS cuota, fecha_1 AS vencimiento, acuerdo_1 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_1, current_date()) as diferencia, idfecha, empresa, DATE_FORMAT(fecha_1, '%d %M %Y') FROM hojas where datediff(fecha_1, current_date()) > 0 and datediff(fecha_1, current_date()) < 6 UNION ALL SELECT 'CUOTA 2' AS cuota, fecha_2 AS vencimiento, acuerdo_2 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_2, current_date()) as diferencia, idfecha, empresa, DATE_FORMAT(fecha_2, '%d %M %Y') FROM hojas where datediff(fecha_2, current_date()) > 0 and datediff(fecha_2, current_date()) < 6 UNION ALL SELECT 'CUOTA 3' AS cuota, fecha_3 AS vencimiento, acuerdo_3 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_3, current_date()) as diferencia, idfecha, empresa, DATE_FORMAT(fecha_3, '%d %M %Y') FROM hojas where datediff(fecha_3, current_date()) > 0 and datediff(fecha_3, current_date()) < 6 UNION ALL SELECT 'CUOTA 4' AS cuota, fecha_4 AS vencimiento, acuerdo_4 AS pago, LPAD( idhoja, 8, '0'), nombre, telefono, servicio, objeto, notapago, datediff(fecha_4, current_date()) as diferencia, idfecha, empresa, DATE_FORMAT(fecha_4, '%d %M %Y') FROM hojas where datediff(fecha_4, current_date()) > 0 and  datediff(fecha_4, current_date()) < 6 order by diferencia;")
     porvencer = cursor.fetchall()
-    cursor.execute(f"select DATE_FORMAT(fecha, '%d %M'), empresa, nombre, telefono, motivo, tareas.tarea, email, direccion, registros.tarea, fecha, hora_tarea, cast(hora_tarea as unsigned) as hora, DATE_FORMAT(fecha_tarea, '%d %M %Y'), datediff(current_date(), fecha_tarea) as dias, fecha_tarea from registros JOIN tareas ON registros.tarea = tareas.idtarea where (fecha_tarea < current_date() or fecha_tarea is null) and agente = '{current_user.fullname}' and estado = 'registro' and registros.tarea in (select tarea from registros where tarea = 0 or tarea = 3 or tarea = 4 or tarea = 5 or tarea = 6 or tarea = 8 or tarea = 9 or tarea = 10 or tarea = 11 or tarea = 12 or tarea = 13 or tarea = 14 or tarea = 15 or tarea = 16 or tarea = 17 or tarea = 18 or tarea = 20 or tarea = 25 or tarea = 26) ORDER BY dias, hora, fecha asc;")
-    atrasados = cursor.fetchall()
     dias = ("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
     nombre_dia_hoy = f'{dias[int(dt.date.today().strftime("%w"))]} {dt.date.today().strftime("%d")}'
     return render_template('dashboard.html', tareas=tareas, agentes=agentes, pendiente=pendiente, empresas=empresas, vencehoy=vencehoy, vencidos=vencidos, porvencer=porvencer, dia_hoy = dt.date.today(), nombre_dia_hoy=nombre_dia_hoy, atrasados=atrasados)
@@ -530,6 +594,7 @@ def pagos():
         sumaimpagos = sumaimpagos+float(impagos[p][10])
     cursor.execute("SELECT empresa from clientes order by empresa asc;")
     empresas = cursor.fetchall()
+    cursor.close()
     return render_template('pagos.html', pagos=pagos, empresas=empresas, hoy=dt.date.today(), mes=mes, suma=suma,fecha_inicial=fecha_inicial, fecha_final   =fecha_final, impagos=impagos, sumaimpagos = sumaimpagos)
     
 @app.route('/usuarios')
@@ -539,6 +604,7 @@ def usuarios():
     sql = "SELECT * FROM auth;"
     cursor.execute(sql)
     tablas = cursor.fetchall()
+    cursor.close()
     return render_template('usuarios.html', tablas=tablas)
 
 @app.route('/movimientos', methods=['GET', 'POST'])
@@ -564,7 +630,24 @@ def movimientos():
     tablas = cursor.fetchall()
     cursor.execute("SELECT agente from movimientos where agente is not null group by agente;")
     agentes = cursor.fetchall()
+    cursor.close()
     return render_template('movimientos.html', tablas=tablas, mostrados=mostrados, fecha=fecha, agentes=agentes)
+
+@app.route('/recordatorios', methods=['GET', 'POST'])
+@login_required
+def recordatorios():
+    mes_actual = datetime.now().month
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT fullname from auth order by fullname")
+    agentes = cursor.fetchall()
+    cursor.execute(f"SELECT idtarea, titulo, descripcion, hora_rec, prioridades.prioridad, realizada, preaviso, CONCAT(fecha_rec, ' ', hora_rec) FROM recordatorios JOIN prioridades ON prioridades.idprioridades = recordatorios.prioridad WHERE agente = '{current_user.fullname}' AND fecha_rec = current_date() order by hora_rec ASC, recordatorios.prioridad DESC;")
+    rec_hoy = cursor.fetchall()
+    cursor.execute(f"SELECT idtarea, titulo, descripcion, hora_rec, prioridades.prioridad, realizada, preaviso, CONCAT(fecha_rec, ' ', hora_rec), DATEDIFF(current_date, fecha_rec), month(fecha_rec), DATE_FORMAT(fecha_rec, '%d %M') FROM recordatorios JOIN prioridades ON prioridades.idprioridades = recordatorios.prioridad WHERE agente = '{current_user.fullname}' AND fecha_rec < current_date() AND year(fecha_rec) = year(current_date) order by fecha_rec DESC, hora_rec ASC, recordatorios.prioridad DESC;")
+    rec_atrasados = cursor.fetchall()
+    cursor.execute(f"SELECT idtarea, titulo, descripcion, hora_rec, prioridades.prioridad, realizada, preaviso, CONCAT(fecha_rec, ' ', hora_rec), DATEDIFF(fecha_rec, current_date), month(fecha_rec), DATE_FORMAT(fecha_rec, '%d %M') FROM recordatorios JOIN prioridades ON prioridades.idprioridades = recordatorios.prioridad WHERE agente = '{current_user.fullname}' AND fecha_rec > current_date() order by fecha_rec ASC, hora_rec ASC, recordatorios.prioridad DESC;")
+    rec_futuros = cursor.fetchall()
+    cursor.close()
+    return render_template('recordatorios.html', rec_hoy=rec_hoy, agentes=agentes, rec_atrasados=rec_atrasados, mes_actual=mes_actual, rec_futuros=rec_futuros)
     
 @app.route('/registros', methods=['GET', 'POST'])
 @login_required
@@ -1067,6 +1150,10 @@ def cambiarAgenteRecordatorio():
         cursor.execute(f"UPDATE recordatorios SET agente = '{nuevo}' WHERE idtarea = '{idfecha}';")
     elif accion == 'realizado':
         cursor.execute(f"UPDATE recordatorios SET realizada = 1 WHERE idtarea = '{idfecha}';")
+    elif accion == 'pendiente':
+        cursor.execute(f"UPDATE recordatorios SET realizada = 0 WHERE idtarea = '{idfecha}';")
+    elif accion == 'eliminar':
+        cursor.execute(f"DELETE FROM recordatorios WHERE idtarea = '{idfecha}';")
     db.connection.commit()
     cursor.close()
     return jsonify({'status': 'success', 'accion': accion})
@@ -1089,14 +1176,13 @@ def nuevoRecordatorio():
         fecha = None
         hora = None
     prioridad = request.form.get('prioridad')
-    tipo = request.form.get('tipo')
     preaviso = request.form.get('preaviso')
     cursor = db.connection.cursor()
     if recordatorioid:
         #cursor.execute("UPDATE recordatorios SET titulo = %s, descripcion = %s, fecha_rec = %s, hora_rec = %s, prioridad =%s, tipo = %s, preaviso = %s WHERE idtarea = %s)", (titulo, descripcion, fecha, hora, prioridad, tipo, preaviso, recordatorioid))
-        cursor.execute(f"UPDATE recordatorios SET titulo = '{titulo}', descripcion = '{descripcion}', fecha_rec = '{fecha}', hora_rec = '{hora}', prioridad = {int(prioridad)}, tipo = '{tipo}', preaviso = {int(preaviso)} WHERE idtarea = '{recordatorioid}';")
+        cursor.execute(f"UPDATE recordatorios SET titulo = '{titulo}', descripcion = '{descripcion}', fecha_rec = '{fecha}', hora_rec = '{hora}', prioridad = {int(prioridad)}, preaviso = {int(preaviso)} WHERE idtarea = '{recordatorioid}';")
     else:
-        cursor.execute("INSERT INTO recordatorios VALUES (now(), %s, %s, %s, %s, %s, %s, 0, %s, %s)", (titulo, descripcion, fecha, hora, prioridad, tipo, current_user.fullname, preaviso))
+        cursor.execute("INSERT INTO recordatorios VALUES (now(), %s, %s, %s, %s, %s, 0, %s, %s)", (titulo, descripcion, fecha, hora, prioridad, current_user.fullname, preaviso))
     db.connection.commit()
     cursor.close()
     return jsonify({'status': 'success', 'recordatorioid': recordatorioid})

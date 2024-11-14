@@ -168,6 +168,7 @@
         <ul>
           <li><a href="{{ url_for('dashboard') }}">Inicio</a></li>
           <li><a type="button" style="cursor: pointer;" id="open-new-tasks-modal">Nuevo recordatorio</a></li>
+          <li><a href="{{ url_for('recordatorios') }}" style="cursor: pointer;">Mis recordatorios</a></li>
           {% if current_user.rol == 'admin' %}
           <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
           {% endif %}
@@ -283,6 +284,7 @@
           <option value="1">Baja</option>
         </select>
       </span>
+    <!--
       <span>
         <fieldset style="display: flex;">
           <legend>Tipo:</legend>
@@ -296,6 +298,7 @@
           </span>
         </fieldset>
       </span>
+    -->
       <input type="hidden" id="recordatorio-id">
     </div>
     
@@ -374,13 +377,6 @@
     }
 
     function nuevoRecordatorio(){
-      let tipo;
-
-      if (document.getElementById('radio-personal').checked){
-        tipo = 'PERSONAL';
-      }else{
-        tipo = 'GLOBAL';
-      };
 
       let titulo = document.getElementById('new-tasks-title').value.toUpperCase().trim();
 
@@ -389,7 +385,6 @@
       'descripcion': document.getElementById('new-tasks-description').value,
       'fecha': document.getElementById('new-tasks-date').value,
       'prioridad': document.getElementById('new-tasks-priority').value,
-      'tipo': tipo,
       'preaviso': document.getElementById('new-tasks-anticipacion').value,
       'recordatorioid': document.getElementById('recordatorio-id').value
   };
@@ -403,18 +398,18 @@
   .done(function(data){
       if(data.status === 'success'){
         if (data.recordatorioid){
-          alert('Se modificó la tarea: '+titulo);
+          alert('Se modificó el recordatorio '+titulo);
         }else{
-        alert('Se creó una tarea '+tipo.toLowerCase()+': '+titulo);  
+        alert('Se creó un recordatorio '+titulo);  
         }
         window.location.reload();
       }else{
-        alert('No fue posible crear la tarea. Revisar los datos.')
+        alert('No fue posible crear el recordatorio. Revisar los datos.')
       }
   })
 
   .fail(function(error) {
-    alert("No fue posible crear la tarea. Revisar los datos.");
+    alert("No fue posible crear el recordatorio. Revisar los datos.");
     console.error('Error: ', error);
   });
     }

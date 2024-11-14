@@ -1,0 +1,301 @@
+{% extends 'index.html' %}
+
+{% block titulo %}
+Administración Los Andes | Recordatorios
+{% endblock %}
+
+{% block body %}
+<div id="main-content">
+    <h1>Panel de recordatorios</h1>
+    {% if rec_hoy %}
+    <table style="margin: 0 auto;">
+        <tr>
+            <th colspan="6" style="background: none; color: #000080">Recordatorios para HOY</th>
+        </tr>
+        <tr>
+            <th>Título</th>
+            <th>Descripción</th>
+            <th>Horario</th>
+            <th colspan="3">Configuraciones</th>
+        </tr>
+        <tr>
+            <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+        </tr>
+        {% for a in rec_hoy %}
+        <tr>
+            <td style="color: #000080;">{{a[1]}}</td>
+            <td>{{a[2]}}</td>
+            <td>
+                {{a[3]}} h
+                <br>
+                {% if a[4] == 'BAJA' %}
+                    <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
+                {% elif a[4] == 'MEDIA' %}
+                <span style="color: rosybrown">
+                    <i class="fa fa-angle-double-up"></i> MEDIA IMPORTANCIA
+                </span>
+                {% elif a[4] == 'ALTA' %}
+                <span style="color: orange;">
+                    <i class="fa fa-exclamation-triangle"></i> ALTA IMPORTANCIA
+                </span>
+                {% elif a[4] == 'URGENTE' %}
+                <span style="color: red;">
+                    <i class="fa fa-exclamation-circle"></i> URGENTE
+                </span>
+                {% endif %}
+            </td>
+            <td>
+                <span class="icon-container">
+                    <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
+                {% if a[5] %}
+                <span class="icon-container">
+                    <i class="fa fa-bell" style="color: gray; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'pendiente')"></i>
+                <span class="tooltip" id="tooltip-editar" style="background-color: gray;">Marcar como PENDIENTE</span></span>
+                {% else %}
+                <span class="icon-container">
+                    <i class="fa fa-check" style="color: green; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'realizado')"></i>
+                <span class="tooltip" id="tooltip-editar" style="background-color: green;">Marcar como REALIZADO</span></span>
+                {% endif %}
+                <span class="icon-container">
+                    <i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'eliminar')"></i>
+                <span class="tooltip" id="tooltip-editar" style="background-color: red;">Borrar</span></span>
+            </td>
+            <td style="padding: 0;">
+                {% if a[5] %}
+                <div style="background-color: green; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">REALIZADA</div>
+                {% else %}
+                <div style="background-color: gray; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">PENDIENTE</div>
+                {% endif %}
+            </td>
+            <td>
+                <span class="icon-container"><i class="fa fa-headphones" style="margin-left: 8px;"></i>
+                    <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer;" onchange="cambiarAgenteRecordatorio(this.value, '{{a[0]}}', 'agente')">
+                      {% for agente in agentes %}
+                      <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+                      {% endfor %}
+                    </select>
+                    <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+    <div style="margin-top: 25px; display: flex; justify-content: space-around;">
+        {% if rec_atrasados %}
+        <table style="width: 49%;">
+            <tr>
+                <th colspan="6" style="background: none; color: orangered">Recordatorios pasados</th>
+            </tr>
+            <tr>
+                <td colspan="6">
+                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: orangered;">Título</th>
+                <th style="background-color: orangered;">Descripción</th>
+                <th style="background-color: orangered;">Horario</th>
+                <th colspan="3" style="background-color: orangered;">Configuraciones</th>
+            </tr>
+            <tr>
+                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+            </tr>
+            {% for a in rec_atrasados %}
+            <tr>
+                <td style="color: #000080;">{{a[1]}}</td>
+                <td>{{a[2]}}</td>
+                <td>
+                    {{a[10]}} a las {{a[3]}} h.
+                    <br>
+                    {% if a[4] == 'BAJA' %}
+                        <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
+                    {% elif a[4] == 'MEDIA' %}
+                    <span style="color: rosybrown">
+                        <i class="fa fa-angle-double-up"></i> MEDIA IMPORTANCIA
+                    </span>
+                    {% elif a[4] == 'ALTA' %}
+                    <span style="color: orange;">
+                        <i class="fa fa-exclamation-triangle"></i> ALTA IMPORTANCIA
+                    </span>
+                    {% elif a[4] == 'URGENTE' %}
+                    <span style="color: red;">
+                        <i class="fa fa-exclamation-circle"></i> URGENTE
+                    </span>
+                    {% endif %}
+                    {% if not a[5] %}
+                    <br>
+                    <span style="color: orangered"><i class="fa fa-exclamation"></i> Debió realizarse {% if a[8] == 1 %}ayer.{% else %}hace {{a[8]}} días.{% endif %}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="icon-container">
+                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
+                    {% if a[5] %}
+                    <span class="icon-container">
+                        <i class="fa fa-bell" style="color: gray; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'pendiente')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: gray;">Marcar como PENDIENTE</span></span>
+                    {% else %}
+                    <span class="icon-container">
+                        <i class="fa fa-check" style="color: green; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'realizado')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: green;">Marcar como REALIZADO</span></span>
+                    {% endif %}
+                    <span class="icon-container">
+                        <i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'eliminar')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: red;">Borrar</span></span>
+                </td>
+                <td style="padding: 0;">
+                    {% if a[5] %}
+                    <div style="background-color: green; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">REALIZADA</div>
+                    {% else %}
+                    <div style="background-color: gray; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">PENDIENTE</div>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="icon-container"><i class="fa fa-headphones" style="margin-left: 8px;"></i>
+                        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer;" onchange="cambiarAgenteRecordatorio(this.value, '{{a[0]}}', 'agente')">
+                          {% for agente in agentes %}
+                          <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+                          {% endfor %}
+                        </select>
+                        <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+                </td>
+                <td hidden>{{a[9]}}</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+        {% if rec_futuros %}
+        <table style="width: 49%;">
+            <tr>
+                <th colspan="6" style="background: none; color: blue">Próximos recordatorios</th>
+            </tr>
+            <tr>
+                <td colspan="6">
+                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+                </td>
+            </tr>
+            <tr>
+                <th style="background-color: blue;">Título</th>
+                <th style="background-color: blue;">Descripción</th>
+                <th style="background-color: blue;">Horario</th>
+                <th colspan="3" style="background-color: blue;">Configuraciones</th>
+            </tr>
+            <tr>
+                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+            </tr>
+            {% for a in rec_futuros %}
+            <tr>
+                <td style="color: #000080;">{{a[1]}}</td>
+                <td>{{a[2]}}</td>
+                <td>
+                    {{a[10]}} a las {{a[3]}} h.
+                    <br>
+                    {% if a[4] == 'BAJA' %}
+                        <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
+                    {% elif a[4] == 'MEDIA' %}
+                    <span style="color: rosybrown">
+                        <i class="fa fa-angle-double-up"></i> MEDIA IMPORTANCIA
+                    </span>
+                    {% elif a[4] == 'ALTA' %}
+                    <span style="color: orange;">
+                        <i class="fa fa-exclamation-triangle"></i> ALTA IMPORTANCIA
+                    </span>
+                    {% elif a[4] == 'URGENTE' %}
+                    <span style="color: red;">
+                        <i class="fa fa-exclamation-circle"></i> URGENTE
+                    </span>
+                    {% endif %}
+                    {% if not a[5] %}
+                    <br>
+                    <span style="color: blue"><i class="fa fa-info"></i> {% if a[8] == 1 %}Mañana.{% else %}En {{a[8]}} días.{% endif %}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="icon-container">
+                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
+                    {% if a[5] %}
+                    <span class="icon-container">
+                        <i class="fa fa-bell" style="color: gray; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'pendiente')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: gray;">Marcar como PENDIENTE</span></span>
+                    {% else %}
+                    <span class="icon-container">
+                        <i class="fa fa-check" style="color: green; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'realizado')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: green;">Marcar como REALIZADO</span></span>
+                    {% endif %}
+                    <span class="icon-container">
+                        <i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'eliminar')"></i>
+                    <span class="tooltip" id="tooltip-editar" style="background-color: red;">Borrar</span></span>
+                </td>
+                <td style="padding: 0;">
+                    {% if a[5] %}
+                    <div style="background-color: green; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">REALIZADA</div>
+                    {% else %}
+                    <div style="background-color: gray; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">PENDIENTE</div>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="icon-container"><i class="fa fa-headphones" style="margin-left: 8px;"></i>
+                        <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer;" onchange="cambiarAgenteRecordatorio(this.value, '{{a[0]}}', 'agente')">
+                          {% for agente in agentes %}
+                          <option value="{{ agente[0] }}" {% if agente[0] == current_user.fullname %}selected{% endif %}>{{ agente[0] }}</option>
+                          {% endfor %}
+                        </select>
+                        <span class="tooltip" id="tooltip-editar">Cambiar agente</span></span>
+                </td>
+                <td hidden>{{a[9]}}</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+    const mesActual = {{ mes_actual | tojson }};
+
+    document.querySelectorAll('.filtroMesRecordatorio').forEach(select => {
+        select.value = mesActual;
+    });
+</script>
+{% endblock %}
