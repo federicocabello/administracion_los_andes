@@ -281,10 +281,19 @@ function cambiarAgenteRecordatorio(nuevo, idfecha, accion){
   })
   .done(function(data){
       if(data.status === 'success'){
-        if(data.accion === 'agente'){
-          alert('Se envió el recordatorio a '+nuevo+'.');
-        }else{
-          alert('Se marcó al recordatorio como realizado.');
+        switch (data.accion){
+          case 'agente':
+            alert('Se envió el recordatorio a '+nuevo+'.');
+            break;
+          case 'realizado':
+            alert('Se marcó al recordatorio como realizado.');
+            break;
+          case 'pendiente':
+            alert('Se marcó al recordatorio como pendiente.');
+            break;
+          case 'eliminar':
+            alert('Se eliminó el recordatorio.');
+            break;
         }
         location.reload();
       }else{
@@ -298,7 +307,7 @@ function cambiarAgenteRecordatorio(nuevo, idfecha, accion){
   });
 }
 
-function editarRecordatorio(idrecordatorio, titulo, descripcion, fecha, prioridad, tipo, preaviso){
+function editarRecordatorio(idrecordatorio, titulo, descripcion, fecha, prioridad, preaviso){
   document.getElementById('recordatorio-id').value = idrecordatorio;
   document.getElementById('new-tasks-title').value = titulo;
   document.getElementById('new-tasks-description').value = descripcion;
@@ -316,15 +325,6 @@ function editarRecordatorio(idrecordatorio, titulo, descripcion, fecha, priorida
     priority.value = valor;
   }
   document.getElementById('new-tasks-anticipacion').value = preaviso;
-
-const radioPersonal = document.getElementById('radio-personal');
-const radioGlobal = document.getElementById('radio-global');
-
-if (tipo === 'PERSONAL'){
-  radioPersonal.checked = true;
-}else{
-  radioGlobal.checked = true;
-};
 
   newTasksModal.style.display = "block";
   document.getElementById('new-tasks-title').focus();
