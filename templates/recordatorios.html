@@ -7,6 +7,9 @@ Administración Los Andes | Recordatorios
 {% block body %}
 <div id="main-content">
     <h1>Panel de recordatorios</h1>
+    {% if not rec_hoy and not rec_atrasados and not rec_futuros %}
+    <h1 style="color: #00ba00; font-size: 22px; background: none; text-align: center;"><img src="{{ url_for('static', filename='img/cheque.png') }}" width="20" height="20"> No tiene recordatorios para hoy</h1>
+    {% endif %}
     {% if rec_hoy %}
     <table style="margin: 0 auto;">
         <tr>
@@ -24,9 +27,9 @@ Administración Los Andes | Recordatorios
         {% for a in rec_hoy %}
         <tr>
             <td style="color: #000080;">{{a[1]}}</td>
-            <td>{{a[2]}}</td>
-            <td>
-                {{a[3]}} h
+            <td style="white-space: pre-line;">{{a[2]}}</td>
+            <td>    
+                <i class="fa fa-clock-o"></i> {{a[3]}} h
                 <br>
                 {% if a[4] == 'BAJA' %}
                     <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
@@ -46,7 +49,7 @@ Administración Los Andes | Recordatorios
             </td>
             <td>
                 <span class="icon-container">
-                    <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                    <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', `{{ a[2] | replace('\n', '\\n') | replace('\r', '\\r') }}`, '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
                 <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
                 {% if a[5] %}
                 <span class="icon-container">
@@ -86,13 +89,14 @@ Administración Los Andes | Recordatorios
     {% endif %}
     <div style="margin-top: 25px; display: flex; justify-content: space-around;">
         {% if rec_atrasados %}
-        <table style="width: 49%;">
+        <span style="width: 49%;">
+        <table style="width: 100%;" id="tabla1" class="tabla-con-filtros">
             <tr>
                 <th colspan="6" style="background: none; color: orangered">Recordatorios pasados</th>
             </tr>
             <tr>
                 <td colspan="6">
-                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" data-table="tabla1">
                     <option value="1">Enero</option>
                     <option value="2">Febrero</option>
                     <option value="3">Marzo</option>
@@ -114,15 +118,14 @@ Administración Los Andes | Recordatorios
                 <th style="background-color: orangered;">Horario</th>
                 <th colspan="3" style="background-color: orangered;">Configuraciones</th>
             </tr>
-            <tr>
-                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
-            </tr>
             {% for a in rec_atrasados %}
             <tr>
-                <td style="color: #000080;">{{a[1]}}</td>
-                <td>{{a[2]}}</td>
-                <td>
-                    {{a[10]}} a las {{a[3]}} h.
+                <td style="color: #000080; border-bottom: 1px solid gainsboro;">{{a[1]}}</td>
+                <td style="white-space: pre-line; border-bottom: 1px solid gainsboro;">{{a[2]}}</td>
+                <td style="border-bottom: 1px solid gainsboro;">
+                    <i class="fa fa-calendar"></i> {{a[10]}}
+                    <br>
+                    <i class="fa fa-clock-o"></i> {{a[3]}} h
                     <br>
                     {% if a[4] == 'BAJA' %}
                         <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
@@ -144,9 +147,9 @@ Administración Los Andes | Recordatorios
                     <span style="color: orangered"><i class="fa fa-exclamation"></i> Debió realizarse {% if a[8] == 1 %}ayer.{% else %}hace {{a[8]}} días.{% endif %}</span>
                     {% endif %}
                 </td>
-                <td>
+                <td style="border-bottom: 1px solid gainsboro;">
                     <span class="icon-container">
-                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', `{{ a[2] | replace('\n', '\\n') | replace('\r', '\\r') }}`, '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
                     <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
                     {% if a[5] %}
                     <span class="icon-container">
@@ -161,14 +164,14 @@ Administración Los Andes | Recordatorios
                         <i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'eliminar')"></i>
                     <span class="tooltip" id="tooltip-editar" style="background-color: red;">Borrar</span></span>
                 </td>
-                <td style="padding: 0;">
+                <td style="padding: 0; border-bottom: 1px solid gainsboro;">
                     {% if a[5] %}
                     <div style="background-color: green; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">REALIZADA</div>
                     {% else %}
                     <div style="background-color: gray; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">PENDIENTE</div>
                     {% endif %}
                 </td>
-                <td>
+                <td style="border-bottom: 1px solid gainsboro;">
                     <span class="icon-container"><i class="fa fa-headphones" style="margin-left: 8px;"></i>
                         <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer;" onchange="cambiarAgenteRecordatorio(this.value, '{{a[0]}}', 'agente')">
                           {% for agente in agentes %}
@@ -179,20 +182,19 @@ Administración Los Andes | Recordatorios
                 </td>
                 <td hidden>{{a[9]}}</td>
             </tr>
-            <tr>
-                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
-            </tr>
             {% endfor %}
         </table>
+        </span>
         {% endif %}
         {% if rec_futuros %}
-        <table style="width: 49%;">
+        <span style="width: 49%;">
+        <table style="width: 100%;" id="tabla2" class="tabla-con-filtros">
             <tr>
                 <th colspan="6" style="background: none; color: blue">Próximos recordatorios</th>
             </tr>
             <tr>
                 <td colspan="6">
-                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;">
+                <select class="filtroMesRecordatorio" style="width: 100%; font-family: 'Rubik', sans-serif; font-size: 16px;" data-table="tabla2">
                     <option value="1">Enero</option>
                     <option value="2">Febrero</option>
                     <option value="3">Marzo</option>
@@ -214,15 +216,14 @@ Administración Los Andes | Recordatorios
                 <th style="background-color: blue;">Horario</th>
                 <th colspan="3" style="background-color: blue;">Configuraciones</th>
             </tr>
-            <tr>
-                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
-            </tr>
             {% for a in rec_futuros %}
             <tr>
-                <td style="color: #000080;">{{a[1]}}</td>
-                <td>{{a[2]}}</td>
-                <td>
-                    {{a[10]}} a las {{a[3]}} h.
+                <td style="color: #000080; border-bottom: 1px solid gainsboro;">{{a[1]}}</td>
+                <td style="white-space: pre-line; border-bottom: 1px solid gainsboro;">{{a[2]}}</td>
+                <td style="border-bottom: 1px solid gainsboro;">
+                    <i class="fa fa-calendar"></i> {{a[10]}}
+                    <br>
+                    <i class="fa fa-clock-o"></i> {{a[3]}} h
                     <br>
                     {% if a[4] == 'BAJA' %}
                         <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
@@ -244,9 +245,9 @@ Administración Los Andes | Recordatorios
                     <span style="color: blue"><i class="fa fa-info"></i> {% if a[8] == 1 %}Mañana.{% else %}En {{a[8]}} días.{% endif %}</span>
                     {% endif %}
                 </td>
-                <td>
+                <td style="border-bottom: 1px solid gainsboro;">
                     <span class="icon-container">
-                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', '{{a[2]}}', '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
+                        <i class="fa fa-refresh" style="color: blue; cursor: pointer" onclick="editarRecordatorio('{{a[0]}}', '{{a[1]}}', `{{ a[2] | replace('\n', '\\n') | replace('\r', '\\r') }}`, '{{a[7]}}', '{{a[4]}}', '{{a[6]}}')"></i>
                     <span class="tooltip" id="tooltip-editar" style="background-color: blue;">Reprogramar</span></span>
                     {% if a[5] %}
                     <span class="icon-container">
@@ -261,14 +262,14 @@ Administración Los Andes | Recordatorios
                         <i class="fa fa-trash" style="color: red; cursor: pointer;" onclick="cambiarAgenteRecordatorio(null, '{{a[0]}}', 'eliminar')"></i>
                     <span class="tooltip" id="tooltip-editar" style="background-color: red;">Borrar</span></span>
                 </td>
-                <td style="padding: 0;">
+                <td style="padding: 0; border-bottom: 1px solid gainsboro;">
                     {% if a[5] %}
                     <div style="background-color: green; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">REALIZADA</div>
                     {% else %}
                     <div style="background-color: gray; color: white; border-radius: 20px; font-size: 11px; padding: 7px; font-weight: 700; text-align: center; width: 90%;">PENDIENTE</div>
                     {% endif %}
                 </td>
-                <td>
+                <td style="border-bottom: 1px solid gainsboro;">
                     <span class="icon-container"><i class="fa fa-headphones" style="margin-left: 8px;"></i>
                         <select style="width: 20px; font-family: 'Rubik', sans-serif; font-size: 16px; background: none; border: none; cursor: pointer;" onchange="cambiarAgenteRecordatorio(this.value, '{{a[0]}}', 'agente')">
                           {% for agente in agentes %}
@@ -279,11 +280,9 @@ Administración Los Andes | Recordatorios
                 </td>
                 <td hidden>{{a[9]}}</td>
             </tr>
-            <tr>
-                <td colspan="6" style="border-top: 1px solid gainsboro;"></td>
-            </tr>
             {% endfor %}
         </table>
+        </span>
         {% endif %}
     </div>
 
@@ -292,10 +291,52 @@ Administración Los Andes | Recordatorios
 
 {% block js %}
 <script>
-    const mesActual = {{ mes_actual | tojson }};
+    const mesActual = {{ mes_actual }};
 
-    document.querySelectorAll('.filtroMesRecordatorio').forEach(select => {
-        select.value = mesActual;
+    document.addEventListener('DOMContentLoaded', function (){
+        const selects = document.querySelectorAll('.filtroMesRecordatorio');
+
+        selects.forEach(select => {
+            const tableId = select.getAttribute('data-table');
+            const table = document.getElementById(tableId);
+
+            select.value = mesActual;
+
+            aplicarFiltroMes(select, table);
+
+            select.addEventListener('change', function () {
+                aplicarFiltroMes(this, table);
+            });
+        });
     });
+        
+        function aplicarFiltroMes(select, table){
+            const selectedMonth = select.value;
+            const rows = table.querySelectorAll('tr');
+
+            let isDataRow = false;
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 1 && cells[0].hasAttribute('colspan')) {
+                    return;
+                }
+                if (row.querySelector('[hidden]')) {
+                    const rowMonth = row.querySelector('[hidden]').textContent.trim();
+                    if (selectedMonth === '' || rowMonth === selectedMonth) {
+                        row.style.display = '';
+                        isDataRow = true;
+                    } else {
+                        row.style.display = 'none';
+                        isDataRow = false;
+                    }
+                }
+                if (!isDataRow && cells.length === 1 && cells[0].style.border) {
+                    row.style.display = 'none';
+                } else if (isDataRow && cells.length === 1 && cells[0].style.border) {
+                    row.style.display = '';
+                }
+            });
+        }
 </script>
 {% endblock %}

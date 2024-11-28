@@ -401,6 +401,9 @@ Administración Los Andes | {{new[1]}}
     Nombre:
     <input type="text" id="nombre" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('telefono')">
     Teléfono:
+    <div style="color: red; font-size: 14px;" id="div-duplicado" hidden>
+            <i class="fa fa-exclamation-triangle"></i> <span id="span-duplicado"></span>
+    </div>
     <input type="text" id="telefono" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('direccion')">
     Dirección:
     <input type="text" id="direccion" style="width: 100%; color: black; text-transform: uppercase; margin-bottom: 15px;" onkeypress="foco2('email')">
@@ -479,10 +482,46 @@ Administración Los Andes | {{new[1]}}
         </tbody>
     </table>
 </div>
+<table hidden id="tabla-duplicado">
+    {% for r in repetidos %}
+    <tr>
+        <td>
+            {{r[0]}}
+        </td>
+        <td>
+            {{r[1]}}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}
 
 {% block js %}
 <script>
+
+    document.getElementById('telefono').addEventListener('input', function () {
+        const input = this.value.trim().replace(' ', '');
+        const table = document.getElementById('tabla-duplicado');
+        const rows = table.getElementsByTagName('tr');
+        const resultMessage = document.getElementById('span-duplicado');
+        const div = document.getElementById('div-duplicado');
+        div.removeAttribute('hidden');
+        resultMessage.textContent = '';
+
+        if (input === '') return;
+
+        for (let i = 0; i < rows.length; i++){
+            const cells = rows[i].getElementsByTagName('td');
+            const name = cells[0].textContent;
+            const phone = cells[1].textContent;
+
+            if (phone.includes(input)){
+                resultMessage.textContent = `Número ya registrado de ${name}.`
+                return;
+            }
+        }
+        div.setAttribute('hidden', 'hidden');
+    });
     function modoEditor(){
         let areas = ['e_que_vende', 'e_datos', 'e_introduccion', 'e_tener_en_cuenta', 'e_estructura', 'e_c_no_interesado', 'e_c_potencial', 'e_c_interesado', 'e_speech_entrada', 'e_speech_salida', 'e_reglas', 'e_formas_pago', 'e_preguntas_frecuentes', 'e_terminologias'];
         for (let area in areas) {

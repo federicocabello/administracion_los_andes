@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, Response, send_file, json, jsonify
+from flask import Flask, render_template, request, redirect, url_for, Response, send_file, json, jsonify, g
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_required, logout_user, login_user, current_user, UserMixin
 from config import config
@@ -34,6 +34,20 @@ login_manager.login_view = 'login'
 @app.route('/')
 def index():
     return redirect(url_for('login'))
+
+@app.before_request
+def load_user_data():
+    if current_user.is_authenticated:
+        cursor = db.connection.cursor()
+        cursor.execute(f"SELECT idtarea, titulo, descripcion, hora_rec, preaviso FROM recordatorios WHERE agente = '{current_user.fullname}' AND realizada = 0 AND fecha_rec = current_date;")
+        g.recordatorios = cursor.fetchall()
+        cursor.close()
+    else:
+        g.recordatorios = []
+
+@app.context_processor
+def inject_recordatorios():
+    return dict(recordatorios=g.recordatorios)
 
 @app.route('/logout')
 def logout():
@@ -82,7 +96,7 @@ def altaUsuario():
         cursor = db.connection.cursor()
         sql = f"INSERT INTO auth VALUES ('{usuario}', '{password}', '{fullname}', '{rol}')"
         cursor.execute(sql)
-        cursor.execute(f"insert into movimientos (mov, date_mov) values ('{current_user.fullname} agregó al usuario {usuario.upper()} | {fullname}', now())")
+        cursor.execute(f"insert into movimientos (mov, date_mov, agente, datonuevo) values ('Agregó un usuario nuevo.', now(), '{current_user.fullname}', '{fullname}');")
         db.connection.commit()
         cursor.close()
         return redirect(url_for('dashboard'))
@@ -171,8 +185,10 @@ def moduloEmpresa(empresa):
     articulos = cursor.fetchall()
     cursor.execute("SELECT idtarea, tarea FROM tareas;")
     tareas = cursor.fetchall()
+    cursor.execute("SELECT nombre, telefono FROM registros WHERE telefono != '' and nombre != '' and estado = 'registro' GROUP BY telefono;")
+    repetidos = cursor.fetchall()
     cursor.close()
-    return render_template('empresa.html', new=new, articulos=articulos, tareas=tareas)
+    return render_template('empresa.html', new=new, articulos=articulos, tareas=tareas, repetidos=repetidos)
 
 @app.route('/empresas/nueva', methods=['GET', 'POST'])
 @login_required
@@ -611,27 +627,49 @@ def usuarios():
 @login_required
 def movimientos():
     cursor = db.connection.cursor()
-    fecha = None
-    if request.method == 'POST':
-        accion = request.form['accion']
-        if accion == 'cantidad':
-            cant_mov = request.form['cantidad_mov']
-            cursor.execute(f"SELECT mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo FROM movimientos order by date_mov desc limit {cant_mov};")
-            mostrados = cant_mov
-        if accion == 'filtro_fecha':
-            fecha = request.form['fecha_unica']
-            cursor.execute(f"SELECT count(*) from movimientos where date(date_mov) = '{fecha}'")
-            contados_filtrados = cursor.fetchone()
-            cursor.execute(f"SELECT mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo, date(date_mov) from movimientos where date(date_mov) = '{fecha}' order by date_mov desc")
-            mostrados = contados_filtrados[0]
-    else:
-        cursor.execute("SELECT  mov, DATE_FORMAT(date_mov, '%d %M %Y • %T'), agente, nombre, datonuevo FROM movimientos ORDER BY date_mov DESC LIMIT 25;")
-        mostrados = 25
+    fecha = request.args.get('fecha', None)
+    print(fecha)
+    search = request.args.get('search', '')
+    tablas = []
+    agentes = []
+    rows_per_page = 20
+    page = int(request.args.get('page', 1))
+    offset = (page - 1) * rows_per_page
+    query = "SELECT mov, DATE_FORMAT(date_mov, '%%d %%M %%Y • %%T') AS formatted_date, agente, nombre, datonuevo FROM movimientos"
+    filters = []
+    params = []
+    
+    if fecha:
+        filters.append("DATE(date_mov) = %s")
+        params.append(fecha)
+    
+    if search:
+        filters.append("(mov LIKE %s OR agente LIKE %s OR nombre LIKE %s OR datonuevo LIKE %s)")
+        search_param = f"%{search}%"
+        params.extend([search_param, search_param, search_param, search_param])
+        
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+    query += " ORDER BY date_mov DESC LIMIT %s OFFSET %s"
+    params.extend([rows_per_page, offset])
+    
+    cursor.execute(query, params)
     tablas = cursor.fetchall()
-    cursor.execute("SELECT agente from movimientos where agente is not null group by agente;")
+    total_query = "SELECT COUNT(*) from movimientos"
+    
+    if filters:
+        total_query += " WHERE " + " AND ".join(filters)
+        
+    cursor.execute(total_query, params[:-2])
+    total_records = cursor.fetchone()[0]
+    total_pages = (total_records + rows_per_page -1) // rows_per_page
+    
+    cursor.execute("SELECT agente FROM movimientos WHERE agente IS NOT NULL GROUP BY agente;")
     agentes = cursor.fetchall()
+    
     cursor.close()
-    return render_template('movimientos.html', tablas=tablas, mostrados=mostrados, fecha=fecha, agentes=agentes)
+    
+    return render_template('movimientos.html', tablas=tablas, fecha=fecha, agentes=agentes, current_page=page, total_pages=total_pages, search=search)
 
 @app.route('/recordatorios', methods=['GET', 'POST'])
 @login_required
@@ -653,32 +691,93 @@ def recordatorios():
 @login_required
 def registros():
     cursor = db.connection.cursor()
-    consulta = ("""SELECT 
-    COUNT(DISTINCT registros.telefono, registros.nombre) AS total_registros
-FROM 
-    registros 
-JOIN 
-    tareas ON tareas.idtarea = registros.tarea 
-LEFT JOIN 
-    hojas ON registros.fecha = hojas.idfecha 
-WHERE 
-    registros.estado = 'registro' 
-    AND registros.telefono != ''  -- Condición para omitir registros con teléfono vacío
-    AND registros.telefono IN (
+    cursor.execute("""
+            SELECT COUNT(*) AS total_registros
+FROM (
+    WITH duplicados_telefonos AS (
         SELECT telefono 
         FROM registros 
-        WHERE telefono != ''  -- Asegura que solo se consideren teléfonos no vacíos
+        WHERE telefono != '' 
         GROUP BY telefono 
         HAVING COUNT(DISTINCT nombre) > 1
-    );
-    """)
-    #repetidos = cursor.fetchone()
-    repetidos = None
-    start_time = time.time()
-    cursor.execute("SELECT COUNT(*) from registros where estado = 'registro';")
-    n_registros = cursor.fetchone()
-    cursor.execute("select COUNT(*) from registros join tareas on registros.tarea = tareas.idtarea where (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (nombre NOT LIKE '% %' or direccion = '')")
-    faltantes = cursor.fetchone()
+    )
+    SELECT DISTINCT
+        registros.empresa, 
+        registros.agente, 
+        registros.nombre, 
+        registros.telefono, 
+        registros.email, 
+        registros.motivo,  
+        registros.tarea AS tarea_registro, -- Alias para evitar duplicado
+        DATE_FORMAT(registros.fecha, '%d %M %Y • %T') AS fecha_formateada, 
+        CAST(registros.fecha AS char) AS fecha_char, 
+        tareas.tarea AS tarea_descripcion, -- Alias para evitar duplicado
+        registros.fecha_tarea, 
+        registros.hora_tarea, 
+        registros.nota_rechazo, 
+        registros.direccion, 
+        tareas.color, 
+        CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, 
+        DATE_FORMAT(fecha_tarea, '%d %M %Y') AS fecha_tarea_formateada, 
+        perfil 
+    FROM 
+        registros
+    JOIN 
+        tareas ON tareas.idtarea = registros.tarea 
+    LEFT JOIN 
+        hojas ON registros.fecha = hojas.idfecha 
+    JOIN 
+        duplicados_telefonos ON registros.telefono = duplicados_telefonos.telefono
+    WHERE 
+        registros.estado = 'registro'
+) AS subconsulta;
+        """)
+    repetidos = cursor.fetchone()[0]
+    
+    #cursor.execute("select COUNT(*) from registros join tareas on registros.tarea = tareas.idtarea where (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (nombre NOT LIKE '% %' or direccion = '')")
+    cursor.execute("""
+                   SELECT COUNT(*) AS total_registros
+FROM (
+    SELECT 
+        registros.empresa, 
+        registros.agente, 
+        registros.nombre, 
+        registros.telefono, 
+        registros.email, 
+        registros.motivo, 
+        registros.tarea, 
+        DATE_FORMAT(registros.fecha, '%d %M %Y • %T') AS fecha_formateada, 
+        CAST(registros.fecha AS CHAR) AS fecha_char, 
+        tareas.tarea AS descripcion_tarea, 
+        registros.fecha_tarea, 
+        registros.hora_tarea, 
+        registros.nota_rechazo, 
+        registros.direccion, 
+        tareas.color, 
+        CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, 
+        DATE_FORMAT(fecha_tarea, '%d %M %Y') AS fecha_tarea_formateada, 
+        perfil
+    FROM 
+        registros
+    JOIN 
+        tareas ON registros.tarea = tareas.idtarea
+    LEFT JOIN 
+        hojas ON registros.fecha = hojas.idfecha
+    WHERE 
+        tareas.tarea IN (
+            'INSTALACIÓN PROGRAMADA', 
+            'INSPECCIÓN PROGRAMADA', 
+            'YA INSTALÓ', 
+            'INSPECCIÓN REALIZADA'
+        )
+        AND (
+            registros.nombre NOT LIKE '% %' 
+            OR registros.direccion = ''
+        )
+) AS subconsulta;
+                   """)
+    faltantes = cursor.fetchone()[0]
+    
     fechaunica = ''
     fecha_inicial = ''
     fecha_final = ''
@@ -689,14 +788,12 @@ WHERE
     tareas_empresa = cursor.fetchall()
     empresa = None
 
-    
     if request.method == 'POST':
         filtro = request.form['filtro']
         if filtro == 'fecha_unica':
             fechaunica = request.form['fecha_inicial']
             cursor.execute(f"SELECT count(*) from registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '';")
-            one = cursor.fetchone()
-            mostrados = one[0]
+            mostrados = cursor.fetchone()[0]
             cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' group by registros.tarea order by registros.tarea")
             tareas_empresa = cursor.fetchall()
             cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros join tareas on tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' and fecha_tarea = '{fechaunica}' and tareas.tarea != 'NO LE INTERESA' and tareas.tarea != '' order by registros.fecha desc")
@@ -706,28 +803,26 @@ WHERE
             categoria = request.form['limite']
             if categoria == 'fecha':
                 cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}';")
-                one = cursor.fetchone()
-                mostrados = one[0]
+                mostrados = cursor.fetchone()[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and fecha BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
                 cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha BETWEEN '{fecha_inicial}' and '{fecha_final} 23:59:59' order by registros.fecha desc;")
             else:
                 cursor.execute(f"SELECT count(*) from registros where estado = 'registro' and tarea != 1 and tarea != 0 and tarea != 2 and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}';")
-                one = cursor.fetchone()
-                mostrados = one[0]
+                mostrados = cursor.fetchone()[0]
                 cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 and estado = 'registro' and fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' group by registros.tarea order by registros.tarea")
                 tareas_empresa = cursor.fetchall()
                 cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.estado, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.fecha_tarea BETWEEN '{fecha_inicial}' and '{fecha_final}' and registros.tarea != 1 and registros.tarea != 0 and registros.tarea != 2 order by registros.fecha_tarea desc;")
-        if filtro == 'limite':
-            limite = request.form['limite']
-            if limite != 'all':
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE estado = 'registro' order by registros.fecha desc LIMIT {limite};")
-                mostrados = limite
-            else:
-                cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo,  registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' order by registros.fecha desc LIMIT {n_registros[0]};")
-                mostrados = n_registros[0]
         if filtro == 'duplicados':
-            cursor.execute("""SELECT DISTINCT
+            cursor.execute("""
+            WITH duplicados_telefonos AS (
+    SELECT telefono 
+    FROM registros 
+    WHERE telefono != '' 
+    GROUP BY telefono 
+    HAVING COUNT(DISTINCT nombre) > 1
+)
+SELECT DISTINCT
     registros.empresa, 
     registros.agente, 
     registros.nombre, 
@@ -747,38 +842,71 @@ WHERE
     DATE_FORMAT(fecha_tarea, '%d %M %Y') AS fecha_tarea_formateada, 
     perfil 
 FROM 
-    registros 
+    registros
 JOIN 
     tareas ON tareas.idtarea = registros.tarea 
 LEFT JOIN 
     hojas ON registros.fecha = hojas.idfecha 
+JOIN 
+    duplicados_telefonos ON registros.telefono = duplicados_telefonos.telefono
 WHERE 
     registros.estado = 'registro' 
-    AND registros.telefono != ''  -- Condición para omitir registros con teléfono vacío
-    AND registros.telefono IN (
-        SELECT telefono 
-        FROM registros 
-        WHERE telefono != ''  -- Asegura que solo se consideren teléfonos no vacíos
-        GROUP BY telefono 
-        HAVING COUNT(DISTINCT nombre) > 1
-    );""")
-            mostrados = repetidos[0]
+ORDER BY 
+    registros.telefono, fecha_char DESC;
+                           """)
+            mostrados = repetidos
             editar_telefono = 'NO'
         if filtro == 'faltantes':
-            cursor.execute("SELECT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE (tareas.tarea = 'INSTALACIÓN PROGRAMADA' or tareas.tarea = 'INSPECCIÓN PROGRAMADA' or  tareas.tarea = 'YA INSTALÓ' or tareas.tarea = 'INSPECCIÓN REALIZADA') and (registros.nombre NOT LIKE '% %' or registros.direccion = '');")
-            mostrados = faltantes[0]
+            cursor.execute("""
+                                    SELECT 
+                            registros.empresa, 
+                            registros.agente, 
+                            registros.nombre, 
+                            registros.telefono, 
+                            registros.email, 
+                            registros.motivo, 
+                            registros.tarea, 
+                            DATE_FORMAT(registros.fecha, '%d %M %Y • %T') AS fecha_formateada, 
+                            CAST(registros.fecha AS CHAR) AS fecha_char, 
+                            tareas.tarea AS descripcion_tarea, 
+                            registros.fecha_tarea, 
+                            registros.hora_tarea, 
+                            registros.nota_rechazo, 
+                            registros.direccion, 
+                            tareas.color, 
+                            CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, 
+                            DATE_FORMAT(fecha_tarea, '%d %M %Y') AS fecha_tarea_formateada, 
+                            perfil
+                        FROM 
+                            registros
+                        JOIN 
+                            tareas ON registros.tarea = tareas.idtarea
+                        LEFT JOIN 
+                            hojas ON registros.fecha = hojas.idfecha
+                        WHERE 
+                            tareas.tarea IN (
+                                'INSTALACIÓN PROGRAMADA', 
+                                'INSPECCIÓN PROGRAMADA', 
+                                'YA INSTALÓ', 
+                                'INSPECCIÓN REALIZADA'
+                            )
+                            AND (
+                                registros.nombre NOT LIKE '% %' 
+                                OR registros.direccion = ''
+                            );
+                           """)
+            mostrados = faltantes
         if filtro == 'empresa':
             empresa = request.form['limite']
             cursor.execute(f"SELECT COUNT(*) from registros where estado = 'registro' and empresa = '{empresa}';")
-            one = cursor.fetchone()
-            mostrados = one[0]
+            mostrados = cursor.fetchone()[0]
             cursor.execute(f"SELECT tareas.tarea FROM registros join tareas on registros.tarea = tareas.idtarea where estado = 'registro' and empresa = '{empresa}' group by registros.tarea order by registros.tarea")
             tareas_empresa = cursor.fetchall()
             cursor.execute(f"SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON registros.tarea = tareas.idtarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' and registros.empresa = '{empresa}' order by registros.fecha desc;")
     else:
-        
-        cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC LIMIT 25;")
-        mostrados = 25
+        cursor.execute("SELECT COUNT(*) FROM registros WHERE estado = 'registro';")
+        mostrados = cursor.fetchone()[0]
+        cursor.execute("SELECT DISTINCT registros.empresa, registros.agente, registros.nombre, registros.telefono, registros.email, registros.motivo, registros.tarea, DATE_FORMAT(registros.fecha, '%d %M %Y • %T'), CAST(registros.fecha AS char), tareas.tarea, registros.fecha_tarea, registros.hora_tarea, registros.nota_rechazo, registros.direccion, tareas.color, CASE WHEN hojas.idfecha IS NOT NULL THEN 1 ELSE 0 END AS existe, DATE_FORMAT(fecha_tarea, '%d %M %Y'), perfil FROM registros JOIN tareas ON tareas.idtarea = registros.tarea LEFT JOIN hojas ON registros.fecha = hojas.idfecha WHERE registros.estado = 'registro' ORDER BY registros.fecha DESC;")
     tablas = cursor.fetchall()
     cursor.execute("SELECT agente from registros where agente is not null group by agente;")
     agentes_purgados = cursor.fetchall()
@@ -796,7 +924,7 @@ WHERE
     cursor.close()
     #end_time = time.time()
     #print(f"tiempo ejecucion: {end_time - start_time}")
-    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, n_registros=n_registros, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, tareas_empresa=tareas_empresa, empresa=empresa, pdfs=pdfs, ultimahoja=ultimahoja, agentes_purgados=agentes_purgados)
+    return render_template('registros.html', tablas=tablas, agentes=agentes, tareas=tareas, empresas=empresas, mostrados=mostrados, fecha_inicial=fecha_inicial, fecha_final=fecha_final, fechaunica=fechaunica, repetidos=repetidos, editar_telefono=editar_telefono, faltantes=faltantes, categoria=categoria, tareas_empresa=tareas_empresa, empresa=empresa, pdfs=pdfs, ultimahoja=ultimahoja, agentes_purgados=agentes_purgados)
 
 @app.route('/hoja_de_inspeccion/generarpdf', methods=['GET', 'POST'])
 @login_required
@@ -1162,9 +1290,9 @@ def cambiarAgenteRecordatorio():
 @login_required
 def nuevoRecordatorio():
     #FORMDATA IMPRIMIR
-    data = request.form
-    for key, value in data.items():
-        print(f"{key}: {value}")
+    #data = request.form
+    #for key, value in data.items():
+    #    print(f"{key}: {value}")
     recordatorioid = request.form.get('recordatorioid')
     titulo = request.form.get('titulo').upper().strip()
     descripcion = request.form.get('descripcion').upper().strip()
@@ -1181,8 +1309,11 @@ def nuevoRecordatorio():
     if recordatorioid:
         #cursor.execute("UPDATE recordatorios SET titulo = %s, descripcion = %s, fecha_rec = %s, hora_rec = %s, prioridad =%s, tipo = %s, preaviso = %s WHERE idtarea = %s)", (titulo, descripcion, fecha, hora, prioridad, tipo, preaviso, recordatorioid))
         cursor.execute(f"UPDATE recordatorios SET titulo = '{titulo}', descripcion = '{descripcion}', fecha_rec = '{fecha}', hora_rec = '{hora}', prioridad = {int(prioridad)}, preaviso = {int(preaviso)} WHERE idtarea = '{recordatorioid}';")
+        instruccion = 'Modificó un recordatorio.'
     else:
         cursor.execute("INSERT INTO recordatorios VALUES (now(), %s, %s, %s, %s, %s, 0, %s, %s)", (titulo, descripcion, fecha, hora, prioridad, current_user.fullname, preaviso))
+        instruccion = 'Creó un recordatorio.'
+    cursor.execute(f"INSERT INTO movimientos (mov, date_mov, agente, datonuevo) VALUES ('{instruccion}', now(), '{current_user.fullname}', '{titulo}');")
     db.connection.commit()
     cursor.close()
     return jsonify({'status': 'success', 'recordatorioid': recordatorioid})

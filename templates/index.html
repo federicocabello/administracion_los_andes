@@ -255,7 +255,7 @@
     <!-- Input para la descripción -->
     <div style="margin-bottom: 15px;">
     <label for="new-tasks-description">Descripción:</label>
-    <textarea id="new-tasks-description" rows="10" style="text-transform: uppercase;"></textarea>
+    <textarea id="new-tasks-description" rows="10" style="text-transform: uppercase; color: black"></textarea>
     </div>
     
     <!-- Input para fecha y hora -->
@@ -305,7 +305,18 @@
     <button class="btn success" onclick="nuevoRecordatorio()">Confirmar</button>
   </div>
 </div>
-
+{% if recordatorios %}
+<div id="recordatorios" style="display: none;">
+<table id="recordatoriosTable">
+{% for r in recordatorios %}
+<tr data-id="{{r[0]}}" data-hora="{{r[3]}}" data-preaviso="{{r[4]}}">
+<td>{{r[1]}}</td>
+<td>{{r[2]}}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endif %}
 </body>
 <footer>
   <!--FOOTER-->
@@ -471,7 +482,6 @@
       });
     }
 
-    document.addEventListener("DOMContentLoaded", loadMotivos);
 
 var customModal = document.getElementById('customModal');
 var openCustomModalBtn = document.getElementById('openCustomModalBtn');
@@ -555,5 +565,67 @@ window.onclick = function(event) {
     newTasksModal.style.display = "none";
   }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMotivos();
+  loadRecordatorios();
+  setInterval(loadRecordatorios, 30000);
+});
+
+function loadRecordatorios(){
+  const rows = document.querySelectorAll('#recordatoriosTable tr');
+
+  rows.forEach(row => {
+    const horaRec = row.getAttribute('data-hora');
+    const preaviso = parseInt(row.getAttribute('data-preaviso')) || 0;
+
+    const [hours, minutes] = horaRec.split(':').map(Number);
+    const recTime = new Date();
+    recTime.setHours(hours, minutes - preaviso, 0, 0);
+
+    const currentTime = new Date();
+    const hora_exacta_tarea = new Date();
+    hora_exacta_tarea.setHours(hours, minutes, 0 ,0);
+
+    const formattedRecTime = `${recTime.getHours()}:${recTime.getMinutes().toString().padStart(2, '0')}`;
+    const formattedCurrentTime = `${currentTime.getHours()}:${currentTime.getMinutes().toString().padStart(2, '0')}`;
+    const formattedExactTime = `${hora_exacta_tarea.getHours()}:${hora_exacta_tarea.getMinutes().toString().padStart(2, '0')}`;
+/*
+    alert("Current Time: "+formattedCurrentTime);
+    alert("Rec Time: "+formattedRecTime);
+    alert("Exact Task Time: "+formattedExactTime);
+*/
+    if (formattedRecTime === formattedCurrentTime || formattedExactTime === formattedCurrentTime) {
+      playSoundAndNotify(row);
+    }
+  });
+
+  async function playSoundAndNotify(row) {
+    await playSound();
+    notify(row);
+  }
+
+  function playSound() {
+    return new Promise(resolve => {
+      const audio = new Audio('/static/sounds/notify.mp3');
+      audio.play();
+      audio.onended = resolve;
+    });
+  }
+
+  function notify(row) {
+    const title = row.children[0].textContent;
+    const description = row.children[1].textContent;
+
+    if (Notification.permission === "granted") {
+      new Notification(`Recordatorio: ${title}`, {
+        body: description,
+        icon: '/static/img/notify.png'
+      });
+    }
+    alert(`Recordatorio: ${title}\nDescripción: ${description}`);
+  }
+
+};
   </script>
 </html>

@@ -275,7 +275,7 @@ Administración Los Andes | Inicio
       </tr>
     {% else %}
     <tr>
-      <th style="color: #00ba00; font-size: 22px; background: none; text-align: center;"><img src="{{ url_for('static', filename='img/cheque.png') }}" width="20" height="20"> No tiene tareas para hoy • {{ nombre_dia_hoy }}</th>
+      <th style="color: #00ba00; font-size: 22px; background: none; text-align: center;"><img src="{{ url_for('static', filename='img/cheque.png') }}" width="20" height="20"> No tiene tareas ni recordatorios para hoy • {{ nombre_dia_hoy }}</th>
     </tr>
     {% endif %}
     {% for t in pendiente %}
@@ -354,13 +354,13 @@ Administración Los Andes | Inicio
       </td>
       <td>
         <i class="fa fa-calendar-o"></i> Registro del {{t[0]}}
-          {% if t[4] %}
+          {% if t[5] %}
           <br>
-          <i class="fa fa-tasks"></i> {{ t[4] }}
+          <i class="fa fa-tasks"></i> <span style="white-space: pre-line;">{{t[5]}}</span>
           {% endif %}
       </td>
-      <td style="color: #000080">
-          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{t[9]}}','{{t[4]}}','{{t[5]}}','{{t[15]}}','{{t[12]}}', '{{t[14]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{t[5]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
+      <td style="color: #000080;">
+          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{t[9]}}','{{t[4]}}', `{{ t[5] | replace('\n', '\\n') | replace('\r', '\\r') }}`,'{{t[15]}}','{{t[12]}}', '{{t[14]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{t[4]}}{% if t[10] %} a las {{t[10]}} h{% endif %}
           <br>
           {% if t[12] == 'BAJA' %}
           <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
@@ -516,9 +516,9 @@ Administración Los Andes | Inicio
       </td>
       <td>
         <i class="fa fa-calendar-o"></i> Registro del {{a[0]}}
-          {% if a[4] %}
+          {% if a[5] %}
           <br>
-          <i class="fa fa-tasks"></i> {{ a[4] }}
+          <i class="fa fa-tasks"></i> <span style="white-space: pre-line;">{{ a[5] }}</span>
           {% endif %}
       </td>
       <td style="color: #000080">
@@ -529,7 +529,7 @@ Administración Los Andes | Inicio
         </div>
         {% endif %}
 
-          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{a[9]}}','{{a[4]}}','{{a[5]}}','{{a[18]}}','{{a[15]}}','{{a[17]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{a[5]}}{% if a[10] %} a las {{a[10]}} h{% endif %}
+          <span class="icon-container"><i class="fa fa-refresh" style="cursor: pointer;" onclick="editarRecordatorio('{{a[9]}}','{{a[4]}}',`{{ a[5] | replace('\n', '\\n') | replace('\r', '\\r') }}`,'{{a[18]}}','{{a[15]}}','{{a[17]}}')"></i><span class="tooltip" id="tooltip-editar">Reprogramar recordatorio</span></span> {{a[4]}}{% if a[10] %} a las {{a[10]}} h{% endif %}
           <br>
           {% if a[15] == 'BAJA' %}
           <i class="fa fa-angle-up"></i> BAJA IMPORTANCIA
