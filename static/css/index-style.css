@@ -256,3 +256,30 @@ input, textarea{
   -ms-border-radius: 5px;
   -o-border-radius: 5px;
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 5px;
+}
+
+.pagination a {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  background-color: #f9f9f9;
+  color: #333;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.pagination a.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination a:hover {
+  background-color: #ddd;
+}

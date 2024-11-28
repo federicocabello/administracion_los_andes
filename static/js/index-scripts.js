@@ -308,6 +308,7 @@ function cambiarAgenteRecordatorio(nuevo, idfecha, accion){
 }
 
 function editarRecordatorio(idrecordatorio, titulo, descripcion, fecha, prioridad, preaviso){
+  const formattedDescripcion = descripcion.replace(/\\n/g, '\n').replace(/\\r/g, '');
   document.getElementById('recordatorio-id').value = idrecordatorio;
   document.getElementById('new-tasks-title').value = titulo;
   document.getElementById('new-tasks-description').value = descripcion;
